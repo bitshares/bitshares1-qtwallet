@@ -6,3 +6,8 @@ moc_*
 *.moc
 build/
 *.app
+*.sw*
+*.cmake
+CMakeFiles
+qt_wallet
+qt_wallet_automoc.cpp
