@@ -176,7 +176,7 @@ void BtsXtThread::run()
             }
         } 
         
-        while(!cancel) fc::usleep(fc::microseconds(10000));
+        while(!cancel) fc::usleep(fc::microseconds(100000));
     }
     catch ( const fc::exception& e )
     {

@@ -10,33 +10,31 @@
 
 #include <QApplication>
 
-bool exit_signal;
+bool exit_signal = false;
+std::shared_ptr<BtsXtThread> btsxt;
 
 void handle_signal( int signum )
 {
     std::cout<< "Signal " << signum << " caught. exiting.." << std::endl;
     exit_signal = true;
+    btsxt->stop();
 }
 
 int main( int argc, char** argv )
 {
-    exit_signal = false;
-    
-
-    
-    BtsXtThread btsxt;
-    if(!btsxt.init(argc, argv)) return 0;
-    btsxt.start();
+    btsxt = std::make_shared<BtsXtThread>();
+    if(!btsxt->init(argc, argv)) return 0;
+    btsxt->start();
     
     QString initial_url = "http://127.0.0.1:9989";
     //if(!fc::exists( datadir / "default_wallet.dat" ))
     //    initial_url = "http://127.0.0.1:9989/blank.html#/createwallet";
         
-    if( btsxt.is_rpc_only() ) {
+    if( btsxt->is_rpc_only() ) {
         signal(SIGABRT, &handle_signal);
         signal(SIGTERM, &handle_signal);
         signal(SIGINT, &handle_signal);
-        while(!exit_signal && btsxt.isRunning()) fc::usleep(fc::microseconds(10000));
+        while(!exit_signal && btsxt->isRunning()) fc::usleep(fc::microseconds(1000000));
     } else
     {
     
@@ -52,8 +50,8 @@ int main( int argc, char** argv )
         app.exec();    
     }
 
-    btsxt.stop();
-    btsxt.wait();    
+    btsxt->stop();
+    btsxt->wait();
     
     return 0;
 }
