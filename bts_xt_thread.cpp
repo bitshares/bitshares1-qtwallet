@@ -3,7 +3,6 @@
 #include <bts/client/client.hpp>
 #include <bts/net/upnp.hpp>
 #include <bts/blockchain/chain_database.hpp>
-#include <bts/wallet/wallet.hpp>
 #include <bts/rpc/rpc_server.hpp>
 #include <bts/cli/cli.hpp>
 #include <bts/utilities/git_revision.hpp>
@@ -14,6 +13,7 @@
 #include <fc/io/json.hpp>
 #include <fc/reflect/variant.hpp>
 #include <fc/git_revision.hpp>
+#include <fc/io/json.hpp>
 
 #include <iostream>
 #include <iomanip>
@@ -22,41 +22,50 @@
 
 struct config
 {
-   config():ignore_console(false){}
+   config() : default_peers{{"107.170.30.182:8764"}}, ignore_console(false) {}
    bts::rpc::rpc_server::config rpc;
+   std::vector<std::string>     default_peers;
    bool                         ignore_console;
 };
 
-FC_REFLECT( config, (rpc)(ignore_console) )
+FC_REFLECT( config, (rpc)(default_peers)(ignore_console) )
 
+using namespace boost;
 
 void try_to_open_wallet(bts::rpc::rpc_server_ptr);
 void print_banner();
 void configure_logging(const fc::path&);
-fc::path get_data_dir(const boost::program_options::variables_map& option_variables);
+fc::path get_data_dir(const program_options::variables_map& option_variables);
 config   load_config( const fc::path& datadir );
-bts::blockchain::chain_database_ptr load_and_configure_chain_database(const fc::path& datadir,
-                                                                      const boost::program_options::variables_map& option_variables);
+void  load_and_configure_chain_database(const fc::path& datadir,
+                                        const program_options::variables_map& option_variables);
+
+config cfg;
 
 bool BtsXtThread::init(int argc, char** argv)
 {
 
-    // parse command-line options
-    boost::program_options::options_description option_config("Allowed options");
-    option_config.add_options()("data-dir", boost::program_options::value<std::string>(), "configuration data directory")
-    ("help", "display this help message")
-    ("p2p-port", boost::program_options::value<uint16_t>()->default_value(5678), "set port to listen on")
-    ("upnp", boost::program_options::value<bool>()->default_value(true), "Enable UPNP")
-    ("connect-to", boost::program_options::value<std::vector<std::string> >(), "set remote host to connect to")
-    ("daemon", "run in daemon mode with no CLI console")
-    ("rpcuser", boost::program_options::value<std::string>(), "username for JSON-RPC")
-    ("rpcpassword", boost::program_options::value<std::string>(), "password for JSON-RPC")
-    ("rpcport", boost::program_options::value<uint16_t>()->default_value(5679), "port to listen for JSON-RPC connections")
-    ("httpport", boost::program_options::value<uint16_t>()->default_value(5680), "port to listen for HTTP JSON-RPC connections")
-    ("genesis-config", boost::program_options::value<std::string>()->default_value("genesis.dat"), 
-     "generate a genesis state with the given json file (only accepted when the blockchain is empty)")
-    ("version", "print the version information for bts_xt_client")
-    ("rpc-only", "start rpc server in console, no gui");
+// parse command-line options
+   program_options::options_description option_config("Allowed options");
+   option_config.add_options()("data-dir", program_options::value<std::string>(), "configuration data directory")
+                              ("help", "display this help message")
+                              ("p2p-port", program_options::value<uint16_t>(), "set port to listen on")
+                              ("maximum-number-of-connections", program_options::value<uint16_t>(), "set the maximum number of peers this node will accept at any one time")
+                              ("upnp", program_options::value<bool>()->default_value(true), "Enable UPNP")
+                              ("connect-to", program_options::value<std::vector<std::string> >(), "set remote host to connect to")
+                              ("server", "enable JSON-RPC server")
+                              ("daemon", "run in daemon mode with no CLI console, starts JSON-RPC server")
+                              ("rpcuser", "username for JSON-RPC") // default arguments are in config.json
+                              ("rpcpassword", "password for JSON-RPC")
+                              ("rpcport", "port to listen for JSON-RPC connections")
+                              ("httpport", "port to listen for HTTP JSON-RPC connections")
+                              ("genesis-config", program_options::value<std::string>()->default_value("genesis.dat"), 
+                               "generate a genesis state with the given json file (only accepted when the blockchain is empty)")
+                              ("clear-peer-database", "erase all information in the peer database")
+                              ("resync-blockchain", "delete our copy of the blockchain at startup, and download a fresh copy of the entire blockchain from the network")
+                              ("version", "print the version information for bts_xt_client")
+                              ("rpc-only", "start rpc server in console, no gui");
+
     
     
     boost::program_options::positional_options_description positional_config;
@@ -92,7 +101,8 @@ bool BtsXtThread::init(int argc, char** argv)
         std::cout << "                              committed " << fc::get_approximate_relative_time_string(fc::time_point_sec(bts::utilities::git_revision_unix_timestamp)) << "\n";
         return false;
     }
-    rpc_only = option_variables.count("rpc-only");
+    
+   rpc_only = option_variables.count("rpc-only");
 
 
    try {
@@ -100,17 +110,18 @@ bool BtsXtThread::init(int argc, char** argv)
       fc::path datadir = get_data_dir(option_variables);
       ::configure_logging(datadir);
 
-      auto cfg   = load_config(datadir);
-      auto chain = load_and_configure_chain_database(datadir, option_variables);
-      wall  = std::make_shared<bts::wallet::wallet>(chain);
-      wall->set_data_directory( datadir );
+      cfg   = load_config(datadir);
+      std::cout << fc::json::to_pretty_string( cfg ) <<"\n";
 
-      c = std::make_shared<bts::client::client>( chain );
-      c->set_wallet( wall );
-      c->run_delegate();
+      load_and_configure_chain_database(datadir, option_variables);
 
-      rpc_server = std::make_shared<bts::rpc::rpc_server>();
-      rpc_server->set_client(c);
+      client = std::make_shared<bts::client::client>();
+      client->open( datadir, option_variables["genesis-config"].as<std::string>() );
+
+      client->run_delegate();
+
+      bts::rpc::rpc_server_ptr rpc_server = client->get_rpc_server();
+
 
         // the user wants us to launch the RPC server.
         // First, override any config parameters they
@@ -135,8 +146,22 @@ bool BtsXtThread::init(int argc, char** argv)
             std::cerr << "Error starting rpc server\n\n";
             return false;
         }
-                
-       c->configure( datadir );
+
+      client->configure( datadir );
+
+      if (option_variables.count("maximum-number-of-connections"))
+      {
+        fc::mutable_variant_object params;
+        params["maximum_number_of_connections"] = option_variables["maximum-number-of-connections"].as<uint16_t>();
+        client->network_set_advanced_node_parameters(params);
+      }
+       
+      if (option_variables.count("clear-peer-database"))
+      {
+        std::cout << "Erasing old peer database\n";
+        client->get_node()->clear_peer_database();
+      }
+
        return true;
     } 
    catch ( const fc::exception& e )
@@ -151,31 +176,21 @@ bool BtsXtThread::init(int argc, char** argv)
 void BtsXtThread::run()
 {
     try {
-        if (p_option_variables->count("p2p-port"))
-        {
-            auto p2pport = (*p_option_variables)["p2p-port"].as<uint16_t>();
-            std::cout << "Listening to P2P connections on port "<<p2pport<<"\n";
-            c->listen_on_port(p2pport);
-            
-            if( (*p_option_variables)["upnp"].as<bool>() )
-            {
-                std::cout << "Attempting to map UPNP port...\n";
-                auto upnp_service = new bts::net::upnp_service();
-                upnp_service->map_port( p2pport );
-                fc::usleep( fc::seconds(3) );
-            }
-        }
+
         
-        c->connect_to_p2p_network();
+        client->connect_to_p2p_network();
         if (p_option_variables->count("connect-to"))
         {
             std::vector<std::string> hosts = (*p_option_variables)["connect-to"].as<std::vector<std::string>>();
             for( auto peer : hosts )
-            {
-                c->connect_to_peer( peer );
-            }
-        } 
-        
+                client->connect_to_peer( peer );
+        }
+        else
+        {
+            for (std::string default_peer : cfg.default_peers)
+                client->connect_to_peer(default_peer);
+        }
+                
         while(!cancel) fc::usleep(fc::microseconds(100000));
     }
     catch ( const fc::exception& e )
@@ -243,7 +258,7 @@ void configure_logging(const fc::path& data_dir)
 }
 
 
-fc::path get_data_dir(const boost::program_options::variables_map& option_variables)
+fc::path get_data_dir(const program_options::variables_map& option_variables)
 { try {
    fc::path datadir;
    if (option_variables.count("data-dir"))
@@ -264,17 +279,30 @@ fc::path get_data_dir(const boost::program_options::variables_map& option_variab
 
 } FC_RETHROW_EXCEPTIONS( warn, "error loading config" ) }
 
-bts::blockchain::chain_database_ptr load_and_configure_chain_database(const fc::path& datadir,
-                                                                      const boost::program_options::variables_map& option_variables)
+void load_and_configure_chain_database( const fc::path& datadir,
+                                        const program_options::variables_map& option_variables)
 { try {
-  std::cout << "Loading blockchain from \"" << ( datadir / "chain" ).generic_string()  << "\"\n";
-  bts::blockchain::chain_database_ptr chain = std::make_shared<bts::blockchain::chain_database>();
+  if (option_variables.count("resync-blockchain"))
+  {
+    std::cout << "Deleting old copy of the blockchain in \"" << ( datadir / "chain" ).generic_string() << "\"\n";
+    try
+    {
+      fc::remove_all(datadir / "chain");
+    }
+    catch (const fc::exception& e)
+    {
+      std::cout << "Error while deleting old copy of the blockchain: " << e.what() << "\n";
+      std::cout << "You may need to manually delete your blockchain and relaunch bitshares_client\n";
+    }
+  }
+  else
+  {
+    std::cout << "Loading blockchain from \"" << ( datadir / "chain" ).generic_string()  << "\"\n";
+  }
 
   fc::path genesis_file = option_variables["genesis-config"].as<std::string>();
   std::cout << "Using genesis block from file \"" << fc::absolute( genesis_file ).string() << "\"\n";
-  chain->open( datadir / "chain", genesis_file );
 
-  return chain;
 } FC_RETHROW_EXCEPTIONS( warn, "unable to open blockchain from ${data_dir}", ("data_dir",datadir/"chain") ) }
 
 config load_config( const fc::path& datadir )
@@ -288,7 +316,7 @@ config load_config( const fc::path& datadir )
       }
       else
       {
-         std::cerr<<"Creating default config file "<<config_file.generic_string()<<"\n";
+         std::cerr<<"Creating default config file \""<<config_file.generic_string()<<"\"\n";
          fc::json::save_to_file( cfg, config_file );
       }
       return cfg;
