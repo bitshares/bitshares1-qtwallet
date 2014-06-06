@@ -9,33 +9,25 @@ namespace boost {
 }
 
 namespace bts {
-    namespace wallet { class wallet; }
-    namespace rpc { class rpc_server; }
     namespace client { class client; }
 }
 
 class BtsXtThread : public QThread
 {
     Q_OBJECT
-    bool cancel;
-    bool rpc_only;
-    std::shared_ptr<bts::client::client> client;
-    boost::program_options::variables_map* p_option_variables;
-    std::shared_ptr<bts::wallet::wallet> wall;
-    std::shared_ptr<bts::rpc::rpc_server> rpc_server;
+    int _argc;
+    char** _argv;
     
 public: 
-    BtsXtThread()
-    : QThread(0), cancel(false), rpc_only(false)
+    BtsXtThread(int argc, char** argv)
+    : QThread(0), _argc(argc), _argv(argv)
     {
     }
     
-    ~BtsXtThread();
+    ~BtsXtThread() {}
     
-    bool init(int argc, char** argv);
     void run() Q_DECL_OVERRIDE ;
-    void stop(){ cancel = true; }
-    bool is_rpc_only() const {return rpc_only; }
+    void stop();
 
 signals:
     void resultReady(const QString &s);

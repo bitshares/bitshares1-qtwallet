@@ -32,7 +32,6 @@ FC_REFLECT( config, (rpc)(default_peers)(ignore_console) )
 
 using namespace boost;
 
-void try_to_open_wallet(bts::rpc::rpc_server_ptr);
 void print_banner();
 void configure_logging(const fc::path&);
 fc::path get_data_dir(const program_options::variables_map& option_variables);
@@ -40,12 +39,12 @@ config   load_config( const fc::path& datadir );
 void  load_and_configure_chain_database(const fc::path& datadir,
                                         const program_options::variables_map& option_variables);
 
-config cfg;
+bts::client::client* _global_client = nullptr;
+bool cancel;
 
-bool BtsXtThread::init(int argc, char** argv)
+int tmain( int argc, char** argv )
 {
-
-// parse command-line options
+   // parse command-line options
    program_options::options_description option_config("Allowed options");
    option_config.add_options()("data-dir", program_options::value<std::string>(), "configuration data directory")
                               ("help", "display this help message")
@@ -55,97 +54,93 @@ bool BtsXtThread::init(int argc, char** argv)
                               ("connect-to", program_options::value<std::vector<std::string> >(), "set remote host to connect to")
                               ("server", "enable JSON-RPC server")
                               ("daemon", "run in daemon mode with no CLI console, starts JSON-RPC server")
-                              ("rpcuser", "username for JSON-RPC") // default arguments are in config.json
-                              ("rpcpassword", "password for JSON-RPC")
-                              ("rpcport", "port to listen for JSON-RPC connections")
-                              ("httpport", "port to listen for HTTP JSON-RPC connections")
+                              ("rpcuser", program_options::value<std::string>(), "username for JSON-RPC") // default arguments are in config.json
+                              ("rpcpassword", program_options::value<std::string>(), "password for JSON-RPC")
+                              ("rpcport", program_options::value<uint16_t>(), "port to listen for JSON-RPC connections")
+                              ("httpport", program_options::value<uint16_t>(), "port to listen for HTTP JSON-RPC connections")
                               ("genesis-config", program_options::value<std::string>()->default_value("genesis.dat"), 
                                "generate a genesis state with the given json file (only accepted when the blockchain is empty)")
                               ("clear-peer-database", "erase all information in the peer database")
                               ("resync-blockchain", "delete our copy of the blockchain at startup, and download a fresh copy of the entire blockchain from the network")
-                              ("version", "print the version information for bts_xt_client")
-                              ("rpc-only", "start rpc server in console, no gui");
+                              ("version", "print the version information for bts_xt_client");
 
-    
-    
-    boost::program_options::positional_options_description positional_config;
-    positional_config.add("data-dir", 1);
-    
-    p_option_variables = new boost::program_options::variables_map;
-    boost::program_options::variables_map& option_variables = *p_option_variables;
-    try
-    {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv).
-                                      options(option_config).positional(positional_config).run(), option_variables);
-        boost::program_options::notify(option_variables);
-    }
-    catch (boost::program_options::error&)
-    {
-        std::cerr << "Error parsing command-line options\n\n";
-        std::cerr << option_config << "\n";
-        return false;
-    }
-    
-    if (option_variables.count("help"))
-    {
-        std::cout << option_config << "\n";
-        return false;
-    }
-    
-    if (option_variables.count("version"))
-    {
-        std::cout << "bts_xt_client built on " << __DATE__ << " at " << __TIME__ << "\n";
-        std::cout << "  bitshares_toolkit revision: " << bts::utilities::git_revision_sha << "\n";
-        std::cout << "                              committed " << fc::get_approximate_relative_time_string(fc::time_point_sec(bts::utilities::git_revision_unix_timestamp)) << "\n";
-        std::cout << "                 fc revision: " << fc::git_revision_sha << "\n";
-        std::cout << "                              committed " << fc::get_approximate_relative_time_string(fc::time_point_sec(bts::utilities::git_revision_unix_timestamp)) << "\n";
-        return false;
-    }
-    
-   rpc_only = option_variables.count("rpc-only");
 
+   program_options::positional_options_description positional_config;
+   positional_config.add("data-dir", 1);
+
+   program_options::variables_map option_variables;
+   try
+   {
+     program_options::store(program_options::command_line_parser(argc, argv).
+       options(option_config).positional(positional_config).run(), option_variables);
+     program_options::notify(option_variables);
+   }
+   catch (program_options::error&)
+   {
+     std::cerr << "Error parsing command-line options\n\n";
+     std::cerr << option_config << "\n";
+     return 1;
+   }
+
+   if (option_variables.count("help"))
+   {
+     std::cout << option_config << "\n";
+     return 0;
+   }
+
+   if (option_variables.count("version"))
+   {
+     std::cout << "bts_xt_client built on " << __DATE__ << " at " << __TIME__ << "\n";
+     std::cout << "  bitshares_toolkit revision: " << bts::utilities::git_revision_sha << "\n";
+     std::cout << "                              committed " << fc::get_approximate_relative_time_string(fc::time_point_sec(bts::utilities::git_revision_unix_timestamp)) << "\n";
+     std::cout << "                 fc revision: " << fc::git_revision_sha << "\n";
+     std::cout << "                              committed " << fc::get_approximate_relative_time_string(fc::time_point_sec(bts::utilities::git_revision_unix_timestamp)) << "\n";
+     return 0;
+   }
 
    try {
       print_banner();
       fc::path datadir = get_data_dir(option_variables);
       ::configure_logging(datadir);
 
-      cfg   = load_config(datadir);
+      auto cfg   = load_config(datadir);
       std::cout << fc::json::to_pretty_string( cfg ) <<"\n";
 
       load_and_configure_chain_database(datadir, option_variables);
 
-      client = std::make_shared<bts::client::client>();
+      bts::client::client_ptr client = std::make_shared<bts::client::client>();
       client->open( datadir, option_variables["genesis-config"].as<std::string>() );
+      _global_client = client.get();
 
       client->run_delegate();
 
       bts::rpc::rpc_server_ptr rpc_server = client->get_rpc_server();
 
-
+      if( option_variables.count("server") || option_variables.count("daemon") )
+      {
         // the user wants us to launch the RPC server.
         // First, override any config parameters they
-        bts::rpc::rpc_server::config rpc_config(cfg.rpc);
+       // bts::rpc::rpc_server::config rpc_config(cfg.rpc);
         if (option_variables.count("rpcuser"))
-          rpc_config.rpc_user = option_variables["rpcuser"].as<std::string>();
+          cfg.rpc.rpc_user = option_variables["rpcuser"].as<std::string>();
         if (option_variables.count("rpcpassword"))
-          rpc_config.rpc_password = option_variables["rpcpassword"].as<std::string>();
-        // for now, force binding to localhost only
+           cfg.rpc.rpc_password = option_variables["rpcpassword"].as<std::string>();
         if (option_variables.count("rpcport"))
-          rpc_config.rpc_endpoint = fc::ip::endpoint(fc::ip::address("127.0.0.1"), option_variables["rpcport"].as<uint16_t>());
-        else
-          rpc_config.rpc_endpoint = fc::ip::endpoint(fc::ip::address("127.0.0.1"), uint16_t(9988));
+           cfg.rpc.rpc_endpoint.set_port(option_variables["rpcport"].as<uint16_t>());
         if (option_variables.count("httpport"))
-            rpc_config.httpd_endpoint = fc::ip::endpoint(fc::ip::address("127.0.0.1"), option_variables["httpport"].as<uint16_t>());
-        std::cout<<"Starting json rpc server on "<< std::string( rpc_config.rpc_endpoint ) <<"\n";
-        std::cout<<"Starting http json rpc server on "<< std::string( rpc_config.httpd_endpoint ) <<"\n";     
-        try_to_open_wallet(rpc_server); // assuming password is blank
-        bool rpc_succuss = rpc_server->configure(rpc_config);
-        if (!rpc_succuss)
+           cfg.rpc.httpd_endpoint.set_port(option_variables["httpport"].as<uint16_t>());
+        std::cout<<"Starting json rpc server on "<< std::string( cfg.rpc.rpc_endpoint ) <<"\n";
+        std::cout<<"Starting http json rpc server on "<< std::string( cfg.rpc.httpd_endpoint ) <<"\n";
+        bool rpc_success = rpc_server->configure(cfg.rpc);
+        if (!rpc_success)
         {
             std::cerr << "Error starting rpc server\n\n";
-            return false;
         }
+      }
+      else
+      {
+         std::cout << "Not starting rpc server, use --server to enable the rpc interface\n";
+      }
 
       client->configure( datadir );
 
@@ -155,55 +150,52 @@ bool BtsXtThread::init(int argc, char** argv)
         params["maximum_number_of_connections"] = option_variables["maximum-number-of-connections"].as<uint16_t>();
         client->network_set_advanced_node_parameters(params);
       }
-       
+
+      if (option_variables.count("p2p-port"))
+      {
+         auto p2pport = option_variables["p2p-port"].as<uint16_t>();
+         std::cout << "Listening to P2P connections on port " << p2pport << "\n";
+         client->listen_on_port(p2pport);
+
+         if( option_variables["upnp"].as<bool>() )
+         {
+            std::cout << "Attempting to map UPNP port...\n";
+            auto upnp_service = new bts::net::upnp_service();
+            upnp_service->map_port( p2pport );
+            fc::usleep( fc::seconds(3) );
+         }
+      }
+
       if (option_variables.count("clear-peer-database"))
       {
         std::cout << "Erasing old peer database\n";
         client->get_node()->clear_peer_database();
       }
 
-       return true;
-    } 
+      client->connect_to_p2p_network();
+      if (option_variables.count("connect-to"))
+      {
+         std::vector<std::string> hosts = option_variables["connect-to"].as<std::vector<std::string>>();
+         for( auto peer : hosts )
+            client->connect_to_peer( peer );
+      }
+      else
+      {
+        for (std::string default_peer : cfg.default_peers)
+          client->connect_to_peer(default_peer);
+      }
+
+       while(!cancel){
+         fc::usleep(fc::microseconds(100000));
+       } 
+   }
    catch ( const fc::exception& e )
    {
       std::cerr << "------------ error --------------\n" 
                 << e.to_detail_string() << "\n";
       wlog( "${e}", ("e", e.to_detail_string() ) );
    }
-    return false;
-}
-
-void BtsXtThread::run()
-{
-    try {
-
-        
-        client->connect_to_p2p_network();
-        if (p_option_variables->count("connect-to"))
-        {
-            std::vector<std::string> hosts = (*p_option_variables)["connect-to"].as<std::vector<std::string>>();
-            for( auto peer : hosts )
-                client->connect_to_peer( peer );
-        }
-        else
-        {
-            for (std::string default_peer : cfg.default_peers)
-                client->connect_to_peer(default_peer);
-        }
-                
-        while(!cancel) fc::usleep(fc::microseconds(100000));
-    }
-    catch ( const fc::exception& e )
-    {
-        std::cerr << "------------ error --------------\n" 
-        << e.to_detail_string() << "\n";
-        wlog( "${e}", ("e", e.to_detail_string() ) );
-    }
-}
-
-BtsXtThread::~BtsXtThread()
-{
-    delete p_option_variables;
+   return 0;
 }
 
 void print_banner()
@@ -322,14 +314,14 @@ config load_config( const fc::path& datadir )
       return cfg;
 } FC_RETHROW_EXCEPTIONS( warn, "unable to load config file ${cfg}", ("cfg",datadir/"config.json")) }
 
-void try_to_open_wallet(bts::rpc::rpc_server_ptr rpc_server) {
-    try
-    {
-        // try to open without a passphrase first
-        rpc_server->direct_invoke_method("open_wallet", fc::variants());
-        return;
-    }
-    catch (...)
-    {
-    }
+
+void BtsXtThread::run()
+{
+    cancel = false;
+    tmain(_argc, _argv);
+}
+
+void BtsXtThread::stop()
+{
+    cancel = true;
 }

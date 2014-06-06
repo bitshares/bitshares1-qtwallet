@@ -22,22 +22,17 @@ void handle_signal( int signum )
 
 int main( int argc, char** argv )
 {
-    btsxt = std::make_shared<BtsXtThread>();
-    if(!btsxt->init(argc, argv)) return 0;
+    signal(SIGABRT, &handle_signal);
+    signal(SIGTERM, &handle_signal);
+    signal(SIGINT, &handle_signal);
+    
+    btsxt = std::make_shared<BtsXtThread>(argc, argv);
     btsxt->start();
     
-    QString initial_url = "http://127.0.0.1:9989";
+    QString initial_url = "http://127.0.0.1:5680";
     //if(!fc::exists( datadir / "default_wallet.dat" ))
-    //    initial_url = "http://127.0.0.1:9989/blank.html#/createwallet";
+    //    initial_url = "http://127.0.0.1:5680/blank.html#/createwallet";
         
-    if( btsxt->is_rpc_only() ) {
-        signal(SIGABRT, &handle_signal);
-        signal(SIGTERM, &handle_signal);
-        signal(SIGINT, &handle_signal);
-        while(!exit_signal && btsxt->isRunning()) fc::usleep(fc::microseconds(1000000));
-    } else
-    {
-    
         QApplication app(argc, argv);
         Html5Viewer viewer;
         viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
@@ -48,8 +43,7 @@ int main( int argc, char** argv )
         url.setPassword("");
         viewer.loadUrl(url);
         app.exec();    
-    }
-
+  
     btsxt->stop();
     btsxt->wait();
     
