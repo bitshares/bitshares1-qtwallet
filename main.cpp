@@ -9,6 +9,8 @@
 #include <signal.h>
 
 #include <QApplication>
+#include <QPixmap>
+#include <QSplashScreen>
 
 bool exit_signal = false;
 std::shared_ptr<BtsXtThread> btsxt;
@@ -33,16 +35,32 @@ int main( int argc, char** argv )
     //if(!fc::exists( datadir / "default_wallet.dat" ))
     //    initial_url = "http://127.0.0.1:5680/blank.html#/createwallet";
         
-        QApplication app(argc, argv);
-        Html5Viewer viewer;
-        viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
-        viewer.resize(1024,648);
-        viewer.show();
-        QUrl url = QUrl(initial_url);
-        url.setUserName("");
-        url.setPassword("");
-        viewer.loadUrl(url);
-        app.exec();    
+    QApplication app(argc, argv);
+    
+    QPixmap pixmap("/Users/vz/work/i3/qt_wallet/splash_screen.png");
+    QSplashScreen splash(pixmap);
+    splash.show();
+    
+    splash.showMessage(QObject::tr("Starting RPC Server..."),
+                       Qt::AlignCenter | Qt::AlignBottom, Qt::white);    
+    qApp->processEvents(); //This is used to accept a click on the screen so that user can cancel the screen
+    
+    QThread::sleep(5);
+    
+    Html5Viewer viewer;
+    viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
+    viewer.resize(1200,800);
+    viewer.show();
+    
+    
+    QUrl url = QUrl(initial_url);
+    url.setUserName("");
+    url.setPassword("");
+    viewer.loadUrl(url);
+    
+    splash.finish(&viewer);
+    
+    app.exec();    
   
     btsxt->stop();
     btsxt->wait();

@@ -40,7 +40,7 @@ void  load_and_configure_chain_database(const fc::path& datadir,
                                         const program_options::variables_map& option_variables);
 
 bts::client::client* _global_client = nullptr;
-bool cancel;
+bts::rpc::rpc_server_ptr rpc_server = nullptr;
 
 int tmain( int argc, char** argv )
 {
@@ -58,7 +58,7 @@ int tmain( int argc, char** argv )
                               ("rpcpassword", program_options::value<std::string>(), "password for JSON-RPC")
                               ("rpcport", program_options::value<uint16_t>(), "port to listen for JSON-RPC connections")
                               ("httpport", program_options::value<uint16_t>(), "port to listen for HTTP JSON-RPC connections")
-                              ("genesis-config", program_options::value<std::string>()->default_value("genesis.dat"), 
+                              ("genesis-config", program_options::value<std::string>()->default_value("genesis.json"), 
                                "generate a genesis state with the given json file (only accepted when the blockchain is empty)")
                               ("clear-peer-database", "erase all information in the peer database")
                               ("resync-blockchain", "delete our copy of the blockchain at startup, and download a fresh copy of the entire blockchain from the network")
@@ -114,7 +114,7 @@ int tmain( int argc, char** argv )
 
       client->run_delegate();
 
-      bts::rpc::rpc_server_ptr rpc_server = client->get_rpc_server();
+      rpc_server = client->get_rpc_server();
 
       if( option_variables.count("server") || option_variables.count("daemon") )
       {
@@ -129,17 +129,47 @@ int tmain( int argc, char** argv )
            cfg.rpc.rpc_endpoint.set_port(option_variables["rpcport"].as<uint16_t>());
         if (option_variables.count("httpport"))
            cfg.rpc.httpd_endpoint.set_port(option_variables["httpport"].as<uint16_t>());
-        std::cout<<"Starting json rpc server on "<< std::string( cfg.rpc.rpc_endpoint ) <<"\n";
-        std::cout<<"Starting http json rpc server on "<< std::string( cfg.rpc.httpd_endpoint ) <<"\n";
-        bool rpc_success = rpc_server->configure(cfg.rpc);
-        if (!rpc_success)
+
+        if (cfg.rpc.rpc_user.empty() ||
+            cfg.rpc.rpc_password.empty())
         {
-            std::cerr << "Error starting rpc server\n\n";
+          std::cout << "Error starting RPC server\n";
+          std::cout << "You specified " << (option_variables.count("server") ? "--server" : "--daemon") << " on the command line,\n";
+          std::cout << "but did not provide a username or password to authenticate RPC connections.\n";
+          std::cout << "You can provide these by using --rpcuser=username and --rpcpassword=password on the\n";
+          std::cout << "command line, or by setting the \"rpc_user\" and \"rpc_password\" properties in the\n";
+          std::cout << "config file.\n";
+          return 1;
+        }
+
+        // launch the RPC servers
+        bool rpc_success = rpc_server->configure(cfg.rpc);
+
+        // this shouldn't fail due to the above checks, but just to be safe...
+        if (!rpc_success)
+          std::cerr << "Error starting rpc server\n\n";
+
+        fc::optional<fc::ip::endpoint> actual_rpc_endpoint = rpc_server->get_rpc_endpoint();
+        if (actual_rpc_endpoint)
+        {
+          std::cout << "Starting JSON RPC server on port " << actual_rpc_endpoint->port();
+          if (actual_rpc_endpoint->get_address() == fc::ip::address("127.0.0.1"))
+            std::cout << " (localhost only)";
+          std::cout << "\n";
+        }
+
+        fc::optional<fc::ip::endpoint> actual_httpd_endpoint = rpc_server->get_httpd_endpoint();
+        if (actual_httpd_endpoint)
+        {
+          std::cout << "Starting HTTP JSON RPC server on port " << actual_httpd_endpoint->port();
+          if (actual_httpd_endpoint->get_address() == fc::ip::address("127.0.0.1"))
+            std::cout << " (localhost only)";
+          std::cout << "\n";
         }
       }
       else
       {
-         std::cout << "Not starting rpc server, use --server to enable the rpc interface\n";
+         std::cout << "Not starting RPC server, use --server to enable the RPC interface\n";
       }
 
       client->configure( datadir );
@@ -153,13 +183,12 @@ int tmain( int argc, char** argv )
 
       if (option_variables.count("p2p-port"))
       {
-         auto p2pport = option_variables["p2p-port"].as<uint16_t>();
-         std::cout << "Listening to P2P connections on port " << p2pport << "\n";
+         uint16_t p2pport = option_variables["p2p-port"].as<uint16_t>();
          client->listen_on_port(p2pport);
 
          if( option_variables["upnp"].as<bool>() )
          {
-            std::cout << "Attempting to map UPNP port...\n";
+            std::cout << "Attempting to map P2P port " << p2pport << " with UPNP...\n";
             auto upnp_service = new bts::net::upnp_service();
             upnp_service->map_port( p2pport );
             fc::usleep( fc::seconds(3) );
@@ -172,7 +201,23 @@ int tmain( int argc, char** argv )
         client->get_node()->clear_peer_database();
       }
 
+      // fire up the p2p , 
       client->connect_to_p2p_network();
+      fc::ip::endpoint actual_p2p_endpoint = client->get_p2p_listening_endpoint();
+      std::cout << "Listening for P2P connections on ";
+      if (actual_p2p_endpoint.get_address() == fc::ip::address())
+        std::cout << "port " << actual_p2p_endpoint.port();
+      else
+        std::cout << (std::string)actual_p2p_endpoint;
+      if (option_variables.count("p2p-port"))
+      {
+        uint16_t p2p_port = option_variables["p2p-port"].as<uint16_t>();
+        if (p2p_port != 0 && p2p_port != actual_p2p_endpoint.port())
+          std::cout << " (unable to bind to the desired port " << p2p_port << ")";
+      }
+      std::cout << "\n";
+
+
       if (option_variables.count("connect-to"))
       {
          std::vector<std::string> hosts = option_variables["connect-to"].as<std::vector<std::string>>();
@@ -184,10 +229,7 @@ int tmain( int argc, char** argv )
         for (std::string default_peer : cfg.default_peers)
           client->connect_to_peer(default_peer);
       }
-
-       while(!cancel){
-         fc::usleep(fc::microseconds(100000));
-       } 
+      rpc_server->wait_on_quit();
    }
    catch ( const fc::exception& e )
    {
@@ -317,11 +359,10 @@ config load_config( const fc::path& datadir )
 
 void BtsXtThread::run()
 {
-    cancel = false;
     tmain(_argc, _argv);
 }
 
 void BtsXtThread::stop()
 {
-    cancel = true;
+    if(rpc_server) rpc_server->shutdown_rpc_server();
 }
