@@ -3,7 +3,6 @@
 
 #include <boost/program_options.hpp>
 #include <boost/thread.hpp>
-#include <fc/thread/thread.hpp>
 #include <fc/filesystem.hpp>
 #include <bts/blockchain/config.hpp>
 #include <signal.h>
@@ -11,6 +10,7 @@
 #include <QApplication>
 #include <QPixmap>
 #include <QSplashScreen>
+#include <QDir>
 
 bool exit_signal = false;
 std::shared_ptr<BtsXtThread> btsxt;
@@ -20,6 +20,23 @@ void handle_signal( int signum )
     std::cout<< "Signal " << signum << " caught. exiting.." << std::endl;
     exit_signal = true;
     btsxt->stop();
+}
+
+QString find_splash_screen_png(QString location) {
+    QString res = "";
+    QDir app_path = location;
+    if(app_path.exists("splash_screen.png")) {
+        res = app_path.filePath("splash_screen.png");
+    } else {
+        QDir updir = app_path; updir.cdUp();
+        if(updir.exists("splash_screen.png")) res = updir.filePath("splash_screen.png");
+        else {
+            updir.cdUp();
+            if(updir.exists("splash_screen.png")) res = updir.filePath("splash_screen.png");
+        }
+    }
+    if (res == "") printf("WARNING: splash_screen.png not found, splash screen won't be shonw.");
+    return res;
 }
 
 int main( int argc, char** argv )
@@ -37,10 +54,13 @@ int main( int argc, char** argv )
         
     QApplication app(argc, argv);
     
+    QString splash_screen_path = find_splash_screen_png(QCoreApplication::applicationFilePath());
+        
     // TODO: splash_screen.png's path should be loaded from config
-    QPixmap pixmap("/Users/vz/work/i3/qt_wallet/splash_screen.png");
+    QPixmap pixmap(splash_screen_path);
     QSplashScreen splash(pixmap);
-    splash.show();
+    
+    if(splash_screen_path != "") splash.show();
     
     splash.showMessage(QObject::tr("Starting RPC Server..."),
                        Qt::AlignCenter | Qt::AlignBottom, Qt::white);    

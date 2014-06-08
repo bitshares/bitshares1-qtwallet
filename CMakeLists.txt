@@ -38,3 +38,5 @@ add_executable(qt_wallet WIN32 main.cpp bts_xt_thread.cpp bts_xt_thread.h html5v
 target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
   bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static)
+
+configure_file(splash_screen.png splash_screen.png COPYONLY)
