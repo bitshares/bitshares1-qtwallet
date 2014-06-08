@@ -37,15 +37,17 @@ int main( int argc, char** argv )
         
     QApplication app(argc, argv);
     
+    // TODO: splash_screen.png's path should be loaded from config
     QPixmap pixmap("/Users/vz/work/i3/qt_wallet/splash_screen.png");
     QSplashScreen splash(pixmap);
     splash.show();
     
     splash.showMessage(QObject::tr("Starting RPC Server..."),
                        Qt::AlignCenter | Qt::AlignBottom, Qt::white);    
-    qApp->processEvents(); //This is used to accept a click on the screen so that user can cancel the screen
+    qApp->processEvents();
     
-    QThread::sleep(5);
+    btsxt->wait_until_initialized();
+    QThread::sleep(1); // let's give rpc server one more second to bind to port and start listening
     
     Html5Viewer viewer;
     viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
@@ -54,8 +56,8 @@ int main( int argc, char** argv )
     
     
     QUrl url = QUrl(initial_url);
-    url.setUserName("");
-    url.setPassword("");
+    url.setUserName("user");
+    url.setPassword("pass");
     viewer.loadUrl(url);
     
     splash.finish(&viewer);
