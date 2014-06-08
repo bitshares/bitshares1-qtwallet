@@ -32,7 +32,7 @@ include_directories( "${CMAKE_SOURCE_DIR}/libraries/utilities/include" )
 include_directories( "${CMAKE_SOURCE_DIR}/libraries/bitcoin_import/include" )
 
 # Tell CMake to create the helloworld executable
-add_executable(qt_wallet WIN32 main.cpp bts_xt_thread.cpp bts_xt_thread.h html5viewer/html5viewer.cpp)
+add_executable(qt_wallet WIN32 main.cpp  html5viewer/html5viewer.cpp)
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
