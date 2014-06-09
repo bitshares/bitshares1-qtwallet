@@ -8,6 +8,7 @@
 #include <QApplication>
 #include <QSettings>
 #include <QPixmap>
+#include <QErrorMessage>
 #include <QSplashScreen>
 #include <QDir>
 
@@ -145,9 +146,12 @@ int main( int argc, char** argv )
     QCoreApplication::setOrganizationName( "BitShares" );
     QCoreApplication::setOrganizationDomain( "bitshares.org" );
     QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
+    QApplication app(argc, argv);
     
+   try {
     auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
 
+    QDir app_dir = QDir(app.applicationDirPath());
     config cfg = load_config( data_dir );
 
     std::shared_ptr<bts::client::client> client;
@@ -158,7 +162,8 @@ int main( int argc, char** argv )
     rpc.rpc_password = fc::variant(fc::ecc::private_key::generate()).as_string();
     rpc.httpd_endpoint = fc::ip::endpoint::from_string( "127.0.0.1:9999" );
     rpc.httpd_endpoint.set_port(0);
-    rpc.htdocs = /*data_dir / */"htdocs";
+    rpc.htdocs = fc::path( app_dir.absolutePath().toStdString() ) / "../htdocs"; ///*data_dir / */"htdocs";
+    ilog( "htdocs: ${d}", ("d",rpc.htdocs) );
 
     bool rpc_success = false;
     fc::optional<fc::ip::endpoint> actual_httpd_endpoint;
@@ -168,7 +173,6 @@ int main( int argc, char** argv )
     //uint32_t p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
     bool     upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
 
-    QApplication app(argc, argv);
     
     QString splash_screen_path = find_splash_screen_png(QCoreApplication::applicationFilePath());
         
@@ -244,4 +248,10 @@ int main( int argc, char** argv )
     bitshares_thread.quit();
     
     return 0;
+   }
+   catch ( const fc::exception& e) 
+   {
+      elog( "${e}", ("e",e.to_detail_string() ) );
+      QErrorMessage::qtHandler()->showMessage( e.to_string().c_str() );
+   }
 }

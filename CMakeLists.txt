@@ -31,8 +31,26 @@ include_directories( "${CMAKE_SOURCE_DIR}/libraries/cli/include" )
 include_directories( "${CMAKE_SOURCE_DIR}/libraries/utilities/include" )
 include_directories( "${CMAKE_SOURCE_DIR}/libraries/bitcoin_import/include" )
 
+IF( APPLE )
+    SET_SOURCE_FILES_PROPERTIES( "images/keyhotee.icns"
+                                  PROPERTIES
+                                   MACOSX_PACKAGE_LOCATION Resources
+                                )
+    SET( MACOSX_BUNDLE_BUNDLE_NAME "BitShares XTS" )
+    SET( MACOSX_BUNDLE_GUI_IDENTIFIER "org.bitshares.xts" ) 
+    set( MACOSX_BUNDLE_ICON_FILE keyhotee.icns )
+    SET( MACOSX_BUNDLE_INFO_STRING "BitShares XTS - version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
+    SET( MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
+    SET( MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
+    SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
+    SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" ) 
+  
+ENDIF( APPLE )
+
+
+
 # Tell CMake to create the helloworld executable
-add_executable(qt_wallet WIN32 main.cpp  html5viewer/html5viewer.cpp)
+add_executable(qt_wallet WIN32 MACOSX_BUNDLE main.cpp  html5viewer/html5viewer.cpp)
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
@@ -40,3 +58,10 @@ target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static)
 
 configure_file(splash_screen.png splash_screen.png COPYONLY)
+
+if(APPLE)
+  set(CPACK_GENERATOR "DragNDrop")
+  set(CPACK_PACKAGE_VENDOR "bitshares.org")
+endif()
+
+
