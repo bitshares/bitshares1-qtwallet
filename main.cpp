@@ -11,6 +11,9 @@
 #include <QErrorMessage>
 #include <QSplashScreen>
 #include <QDir>
+#include <QWebSettings>
+#include <QWebPage>
+#include <QGraphicsWebView>
 
 #include <boost/program_options.hpp>
 
@@ -37,13 +40,18 @@
 #include <iostream>
 #include <iomanip>
 
-bool exit_signal = false;
+#ifdef NDEBUG
+#include "config_prod.hpp"
+#else
+#include "config_dev.hpp"
+#endif
 
 
 struct config
 {
    config( ) 
-   :default_peers{{"107.170.30.182:8764"},{"114.215.104.153:8764"},{"84.238.140.192:8764"}} 
+   : default_peers{{"107.170.30.182:8764"},{"114.215.104.153:8764"},{"84.238.140.192:8764"}},
+    splash_screen_path( (fc::path(package_dir) / "images/splash_screen.png").string() )
    {}
 
    void init_default_logger( const fc::path& data_dir )
@@ -84,107 +92,83 @@ struct config
    }
    std::vector<std::string>     default_peers;
    fc::logging_config           logging;
+   fc::string                   splash_screen_path; 
 };
 
-FC_REFLECT( config, (default_peers)(logging) )
+FC_REFLECT( config, (default_peers)(logging)(splash_screen_path) )
 
 
-
-void handle_signal( int signum )
+static config load_config( const fc::path& data_dir )
 {
-   static int count = 0;
-   if( count ) exit(1);
-   ++count;
-   std::cout<< "Signal " << signum << " caught. exiting.." << std::endl;
-   exit_signal = true;
-}
-
-QString find_splash_screen_png(QString location) {
-    QString res = "";
-    QDir app_path = location;
-    if(app_path.exists("splash_screen.png")) {
-        res = app_path.filePath("splash_screen.png");
-    } else {
-        QDir updir = app_path; updir.cdUp();
-        if(updir.exists("splash_screen.png")) res = updir.filePath("splash_screen.png");
-        else {
-            updir.cdUp();
-            if(updir.exists("splash_screen.png")) res = updir.filePath("splash_screen.png");
-        }
-    }
-    if (res == "") printf("WARNING: splash_screen.png not found, splash screen won't be shonw.");
-    return res;
-}
-
-config load_config( const fc::path& data_dir )
-{
-      auto config_file = data_dir/"config.json";
-      config cfg;
-      if( fc::exists( config_file ) )
-      {
-         std::cout << "Loading config \"" << config_file.generic_string()  << "\"\n";
-         cfg = fc::json::from_file( config_file ).as<config>();
-      }
-      else
-      {
-         std::cerr<<"Creating default config file \""<<fc::absolute(config_file).generic_string()<<"\"\n";
-         cfg.init_default_logger( data_dir );
-         fc::create_directories( config_file.parent_path() );
-         fc::json::save_to_file( cfg, fc::absolute(config_file) );
-         std::cerr << "done saving config\n";	
-      }
-     // fc::configure_logging( cfg.logging );
-      return cfg;
+  auto config_file = data_dir / "config.json";
+  config cfg;
+  if( fc::exists( config_file ) )
+  {
+     std::cout << "Loading config \"" << config_file.generic_string()  << "\"\n";
+     cfg = fc::json::from_file( config_file ).as<config>();
+  }
+  else
+  {
+     std::cerr<<"Creating default config file \""<<fc::absolute(config_file).generic_string()<<"\"\n";
+     cfg.init_default_logger( data_dir );
+     fc::create_directories( config_file.parent_path() );
+     fc::json::save_to_file( cfg, fc::absolute(config_file) );
+     std::cerr << "done saving config\n";	
+  }
+  fc::configure_logging( cfg.logging );
+  return cfg;
 }
 
 int main( int argc, char** argv )
 {
-    signal(SIGABRT, &handle_signal);
-    signal(SIGTERM, &handle_signal);
-    signal(SIGINT, &handle_signal);
-
+    
     QCoreApplication::setOrganizationName( "BitShares" );
     QCoreApplication::setOrganizationDomain( "bitshares.org" );
     QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
     QApplication app(argc, argv);
     
    try {
-    auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
+    auto data_dir = fc::app_path() / "BitShares" BTS_ADDRESS_PREFIX;
 
-    QDir app_dir = QDir(app.applicationDirPath());
     config cfg = load_config( data_dir );
 
     std::shared_ptr<bts::client::client> client;
     bts::rpc::rpc_server_ptr                rpc_server;
 
     bts::rpc::rpc_server::config rpc;
+#   ifdef NDEBUG
     rpc.rpc_user     = "randomuser";
     rpc.rpc_password = fc::variant(fc::ecc::private_key::generate()).as_string();
     rpc.httpd_endpoint = fc::ip::endpoint::from_string( "127.0.0.1:9999" );
     rpc.httpd_endpoint.set_port(0);
-    rpc.htdocs = fc::path( app_dir.absolutePath().toStdString() ) / "../htdocs"; ///*data_dir / */"htdocs";
+#   else
+    rpc.rpc_user     = "user";
+    rpc.rpc_password = "pass";
+    rpc.httpd_endpoint = fc::ip::endpoint::from_string( "0.0.0.0:5680" );
+    rpc.httpd_endpoint.set_port(5680);
+#   endif
+    rpc.htdocs = fc::path( package_dir ) / "htdocs";
     ilog( "htdocs: ${d}", ("d",rpc.htdocs) );
-
+       
     bool rpc_success = false;
     fc::optional<fc::ip::endpoint> actual_httpd_endpoint;
-
+       
     QSettings settings; 
 
     //uint32_t p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
     bool     upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
 
     
-    QString splash_screen_path = find_splash_screen_png(QCoreApplication::applicationFilePath());
+    QString splash_screen_path = cfg.splash_screen_path.c_str();
         
     // TODO: splash_screen.png's path should be loaded from config
     QPixmap pixmap(splash_screen_path);
     QSplashScreen splash(pixmap);
+       splash.showMessage(QObject::tr("Starting RPC Server..."),
+                          Qt::AlignCenter | Qt::AlignBottom, Qt::white);   
     
-    if(splash_screen_path != "") splash.show();
+    splash.show();
     
-    splash.showMessage(QObject::tr("Starting RPC Server..."),
-                       Qt::AlignCenter | Qt::AlignBottom, Qt::white);    
-
 
     fc::thread bitshares_thread( "bitshares" );
     bitshares_thread.async( [&](){
@@ -200,8 +184,6 @@ int main( int argc, char** argv )
       client->listen_on_port(0);
       fc::ip::endpoint actual_p2p_endpoint = client->get_p2p_listening_endpoint();
       
-      ilog( "actual p2p port ${p}", ("p",actual_p2p_endpoint) );
-      ilog( "actual http port ${p}", ("p",actual_httpd_endpoint) );
       if( upnp )
       {
          auto upnp_service = new bts::net::upnp_service();
@@ -213,23 +195,20 @@ int main( int argc, char** argv )
         client->connect_to_peer(default_peer);
     }).wait();
 
-
-    ilog( "url: ${url}", ("url",actual_httpd_endpoint) );
-    if( !actual_httpd_endpoint )
-       return -1;
+    if( !actual_httpd_endpoint ) return -1;
+       
+    ilog( "http rpc url: ${url}", ("url",actual_httpd_endpoint) );
+    std::cout << "http rpc url: http://" << std::string( *actual_httpd_endpoint ) << std::endl;
     
-    QString initial_url = ("http://" + std::string( *actual_httpd_endpoint )).c_str(); //127.0.0.1:5680";//127.0.0.1:5680";
-    //if(!fc::exists( dat_adir / "default_wallet.dat" ))
-    //    initial_url = "http://127.0.0.1:5680/blank.html#/createwallet";
+    QString initial_url = ("http://" + std::string( *actual_httpd_endpoint )).c_str();
+    if( !fc::exists( data_dir / "wallets" / "default" ) )
+        initial_url += "/blank.html#/createwallet";
         
     qApp->processEvents();
     
-    /*
-    btsxt->wait_until_initialized();
-    QThread::sleep(1); // let's give rpc server one more second to bind to port and start listening
-    */
-    
     Html5Viewer viewer;
+    QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
+    viewer.webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
     viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
     viewer.resize(1200,800);
     viewer.show();
@@ -245,7 +224,7 @@ int main( int argc, char** argv )
     app.exec();    
   
     bitshares_thread.async( [&](){ client->stop(); client.reset(); } ).wait();
-    bitshares_thread.quit();
+    //bitshares_thread.quit(); - not sure if this is needed, I assume .wait() makes it to wait until thread exits
     
     return 0;
    }
