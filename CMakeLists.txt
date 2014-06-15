@@ -47,10 +47,12 @@ IF( APPLE )
   
 ENDIF( APPLE )
 
+QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
+QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 
 
 # Tell CMake to create the helloworld executable
-add_executable(qt_wallet WIN32 MACOSX_BUNDLE main.cpp  html5viewer/html5viewer.cpp)
+add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp  html5viewer/html5viewer.cpp)
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
@@ -59,11 +61,6 @@ target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
 
 configure_file(config_dev.hpp.in config_dev.hpp)
 
-if(APPLE)
-  set(CPACK_GENERATOR "DragNDrop")
-  set(CPACK_PACKAGE_VENDOR "bitshares.org")
-endif()
 
-include(cpack)
 
 
