@@ -113,7 +113,6 @@ int main( int argc, char** argv )
 
       client = std::make_shared<bts::client::client>();
       client->open( data_dir );
-      client->sync_with_ntp();
 
       // setup  RPC / HTTP services
       client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
