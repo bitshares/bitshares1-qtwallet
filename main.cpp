@@ -1,5 +1,6 @@
 #include "html5viewer/html5viewer.h"
 #include "clientwrapper.hpp"
+#include "utilities.hpp"
 
 #include <boost/thread.hpp>
 #include <fc/filesystem.hpp>
@@ -17,6 +18,7 @@
 #include <QWebFrame>
 #include <QJsonDocument>
 #include <QGraphicsWebView>
+#include <QClipboard>
 
 #include <boost/program_options.hpp>
 
@@ -81,6 +83,7 @@ int main( int argc, char** argv )
     viewer.resize(1200,800);
     viewer.webView()->setAcceptHoverEvents(true);
     viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
+    viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
     viewer.show();
 
     viewer.loadUrl(client.http_url());
