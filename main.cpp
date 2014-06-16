@@ -18,7 +18,6 @@
 #include <QWebFrame>
 #include <QJsonDocument>
 #include <QGraphicsWebView>
-#include <QClipboard>
 
 #include <boost/program_options.hpp>
 
