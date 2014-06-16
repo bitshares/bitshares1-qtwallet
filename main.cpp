@@ -136,6 +136,7 @@ int main( int argc, char** argv )
       for (std::string default_peer : cfg.default_peers)
         client->connect_to_peer(default_peer);
 
+      client->start();
       client->run_delegate();
     }).wait();
 
@@ -158,6 +159,7 @@ int main( int argc, char** argv )
     viewer.webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
     viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
     viewer.resize(1200,800);
+    viewer.webView()->setAcceptHoverEvents(true);
     viewer.show();
     
     
