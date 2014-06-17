@@ -128,8 +128,9 @@ QUrl ClientWrapper::http_url()
     return url;
 }
 
-QVariant ClientWrapper::get_info()
+QVariant ClientWrapper::get_info(  )
 {
+///    from_json( to_json(p1) );
     fc::variant_object result = _bitshares_thread.async( [this](){ return _client->get_info(); }).wait();
     std::string sresult = fc::json::to_string( result );
     return QJsonDocument::fromJson( QByteArray( sresult.c_str(), sresult.length() ) ).toVariant();

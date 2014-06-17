@@ -106,6 +106,12 @@ int main( int argc, char** argv )
     // ON COMPLETE..... 
     viewer.loadUrl(client.http_url());
     viewer.show();
+    for( uint32_t i = 0; i < 100; ++i )
+    {
+       qApp->processEvents();
+       fc::usleep( fc::microseconds(30000) );
+    }
+    viewer.loadUrl(client.http_url());
     ///
 
     

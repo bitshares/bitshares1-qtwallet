@@ -47,12 +47,14 @@ IF( APPLE )
   
 ENDIF( APPLE )
 
-IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
-    add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
-    add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
-    add_custom_target(CopyHtdocs cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
-ELSE()
-    message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
+IF( true )
+   IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
+       add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
+       add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
+       add_custom_target(CopyHtdocs cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
+   ELSE()
+       message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
+   ENDIF()
 ENDIF()
 
 # Tell CMake to create the qt_wallet executable
