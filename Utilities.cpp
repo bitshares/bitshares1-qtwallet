@@ -1,4 +1,4 @@
-#include "utilities.hpp"
+#include "Utilities.hpp"
 
 #include <QApplication>
 #include <QClipboard>

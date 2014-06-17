@@ -56,7 +56,7 @@ ELSE()
 ENDIF()
 
 # Tell CMake to create the qt_wallet executable
-add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp clientwrapper.cpp utilities.cpp html5viewer/html5viewer.cpp)
+add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp ClientWrapper.cpp Utilities.cpp html5viewer/html5viewer.cpp)
 add_dependencies(qt_wallet CopyHtdocs)
 
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
