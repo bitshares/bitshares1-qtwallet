@@ -37,8 +37,8 @@ void get_htdocs_file( const fc::path& filename, const fc::http::server::response
 }
 
 ClientWrapper::ClientWrapper(QObject *parent)
- : bitshares_thread("bitshares"),
-   QObject(parent)
+ : QObject(parent),
+   bitshares_thread("bitshares")
 {
 }
 
@@ -47,6 +47,7 @@ void ClientWrapper::initialize()
     QSettings settings;
     bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
     uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
+    Q_UNUSED(p2pport);
 
     cfg.rpc.rpc_user     = "randomuser";
     cfg.rpc.rpc_password = fc::variant(fc::ecc::private_key::generate()).as_string();
@@ -59,6 +60,7 @@ void ClientWrapper::initialize()
     fc::optional<fc::ip::endpoint> actual_httpd_endpoint;
 
     fc::thread& main_thread = fc::thread::current();
+    Q_UNUSED(main_thread);
 
     bitshares_thread.async( [&](){
 
