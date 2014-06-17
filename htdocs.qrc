@@ -1,13 +1,9 @@
 <RCC>
-  <qresource prefix="/htdocs">
-    <file>htdocs/404.html</file>
+  <qresource prefix="htdocs">
     <file>htdocs/blank.html</file>
     <file>htdocs/favicon.ico</file>
     <file>htdocs/index.html</file>
-    <file>htdocs/angular/template-cache.js</file>
     <file>htdocs/css/app.css</file>
-    <file>htdocs/css/app.css.map</file>
-    <file>htdocs/css/app.less.css</file>
     <file>htdocs/img/bitsharesIcon.png</file>
     <file>htdocs/img/bitsharesTransparentLow.png</file>
     <file>htdocs/img/bs-double-trans.png</file>
@@ -17,12 +13,7 @@
     <file>htdocs/img/signal_2.png</file>
     <file>htdocs/img/signal_3.png</file>
     <file>htdocs/img/signal_4.png</file>
-    <file>htdocs/js/app.coffee.js</file>
     <file>htdocs/js/app.js</file>
-    <file>htdocs/js/app.js.map</file>
-    <file>htdocs/js/spec.coffee.js</file>
-    <file>htdocs/js/spec.js</file>
-    <file>htdocs/js/spec.js.map</file>
     <file>htdocs/webfonts/fontawesome-webfont.eot</file>
     <file>htdocs/webfonts/fontawesome-webfont.svg</file>
     <file>htdocs/webfonts/fontawesome-webfont.ttf</file>
