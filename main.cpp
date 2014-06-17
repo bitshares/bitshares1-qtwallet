@@ -3,7 +3,6 @@
 #include "Utilities.hpp"
 
 #include <boost/thread.hpp>
-#include <fc/filesystem.hpp>
 #include <bts/blockchain/config.hpp>
 #include <signal.h>
 
@@ -18,6 +17,7 @@
 #include <QWebFrame>
 #include <QJsonDocument>
 #include <QGraphicsWebView>
+#include <QTimer>
 
 #include <boost/program_options.hpp>
 
@@ -58,24 +58,31 @@ int main( int argc, char** argv )
    QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
    QApplication app(argc, argv);
 
+   QTimer fc_tasks;
+   fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 3000 ) ); } );
+   fc_tasks.start();
+
    QPixmap pixmap(":/images/splash_screen.png");
    QSplashScreen splash(pixmap);
       splash.showMessage(QObject::tr("Loading configuration..."),
                          Qt::AlignCenter | Qt::AlignBottom, Qt::white);
    splash.show();
+   qApp->processEvents();
 
    try {
     ClientWrapper client;
     client.connect(&client, &ClientWrapper::error, [&](QString errorString) {
         splash.showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
         fc::usleep( fc::seconds(3) );
-        exit(-1);
     });
     client.initialize();
 
+    ilog( "process events" );
     qApp->processEvents();
     
     Html5Viewer viewer;
+    splash.finish(&viewer);
+
     QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
     viewer.webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
     viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
@@ -83,11 +90,30 @@ int main( int argc, char** argv )
     viewer.webView()->setAcceptHoverEvents(true);
     viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
     viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
-    viewer.show();
 
-    viewer.loadUrl(client.http_url());
+    /*
+    connect(QWebView::page()->networkAccessManager(), SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)),
+            this, SLOT(handleAuthenticationRequired(QNetworkReply*,QAuthenticator*)));
+     
+    void handleAuthenticationRequired(QNetworkReply*, QAuthenticator* authenticator) {
+         authenticator->setUser("username");
+           authenticator->setPassword("password");
+    }
+    */
+
     
-    splash.finish(&viewer);
+    ilog( "loadURL" );
+    // ON COMPLETE..... 
+    viewer.loadUrl(client.http_url());
+    viewer.show();
+    for( uint32_t i = 0; i < 100; ++i )
+    {
+       qApp->processEvents();
+       fc::usleep( fc::microseconds(30000) );
+    }
+    viewer.loadUrl(client.http_url());
+    ///
+
     
     return app.exec();
    }

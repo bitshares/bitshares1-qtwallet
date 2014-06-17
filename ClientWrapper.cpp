@@ -38,8 +38,18 @@ void get_htdocs_file( const fc::path& filename, const fc::http::server::response
 
 ClientWrapper::ClientWrapper(QObject *parent)
  : QObject(parent),
-   bitshares_thread("bitshares")
+   _bitshares_thread("bitshares")
 {
+}
+ClientWrapper::~ClientWrapper()
+{
+   try {
+      _init_complete.wait();
+      _bitshares_thread.async( [this](){ _client->stop(); _client.reset(); } ).wait();
+   } catch ( ... ) 
+   {
+      elog( "uncaught exception" );
+   }
 }
 
 void ClientWrapper::initialize()
@@ -49,67 +59,81 @@ void ClientWrapper::initialize()
     uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
     Q_UNUSED(p2pport);
 
-    cfg.rpc.rpc_user     = "randomuser";
-    cfg.rpc.rpc_password = fc::variant(fc::ecc::private_key::generate()).as_string();
-    cfg.rpc.httpd_endpoint = fc::ip::endpoint::from_string( "127.0.0.1:9999" );
-    cfg.rpc.httpd_endpoint.set_port(0);
-    ilog( "config: ${d}", ("d", fc::json::to_pretty_string(cfg) ) );
+    _cfg.rpc.rpc_user     = "randomuser";
+    _cfg.rpc.rpc_password = fc::variant(fc::ecc::private_key::generate()).as_string();
+    _cfg.rpc.httpd_endpoint = fc::ip::endpoint::from_string( "127.0.0.1:9999" );
+    _cfg.rpc.httpd_endpoint.set_port(0);
+    ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
     auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
 
-    fc::optional<fc::ip::endpoint> actual_httpd_endpoint;
 
     fc::thread& main_thread = fc::thread::current();
     Q_UNUSED(main_thread);
 
-    bitshares_thread.async( [&](){
+    _init_complete = _bitshares_thread.async( [this,data_dir,upnp,p2pport](){
 
-      client = std::make_shared<bts::client::client>();
-      client->open( data_dir );
+      _client = std::make_shared<bts::client::client>();
+      _client->open( data_dir );
 
       // setup  RPC / HTTP services
-      client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
-      client->get_rpc_server()->configure( cfg.rpc );
-      actual_httpd_endpoint = client->get_rpc_server()->get_httpd_endpoint();
+      _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
+      _client->get_rpc_server()->configure( _cfg.rpc );
+      _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
 
       // load config for p2p node.. creates cli
-      client->configure( data_dir );
-      client->init_cli();
+      _client->configure( data_dir );
+      _client->init_cli();
 
-      client->listen_on_port(0);
-      fc::ip::endpoint actual_p2p_endpoint = client->get_p2p_listening_endpoint();
+      _client->listen_on_port(0);
+      fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
+
+      _client->connect_to_p2p_network();
+
+      for (std::string default_peer : _cfg.default_peers)
+        _client->connect_to_peer(default_peer);
+
+      _client->set_daemon_mode(true);
+      _client->start();
+      _client->run_delegate();
+      if( !_actual_httpd_endpoint )
+      { // I presume Qt will do the proper thread proxy here
+          Q_EMIT error( tr("Unable to start HTTP server...")); 
+      }
 
       if( upnp )
       {
          auto upnp_service = new bts::net::upnp_service();
          upnp_service->map_port( actual_p2p_endpoint.port() );
       }
-      client->connect_to_p2p_network();
 
-      for (std::string default_peer : cfg.default_peers)
-        client->connect_to_peer(default_peer);
+      try {
+      _client->wallet_open( "default" );
+      } catch ( ... ) {}
 
-      client->start();
-      client->run_delegate();
-    }).wait();
+      // EMIT COMPLETE...
+    });
 
-    if( !actual_httpd_endpoint )
-        emit error(tr("Unable to start HTTP server..."));
+    _init_complete.wait();
+    wlog( "init complete" );
 
-    std::cout << "http rpc url: http://" << std::string( *actual_httpd_endpoint ) << std::endl;
+    //std::cout << "http rpc url: http://" << std::string( *actual_httpd_endpoint ) << std::endl;
 }
 
 QUrl ClientWrapper::http_url()
 {
-    QUrl url = QString::fromStdString("http://" + std::string( *client->get_rpc_server()->get_httpd_endpoint() ));
-    url.setUserName(cfg.rpc.rpc_user.c_str() );
-    url.setPassword(cfg.rpc.rpc_password.c_str() );
+    QUrl url = QString::fromStdString("http://" + std::string( *_actual_httpd_endpoint ) );
+    url.setUserName(_cfg.rpc.rpc_user.c_str() );
+    url.setPassword(_cfg.rpc.rpc_password.c_str() );
     return url;
 }
 
-QVariant ClientWrapper::get_info()
+QVariant ClientWrapper::get_info(  )
 {
-    fc::variant_object result = bitshares_thread.async( [=](){ return client->get_info(); }).wait();
+///    from_json( to_json(p1) );
+    fc::variant_object result = _bitshares_thread.async( [this](){ return _client->get_info(); }).wait();
     std::string sresult = fc::json::to_string( result );
     return QJsonDocument::fromJson( QByteArray( sresult.c_str(), sresult.length() ) ).toVariant();
 }
+
+
