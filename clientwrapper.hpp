@@ -6,28 +6,28 @@
 #include <bts/rpc/rpc_server.hpp>
 #include <bts/client/client.hpp>
 
-class ClientWrapper : public QObject {
-    Q_OBJECT
+class ClientWrapper : public QObject 
+{
+   Q_OBJECT
 
-public:
-    ClientWrapper(QObject *parent = nullptr);
-    ~ClientWrapper()
-    {
-        bitshares_thread.async( [&](){ client->stop(); client.reset(); } ).wait();
-    }
+   public:
+       ClientWrapper(QObject *parent = nullptr);
+       ~ClientWrapper();
 
-    ///Not done in constructor to allow caller to connect to error()
-    void initialize();
+       ///Not done in constructor to allow caller to connect to error()
+       void initialize();
 
-    QUrl http_url();
+       QUrl http_url();
 
-    Q_INVOKABLE QVariant get_info();
+       Q_INVOKABLE QVariant get_info();
 
-signals:
-    void error(QString errorString);
+   signals:
+       void error(QString errorString);
 
-private:
-    bts::client::config cfg;
-    std::shared_ptr<bts::client::client> client;
-    fc::thread bitshares_thread;
+   private:
+       bts::client::config                  _cfg;
+       std::shared_ptr<bts::client::client> _client;
+       fc::thread                           _bitshares_thread;
+       fc::future<void>                     _init_complete;
+       fc::optional<fc::ip::endpoint>       _actual_httpd_endpoint;
 };
