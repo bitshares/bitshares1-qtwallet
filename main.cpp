@@ -1,6 +1,6 @@
 #include "html5viewer/html5viewer.h"
-#include "clientwrapper.hpp"
-#include "utilities.hpp"
+#include "ClientWrapper.hpp"
+#include "Utilities.hpp"
 
 #include <boost/thread.hpp>
 #include <bts/blockchain/config.hpp>
