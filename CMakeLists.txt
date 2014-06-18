@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.11)
 
-message("-- Configuring QT Wallet")
+message(STATUS "Configuring QT Wallet")
 
 project(qt_wallet)
 
@@ -61,6 +61,19 @@ target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
 
 configure_file(config_dev.hpp.in config_dev.hpp)
 
+include(DeployQt4)
+install(TARGETS qt_wallet DESTINATION .)
 
+set(CPACK_BUNDLE_NAME "BitShares XTS")
 
+IF( APPLE )
+  set(CPACK_GENERATOR "DragNDrop")
+  set(APP_EXTENSION ".app")
+ELSEIF ( WIN32 )
+  set(CPACK_GENERATOR "NSIS")
+  set(APP_EXTENSION ".exe")
+ENDIF()
 
+include(CPack)
+include( InstallRequiredSystemLibraries )
+install_qt4_executable( qt_wallet${APP_EXTENSION} "" )
