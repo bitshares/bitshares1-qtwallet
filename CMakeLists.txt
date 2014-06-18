@@ -47,12 +47,19 @@ IF( APPLE )
   
 ENDIF( APPLE )
 
+IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
+    add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
+    add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
+    add_custom_target(buildweb cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
+ELSE()
+    message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
+ENDIF()
+
+# Tell CMake to create the qt_wallet executable
+add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp ClientWrapper.cpp Utilities.cpp html5viewer/html5viewer.cpp)
+
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
-
-
-# Tell CMake to create the helloworld executable
-add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp clientwrapper.cpp utilities.cpp html5viewer/html5viewer.cpp)
 
 # Use the Widgets module from Qt 5.
 target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
