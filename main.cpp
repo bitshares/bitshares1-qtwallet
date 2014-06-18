@@ -18,6 +18,9 @@
 #include <QJsonDocument>
 #include <QGraphicsWebView>
 #include <QTimer>
+#include <QAuthenticator>
+#include <QNetworkReply>
+#include <QResource>
 
 #include <boost/program_options.hpp>
 
@@ -39,9 +42,8 @@
 
 #include <boost/iostreams/tee.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <fstream>
 
-#include <QResource>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 
@@ -91,16 +93,11 @@ int main( int argc, char** argv )
     viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
     viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
 
-    /*
-    connect(QWebView::page()->networkAccessManager(), SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)),
-            this, SLOT(handleAuthenticationRequired(QNetworkReply*,QAuthenticator*)));
-     
-    void handleAuthenticationRequired(QNetworkReply*, QAuthenticator* authenticator) {
-         authenticator->setUser("username");
-           authenticator->setPassword("password");
-    }
-    */
-
+    QObject::connect(viewer.webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
+                     [&](QNetworkReply*, QAuthenticator *auth) {
+        auth->setUser(client.http_url().userName());
+        auth->setPassword(client.http_url().password());
+    });
     
     ilog( "loadURL" );
     // ON COMPLETE..... 
