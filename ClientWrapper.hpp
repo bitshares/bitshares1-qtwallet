@@ -17,11 +17,12 @@ class ClientWrapper : public QObject
        ///Not done in constructor to allow caller to connect to error()
        void initialize();
 
-       QUrl http_url();
+       QUrl http_url() const;
 
        Q_INVOKABLE QVariant get_info();
 
    signals:
+       void initialized();
        void error(QString errorString);
 
    private:

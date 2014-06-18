@@ -68,10 +68,10 @@ void ClientWrapper::initialize()
     auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
 
 
-    fc::thread& main_thread = fc::thread::current();
+    fc::thread* main_thread = &fc::thread::current();
     Q_UNUSED(main_thread);
 
-    _init_complete = _bitshares_thread.async( [this,data_dir,upnp,p2pport](){
+    _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport](){
 
       _client = std::make_shared<bts::client::client>();
       _client->open( data_dir );
@@ -107,20 +107,11 @@ void ClientWrapper::initialize()
          upnp_service->map_port( actual_p2p_endpoint.port() );
       }
 
-      try {
-      _client->wallet_open( "default" );
-      } catch ( ... ) {}
-
-      // EMIT COMPLETE...
+      main_thread->async( [&](){ Q_EMIT initialized(); });
     });
-
-    _init_complete.wait();
-    wlog( "init complete" );
-
-    //std::cout << "http rpc url: http://" << std::string( *actual_httpd_endpoint ) << std::endl;
 }
 
-QUrl ClientWrapper::http_url()
+QUrl ClientWrapper::http_url() const
 {
     QUrl url = QString::fromStdString("http://" + std::string( *_actual_httpd_endpoint ) );
     url.setUserName(_cfg.rpc.rpc_user.c_str() );
