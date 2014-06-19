@@ -85,7 +85,7 @@ void ClientWrapper::initialize()
       _client->configure( data_dir );
       _client->init_cli();
 
-      _client->listen_on_port(0);
+      _client->listen_on_port(0, false /*don't wait if not available*/);
       fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
 
       _client->connect_to_p2p_network();
