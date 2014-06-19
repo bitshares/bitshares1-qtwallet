@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.11)
 
-message("-- Configuring QT Wallet")
+message(STATUS "Configuring QT Wallet")
 
 project(qt_wallet)
 
@@ -47,19 +47,16 @@ IF( APPLE )
   
 ENDIF( APPLE )
 
-IF( true )
-   IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
-       add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
-       add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
-       add_custom_target(CopyHtdocs cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
-   ELSE()
-       message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
-   ENDIF()
+IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
+    add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
+    add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
+    add_custom_target(buildweb cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
+ELSE()
+    message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
 ENDIF()
 
 # Tell CMake to create the qt_wallet executable
 add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp ClientWrapper.cpp Utilities.cpp html5viewer/html5viewer.cpp)
-add_dependencies(qt_wallet CopyHtdocs)
 
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
@@ -71,6 +68,38 @@ target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
 
 configure_file(config_dev.hpp.in config_dev.hpp)
 
+include(DeployQt4)
 
+set(CPACK_BUNDLE_NAME "BitSharesXTS")
+set(CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME})
+set(CPACK_PACKAGE_EXECUTABLES qt_wallet ${CPACK_BUNDLE_NAME})
+set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "package description summary")
+set(CPACK_PACKAGE_VENDOR "BitShares")
+set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/qtapp.ico)
+set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/images/qtapp.ico)
 
+IF( APPLE )
+  set(CPACK_GENERATOR "DragNDrop")
+  set(APP_EXTENSION ".app")
+  set(APP_DIR ".")
+ELSEIF ( WIN32 )
+  set(CPACK_GENERATOR "NSIS")
+  set(APP_EXTENSION ".exe")
+  set(APP_DIR "bin")
+ENDIF()
+
+install(TARGETS qt_wallet DESTINATION ${APP_DIR})
+
+include(CPack)
+include( InstallRequiredSystemLibraries )
+
+IF( APPLE )
+  install_qt4_executable(qt_wallet${APP_EXTENSION} "${Qt5Core_DIR}/../../../plugins/platforms/libqcocoa.dylib")
+ELSEIF ( WIN32 )
+  install_qt4_executable(${APP_DIR}/qt_wallet${APP_EXTENSION} "${Qt5Core_DIR}/../../../plugins/platforms/qwindows.dll")
+ENDIF()
 

@@ -18,6 +18,10 @@
 #include <QJsonDocument>
 #include <QGraphicsWebView>
 #include <QTimer>
+#include <QAuthenticator>
+#include <QNetworkReply>
+#include <QResource>
+#include <QGraphicsWidget>
 
 #include <boost/program_options.hpp>
 
@@ -39,9 +43,8 @@
 
 #include <boost/iostreams/tee.hpp>
 #include <boost/iostreams/stream.hpp>
-#include <fstream>
 
-#include <QResource>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
 
@@ -59,62 +62,48 @@ int main( int argc, char** argv )
    QApplication app(argc, argv);
 
    QTimer fc_tasks;
-   fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 3000 ) ); } );
-   fc_tasks.start();
+   fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
+   fc_tasks.start(33);
 
    QPixmap pixmap(":/images/splash_screen.png");
    QSplashScreen splash(pixmap);
-      splash.showMessage(QObject::tr("Loading configuration..."),
-                         Qt::AlignCenter | Qt::AlignBottom, Qt::white);
+   splash.showMessage(QObject::tr("Loading configuration..."),
+                      Qt::AlignCenter | Qt::AlignBottom, Qt::white);
    splash.show();
-   qApp->processEvents();
+
+   QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
+
+   Html5Viewer viewer;
+   ClientWrapper client;
+
+   viewer.webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
+   viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
+   viewer.resize(1200,800);
+   viewer.webView()->setAcceptHoverEvents(true);
+   viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
+   viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
+
+   QObject::connect(viewer.webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
+                    [&client](QNetworkReply*, QAuthenticator *auth) {
+      auth->setUser(client.http_url().userName());
+      auth->setPassword(client.http_url().password());
+   });
+   client.connect(&client, &ClientWrapper::initialized, [&viewer,&client]() {
+      ilog( "Client initialized; loading web interface from ${url}", ("url", client.http_url().toString().toStdString()) );
+      viewer.webView()->load(client.http_url());
+   });
+   viewer.connect(viewer.webView(), &QGraphicsWebView::loadFinished, [&viewer,&splash](bool ok) {
+      ilog( "Webview loaded: ${status}", ("status", ok) );
+      splash.finish(&viewer);
+      viewer.show();
+   });
+   client.connect(&client, &ClientWrapper::error, [&](QString errorString) {
+      splash.showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
+      fc::usleep( fc::seconds(3) );
+   });
 
    try {
-    ClientWrapper client;
-    client.connect(&client, &ClientWrapper::error, [&](QString errorString) {
-        splash.showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
-        fc::usleep( fc::seconds(3) );
-    });
     client.initialize();
-
-    ilog( "process events" );
-    qApp->processEvents();
-    
-    Html5Viewer viewer;
-    splash.finish(&viewer);
-
-    QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
-    viewer.webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
-    viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
-    viewer.resize(1200,800);
-    viewer.webView()->setAcceptHoverEvents(true);
-    viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
-    viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
-
-    /*
-    connect(QWebView::page()->networkAccessManager(), SIGNAL(authenticationRequired(QNetworkReply*,QAuthenticator*)),
-            this, SLOT(handleAuthenticationRequired(QNetworkReply*,QAuthenticator*)));
-     
-    void handleAuthenticationRequired(QNetworkReply*, QAuthenticator* authenticator) {
-         authenticator->setUser("username");
-           authenticator->setPassword("password");
-    }
-    */
-
-    
-    ilog( "loadURL" );
-    // ON COMPLETE..... 
-    viewer.loadUrl(client.http_url());
-    viewer.show();
-    for( uint32_t i = 0; i < 100; ++i )
-    {
-       qApp->processEvents();
-       fc::usleep( fc::microseconds(30000) );
-    }
-    viewer.loadUrl(client.http_url());
-    ///
-
-    
     return app.exec();
    }
    catch ( const fc::exception& e) 
