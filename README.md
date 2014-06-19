@@ -9,6 +9,9 @@ Set envronment variable CMAKE_PREFIX_PATH to point to clang_64 in your QT direct
 Use CMake to configure bitshares_toolkit, set INCLUDE_QT_WALLET to TRUE or to ON, e.g.
     $ cmake -DINCLUDE_QT_WALLET=ON ../bitshares_toolkit
 
+The wallet needs access to the built web application in order to build. This can be built automatically by invoking the 'buildweb' rule via 'make buildweb'.
+Note that the web wallet is expected to be in .../bitshares_toolkit/programs/web_wallet.
+
 If there were no compilation errors, the executable should be located in programs/qt_wallet
 Now you need to run it in a way similar to bitshares_client - it accepts the same command line parameters as bitshares_client or reads them from config.json.
 Currently it expects rpc user to be 'user' and password to be 'pass' (this may change in future) and http rpc port 5680.
