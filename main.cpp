@@ -94,6 +94,7 @@ int main( int argc, char** argv )
    viewer->webView()->setAcceptHoverEvents(true);
    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
+   viewer->webView()->setFocus(Qt::ActiveWindowFocusReason);
 
    mainWindow.resize(1200,800);
    mainWindow.setCentralWidget(viewer);
