@@ -45,7 +45,13 @@ IF( APPLE )
     SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" ) 
   
-ENDIF( APPLE )
+ENDIF()
+
+IF( WIN32 )
+    configure_file(windows/resource.rc resource.rc COPYONLY)
+    configure_file(windows/resource.h resource.h COPYONLY)
+    configure_file(images/qtapp.ico qtapp.ico COPYONLY)
+ENDIF()
 
 set( QT_WALLET_REBUILD_WEB_INTERFACE  FALSE CACHE BOOL "Build web interface via lineman ")
 
@@ -60,7 +66,7 @@ IF( ${QT_WALLET_REBUILD_WEB_INTERFACE} )
 ENDIF()
 
 # Tell CMake to create the qt_wallet executable
-add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp ClientWrapper.cpp Utilities.cpp html5viewer/html5viewer.cpp)
+add_executable(qt_wallet WIN32 MACOSX_BUNDLE htdocs.qrc bitshares.qrc qrc_bitshares.cpp qrc_htdocs.cpp main.cpp ClientWrapper.cpp Utilities.cpp html5viewer/html5viewer.cpp ${CMAKE_CURRENT_BINARY_DIR}/resource.rc)
 
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
@@ -69,8 +75,6 @@ QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
   bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static)
-
-configure_file(config_dev.hpp.in config_dev.hpp)
 
 include(DeployQt4)
 

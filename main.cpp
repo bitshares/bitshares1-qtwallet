@@ -60,6 +60,7 @@ int main( int argc, char** argv )
    QCoreApplication::setOrganizationDomain( "bitshares.org" );
    QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
    QApplication app(argc, argv);
+   app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
    QTimer fc_tasks;
    fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
