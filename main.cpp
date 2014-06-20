@@ -66,11 +66,14 @@ int main( int argc, char** argv )
    app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
    auto menuBar = new QMenuBar(nullptr);
-   auto fileMenu = menuBar->addMenu("File");
+   auto fileMenu = menuBar->addMenu("&File");
    fileMenu->addAction("&Import Wallet")->setEnabled(false);
    fileMenu->addAction("&Export Wallet")->setEnabled(false);
    fileMenu->addAction("&Change Password")->setEnabled(false);
    fileMenu->addAction("&Quit", &app, SLOT(quit()));
+   auto accountMenu = menuBar->addMenu("&Accounts");
+   //We'll populate this menu below, in the handler for loadFinished
+   //We don't know the URL yet!
    menuBar->show();
 
    QTimer fc_tasks;
@@ -93,6 +96,7 @@ int main( int argc, char** argv )
    viewer->setOrientation(Html5Viewer::ScreenOrientationAuto);
    viewer->webView()->setAcceptHoverEvents(true);
    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
+   viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("account_menu", accountMenu);
    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
    viewer->webView()->setFocus(Qt::ActiveWindowFocusReason);
 
@@ -104,11 +108,19 @@ int main( int argc, char** argv )
       auth->setUser(client.http_url().userName());
       auth->setPassword(client.http_url().password());
    });
-   client.connect(&client, &ClientWrapper::initialized, [&viewer,&client]() {
+   client.connect(&client, &ClientWrapper::initialized, [&viewer,&client,accountMenu]() {
       ilog( "Client initialized; loading web interface from ${url}", ("url", client.http_url().toString().toStdString()) );
       viewer->webView()->load(client.http_url());
+      //Now we know the URL of the app, so we can create the items in the Accounts menu
+      QObject::connect(accountMenu->addAction("&Go to My Accounts"), &QAction::triggered, [&viewer,&client](){
+          viewer->loadUrl(client.http_url().toString() + "/#/accounts");
+      });
+      QObject::connect(accountMenu->addAction("&Create Account"), &QAction::triggered, [&viewer,&client](){
+          viewer->loadUrl(client.http_url().toString() + "/#/create/account");
+      });
+      accountMenu->addAction("&Import Account")->setEnabled(false);
    });
-   viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [&mainWindow,&splash](bool ok) {
+   viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [&mainWindow,&splash,&viewer](bool ok) {
       ilog( "Webview loaded: ${status}", ("status", ok) );
       mainWindow.show();
       splash.finish(&mainWindow);
