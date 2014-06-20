@@ -67,9 +67,9 @@ int main( int argc, char** argv )
 
    auto menuBar = new QMenuBar(nullptr);
    auto fileMenu = menuBar->addMenu("File");
-   fileMenu->addAction("&Import Wallet");
-   fileMenu->addAction("&Export Wallet");
-   fileMenu->addAction("&Change Password");
+   fileMenu->addAction("&Import Wallet")->setEnabled(false);
+   fileMenu->addAction("&Export Wallet")->setEnabled(false);
+   fileMenu->addAction("&Change Password")->setEnabled(false);
    fileMenu->addAction("&Quit", &app, SLOT(quit()));
    menuBar->show();
 
