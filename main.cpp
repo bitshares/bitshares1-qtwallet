@@ -77,7 +77,7 @@ int main( int argc, char** argv )
    fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
    fc_tasks.start(33);
 
-   QPixmap pixmap(":/images/splash_screen.png");
+   QPixmap pixmap(":/images/splash_screen.jpg");
    QSplashScreen splash(pixmap);
    splash.showMessage(QObject::tr("Loading configuration..."),
                       Qt::AlignCenter | Qt::AlignBottom, Qt::white);
