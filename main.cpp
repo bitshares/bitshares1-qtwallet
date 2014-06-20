@@ -70,7 +70,7 @@ int main( int argc, char** argv )
    fileMenu->addAction("&Import Wallet");
    fileMenu->addAction("&Export Wallet");
    fileMenu->addAction("&Change Password");
-   fileMenu->addAction("&Quit");
+   fileMenu->addAction("&Quit", &app, SLOT(quit()));
    menuBar->show();
 
    QTimer fc_tasks;
