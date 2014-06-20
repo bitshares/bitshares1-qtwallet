@@ -98,7 +98,7 @@ void ClientWrapper::initialize()
       _client->run_delegate();
       if( !_actual_httpd_endpoint )
       { // I presume Qt will do the proper thread proxy here
-          Q_EMIT error( tr("Unable to start HTTP server...")); 
+          main_thread->async( [&](){ Q_EMIT error( tr("Unable to start HTTP server...")); });
       }
 
       if( upnp )

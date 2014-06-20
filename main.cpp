@@ -22,6 +22,9 @@
 #include <QNetworkReply>
 #include <QResource>
 #include <QGraphicsWidget>
+#include <QMainWindow>
+#include <QMenuBar>
+#include <QLayout>
 
 #include <boost/program_options.hpp>
 
@@ -61,6 +64,14 @@ int main( int argc, char** argv )
    QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
    QApplication app(argc, argv);
 
+   auto menuBar = new QMenuBar(nullptr);
+   auto fileMenu = menuBar->addMenu("File");
+   fileMenu->addAction("&Import Wallet");
+   fileMenu->addAction("&Export Wallet");
+   fileMenu->addAction("&Change Password");
+   fileMenu->addAction("&Quit");
+   menuBar->show();
+
    QTimer fc_tasks;
    fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
    fc_tasks.start(33);
@@ -73,29 +84,32 @@ int main( int argc, char** argv )
 
    QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
 
-   Html5Viewer viewer;
+   QMainWindow mainWindow;
+   auto viewer = new Html5Viewer;
    ClientWrapper client;
 
-   viewer.webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
-   viewer.setOrientation(Html5Viewer::ScreenOrientationAuto);
-   viewer.resize(1200,800);
-   viewer.webView()->setAcceptHoverEvents(true);
-   viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
-   viewer.webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
+   viewer->webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
+   viewer->setOrientation(Html5Viewer::ScreenOrientationAuto);
+   viewer->webView()->setAcceptHoverEvents(true);
+   viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
+   viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("utilities", new Utilities, QWebFrame::ScriptOwnership);
 
-   QObject::connect(viewer.webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
+   mainWindow.resize(1200,800);
+   mainWindow.setCentralWidget(viewer);
+
+   QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
                     [&client](QNetworkReply*, QAuthenticator *auth) {
       auth->setUser(client.http_url().userName());
       auth->setPassword(client.http_url().password());
    });
    client.connect(&client, &ClientWrapper::initialized, [&viewer,&client]() {
       ilog( "Client initialized; loading web interface from ${url}", ("url", client.http_url().toString().toStdString()) );
-      viewer.webView()->load(client.http_url());
+      viewer->webView()->load(client.http_url());
    });
-   viewer.connect(viewer.webView(), &QGraphicsWebView::loadFinished, [&viewer,&splash](bool ok) {
+   viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [&mainWindow,&splash](bool ok) {
       ilog( "Webview loaded: ${status}", ("status", ok) );
-      splash.finish(&viewer);
-      viewer.show();
+      mainWindow.show();
+      splash.finish(&mainWindow);
    });
    client.connect(&client, &ClientWrapper::error, [&](QString errorString) {
       splash.showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
