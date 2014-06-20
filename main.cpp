@@ -63,6 +63,7 @@ int main( int argc, char** argv )
    QCoreApplication::setOrganizationDomain( "bitshares.org" );
    QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
    QApplication app(argc, argv);
+   app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
    auto menuBar = new QMenuBar(nullptr);
    auto fileMenu = menuBar->addMenu("File");
