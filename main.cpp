@@ -101,6 +101,7 @@ int main( int argc, char** argv )
 
    mainWindow.resize(1200,800);
    mainWindow.setCentralWidget(viewer);
+   mainWindow.setMenuBar(menuBar);
 
    QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
                     [&client](QNetworkReply*, QAuthenticator *auth) {
