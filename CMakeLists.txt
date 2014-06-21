@@ -99,7 +99,7 @@ target_link_libraries( qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
   bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static )
 
-include(DeployQt4)
+include( DeployQt4 )
 include( InstallRequiredSystemLibraries )
 install( TARGETS qt_wallet DESTINATION "." )
 
