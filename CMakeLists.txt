@@ -42,7 +42,7 @@ set( SOURCES
   html5viewer/html5viewer.cpp
 )
 
-set(CPACK_BUNDLE_NAME "BitSharesXTS")
+set(CPACK_BUNDLE_NAME "BitSharesXT")
 set(CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME})
 set(CPACK_PACKAGE_EXECUTABLES qt_wallet ${CPACK_BUNDLE_NAME})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "package description summary")
@@ -59,7 +59,7 @@ IF( APPLE )
                                   PROPERTIES
                                    MACOSX_PACKAGE_LOCATION Resources
                                 )
-    SET( MACOSX_BUNDLE_BUNDLE_NAME "BitShares XTS" )
+    SET( MACOSX_BUNDLE_BUNDLE_NAME ${CPACK_BUNDLE_NAME} )
     SET( MACOSX_BUNDLE_GUI_IDENTIFIER "org.bitshares.xts" ) 
     set( MACOSX_BUNDLE_ICON_FILE keyhotee.icns )
     SET( MACOSX_BUNDLE_INFO_STRING "BitShares XTS - version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
