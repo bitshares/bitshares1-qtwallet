@@ -37,7 +37,7 @@ set( SOURCES
   ClientWrapper.cpp 
   Utilities.cpp 
   html5viewer/html5viewer.cpp
-  images/qtapp.icns
+  images/bitshares.icns
 )
 
 set( CPACK_BUNDLE_NAME "BitSharesXT" )
@@ -53,20 +53,18 @@ set( CPACK_PACKAGE_FILE_NAME ${CPACK_BUNDLE_NAME} )
 get_filename_component( QT_PATH ${Qt5Core_DIR}/../../../ ABSOLUTE )
 
 IF( APPLE )
-    SET_SOURCE_FILES_PROPERTIES( "images/keyhotee.icns"
-                                  PROPERTIES
-                                   MACOSX_PACKAGE_LOCATION Resources
-                                )
+    set ( OSX_ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/images/bitshares.icns" )
+    SET_SOURCE_FILES_PROPERTIES( "${OSX_ICON_FILE}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
     SET( MACOSX_BUNDLE_BUNDLE_NAME ${CPACK_BUNDLE_NAME} )
     SET( MACOSX_BUNDLE_EXECUTABLE_NAME ${CPACK_BUNDLE_NAME} )
     SET( MACOSX_BUNDLE_GUI_IDENTIFIER "org.bitshares.xts" ) 
-    set( MACOSX_BUNDLE_ICON_FILE "qtapp.icns" )
+    SET( MACOSX_BUNDLE_ICON_FILE "bitshares.icns" )
     SET( MACOSX_BUNDLE_INFO_STRING "BitShares XTS - version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" )
-    set_source_files_properties("images/qtapp.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set_source_files_properties("images/bitshares.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 ENDIF()
 
 IF( WIN32 )
@@ -77,20 +75,21 @@ IF( WIN32 )
     configure_file( windows/setup.iss.in setup.iss )
 ENDIF()
 
-set( QT_WALLET_REBUILD_WEB_INTERFACE  FALSE CACHE BOOL "Build web interface via lineman ")
-
-IF( ${QT_WALLET_REBUILD_WEB_INTERFACE} )
-   IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
-       add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
-       add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
-       add_custom_target(buildweb cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
-   ELSE()
-       message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
-   ENDIF()
+IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
+    add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
+    add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
+    add_custom_target(buildweb cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
+ELSE()
+    message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
 ENDIF()
 
 # Tell CMake to create the qt_wallet executable
 add_executable( qt_wallet WIN32 MACOSX_BUNDLE ${SOURCES} )
+
+# Workaround because CMake is broken and won't copy the stupid icon in itself
+#IF( APPLE )
+#    add_custom_command(TARGET qt_wallet POST_BUILD COMMAND cp "${OSX_ICON_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/qt_wallet.app/Contents/Resources/" )
+#ENDIF()
 
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
