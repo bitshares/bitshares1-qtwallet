@@ -20,6 +20,7 @@ class ClientWrapper : public QObject
        QUrl http_url() const;
 
        Q_INVOKABLE QVariant get_info();
+       std::shared_ptr<bts::client::client> get_client() { return _client; }
 
    signals:
        void initialized();

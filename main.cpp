@@ -43,6 +43,7 @@
 #include <fc/git_revision.hpp>
 #include <fc/io/json.hpp>
 #include <fc/log/logger_config.hpp>
+#include <fc/signals.hpp>
 
 #include <boost/iostreams/tee.hpp>
 #include <boost/iostreams/stream.hpp>
@@ -119,6 +120,12 @@ int main( int argc, char** argv )
           viewer->loadUrl(client.http_url().toString() + "/#/create/account");
       });
       accountMenu->addAction("&Import Account")->setEnabled(false);
+
+      //Enable accountMenu only when wallet is unlocked.
+      accountMenu->setEnabled(false);
+      client.get_client()->get_wallet()->wallet_lock_state_changed.connect([accountMenu](bool locked){
+          accountMenu->setEnabled(!locked);
+      });
    });
    viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [&mainWindow,&splash,&viewer](bool ok) {
       ilog( "Webview loaded: ${status}", ("status", ok) );
