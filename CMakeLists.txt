@@ -55,18 +55,16 @@ set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/images/qtapp.ico)
 get_filename_component(QT_PATH ${Qt5Core_DIR}/../../../ ABSOLUTE)
 
 IF( APPLE )
-    SET_SOURCE_FILES_PROPERTIES( "images/keyhotee.icns"
-                                  PROPERTIES
-                                   MACOSX_PACKAGE_LOCATION Resources
-                                )
+    set ( OSX_ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/images/bitshares.icns" )
+    SET_SOURCE_FILES_PROPERTIES( "${OSX_ICON_FILE}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
     SET( MACOSX_BUNDLE_BUNDLE_NAME "BitShares XTS" )
     SET( MACOSX_BUNDLE_GUI_IDENTIFIER "org.bitshares.xts" ) 
-    set( MACOSX_BUNDLE_ICON_FILE keyhotee.icns )
+    SET( MACOSX_BUNDLE_ICON_FILE bitshares.icns )
     SET( MACOSX_BUNDLE_INFO_STRING "BitShares XTS - version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
-    SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" )  
+    SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" )
 ENDIF()
 
 IF( WIN32 )
@@ -90,7 +88,11 @@ IF( ${QT_WALLET_REBUILD_WEB_INTERFACE} )
 ENDIF()
 
 # Tell CMake to create the qt_wallet executable
-add_executable(qt_wallet WIN32 MACOSX_BUNDLE ${SOURCES})
+add_executable(qt_wallet WIN32 MACOSX_BUNDLE ${SOURCES} "${OSX_ICON_FILE}" )
+# Workaround because CMake is broken and won't copy the stupid icon in itself
+IF( APPLE )
+    add_custom_command(TARGET qt_wallet POST_BUILD COMMAND cp "${OSX_ICON_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/qt_wallet.app/Contents/Resources/" )
+ENDIF()
 
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
