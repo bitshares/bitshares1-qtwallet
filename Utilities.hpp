@@ -12,4 +12,5 @@ public:
 
     Q_INVOKABLE static void copy_to_clipboard(QString string);
     Q_INVOKABLE static void open_in_external_browser(QUrl url);
+    Q_INVOKABLE static QString prompt_user_to_open_file(QString dialogCaption);
 };
