@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QUrl>
 
 class Utilities : public QObject {
     Q_OBJECT
@@ -10,4 +11,5 @@ public:
     ~Utilities() {}
 
     Q_INVOKABLE static void copy_to_clipboard(QString string);
+    Q_INVOKABLE static void open_in_external_browser(QUrl url);
 };
