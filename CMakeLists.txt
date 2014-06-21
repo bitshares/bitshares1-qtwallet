@@ -42,6 +42,17 @@ set( SOURCES
   html5viewer/html5viewer.cpp
 )
 
+set(CPACK_BUNDLE_NAME "BitSharesXTS")
+set(CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME})
+set(CPACK_PACKAGE_EXECUTABLES qt_wallet ${CPACK_BUNDLE_NAME})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "package description summary")
+set(CPACK_PACKAGE_VENDOR "BitShares")
+set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
+set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/qtapp.ico)
+set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/images/qtapp.ico)
+get_filename_component(QT_PATH ${Qt5Core_DIR}/../../../ ABSOLUTE)
 
 IF( APPLE )
     SET_SOURCE_FILES_PROPERTIES( "images/keyhotee.icns"
@@ -55,8 +66,7 @@ IF( APPLE )
     SET( MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
-    SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" ) 
-  
+    SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" )  
 ENDIF()
 
 IF( WIN32 )
@@ -64,6 +74,7 @@ IF( WIN32 )
     configure_file(windows/resource.h resource.h COPYONLY)
     configure_file(images/qtapp.ico qtapp.ico COPYONLY)
     list(APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/resource.rc)
+    configure_file(windows/setup.iss.in setup.iss)
 ENDIF()
 
 set( QT_WALLET_REBUILD_WEB_INTERFACE  FALSE CACHE BOOL "Build web interface via lineman ")
@@ -91,18 +102,6 @@ target_link_libraries(qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
 
 include(DeployQt4)
 
-set(CPACK_BUNDLE_NAME "BitSharesXTS")
-set(CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME})
-set(CPACK_PACKAGE_EXECUTABLES qt_wallet ${CPACK_BUNDLE_NAME})
-set(CPACK_PACKAGE_DESCRIPTION_FILE ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "package description summary")
-set(CPACK_PACKAGE_VENDOR "BitShares")
-set(CPACK_PACKAGE_VERSION_MAJOR ${VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${VERSION_PATCH})
-set(CPACK_NSIS_MUI_ICON ${CMAKE_CURRENT_SOURCE_DIR}/images/qtapp.ico)
-set(CPACK_NSIS_MUI_UNIICON ${CMAKE_CURRENT_SOURCE_DIR}/images/qtapp.ico)
-
 IF( APPLE )
   set(CPACK_GENERATOR "DragNDrop")
   set(APP_EXTENSION ".app")
@@ -119,8 +118,8 @@ include(CPack)
 include( InstallRequiredSystemLibraries )
 
 IF( APPLE )
-  install_qt4_executable(qt_wallet${APP_EXTENSION} "${Qt5Core_DIR}/../../../plugins/platforms/libqcocoa.dylib")
+  install_qt4_executable(qt_wallet${APP_EXTENSION} "${QT_PATH}/plugins/platforms/libqcocoa.dylib")
 ELSEIF ( WIN32 )
-  install_qt4_executable(${APP_DIR}/qt_wallet${APP_EXTENSION} "${Qt5Core_DIR}/../../../plugins/platforms/qwindows.dll")
+  install_qt4_executable(${APP_DIR}/qt_wallet${APP_EXTENSION} "${QT_PATH}/plugins/platforms/qwindows.dll")
 ENDIF()
 

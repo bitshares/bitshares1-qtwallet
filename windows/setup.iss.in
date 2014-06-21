@@ -1,0 +1,104 @@
+;#define WIN64
+#define APPNAME "@CPACK_BUNDLE_NAME@"
+#define QT_PATH "@QT_PATH@""
+
+#ifdef WIN64
+#define PLATFORM  "x64"
+#define PLATFORM_NAME  "x64"
+#define PLATFORM_TITLE " (64-bit)"
+#else
+#define PLATFORM  "x86"
+#define PLATFORM_NAME  "x86"
+#define PLATFORM_TITLE ""
+#endif
+
+;#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
+#define VERSION "0.1.1"
+
+[Setup]
+AppPublisher=BitShares
+AppPublisherURL=http://bitshares.org
+AppVersion={#VERSION}
+AppName={#APPNAME}{#PLATFORM_TITLE}
+AppVerName={#APPNAME}{#PLATFORM_TITLE} {#VERSION}
+DefaultDirName={pf}\{#APPNAME}
+DefaultGroupName={#APPNAME}
+Compression=lzma/Ultra
+SolidCompression=true
+VersionInfoVersion={#VERSION}
+VersionInfoCompany=BitShares
+VersionInfoDescription={#APPNAME}
+AppCopyright=©2014 God
+DirExistsWarning=no
+DisableStartupPrompt=true
+WindowVisible=false
+AppSupportURL=http://bitshares.org
+AppUpdatesURL=http://bitshares.org
+;AppReadmeFile={app}\README.TXT
+ShowLanguageDialog=no
+LanguageDetectionMethod=none
+AppID=68ad7005-8eee-49c9-95ce-9eed97e5b347
+RestartIfNeededByRun=false
+DisableFinishedPage=false
+DisableProgramGroupPage=true
+DisableReadyPage=true
+OutputDir=.
+OutputBaseFilename={#APPNAME}{#PLATFORM}Setup
+#ifdef WIN64
+ArchitecturesAllowed=x64
+ArchitecturesInstallIn64BitMode=x64
+#endif
+
+[Tasks]
+;Name: desktopicon; Description: Create a &desktop icon; GroupDescription: Additional icons:; Flags: checkedonce
+
+[CustomMessages]
+
+
+[_ISTool]
+EnableISX=true
+
+[LangOptions]
+LanguageCodePage=0
+
+[Languages]
+;Name: en; MessagesFile: compiler:Default.isl; LicenseFile: license.rtf
+
+[Files]
+;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
+Source: Release\qt_wallet.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\icudt52.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\icuin52.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\icuuc52.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\libEGL.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\libGLESv2.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: c:\windows\system32\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: c:\windows\system32\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Core.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Gui.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Multimedia.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5MultimediaWidgets.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Network.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5OpenGL.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Positioning.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5PrintSupport.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Qml.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Quick.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Sensors.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Sql.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5WebKit.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5WebKitWidgets.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\Qt5Widgets.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\plugins\platforms\qwindows.dll; DestDir: {app}\bin\platforms; Flags: ignoreversion
+
+[Icons]
+Name: {group}\{#APPNAME}; Filename: {app}\bin\qt_wallet.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {group}\Uninstall; Filename: {app}\{uninstallexe}
+Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\qt_wallet.exe; WorkingDir: {app}\bin; IconIndex: 0
+
+[Run]
+Filename: {app}\bin\qt_wallet.exe; Flags: postinstall; Description: Run 
+
+[Registry]
+
+[Code]
