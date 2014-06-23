@@ -19,7 +19,7 @@ void MainWindow::readSettings()
         restoreState(settings.value("windowState").toByteArray());
     }
     else {
-        resize(1800,1100);
+        resize(1024,768);
     }
 }
 
