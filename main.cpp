@@ -1,6 +1,7 @@
 #include "html5viewer/html5viewer.h"
 #include "ClientWrapper.hpp"
 #include "Utilities.hpp"
+#include "MainWindow.hpp"
 
 #include <boost/thread.hpp>
 #include <bts/blockchain/config.hpp>
@@ -89,7 +90,7 @@ int main( int argc, char** argv )
 
    QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
 
-   QMainWindow mainWindow;
+   MainWindow mainWindow;
    auto viewer = new Html5Viewer;
    ClientWrapper client;
 
@@ -100,7 +101,6 @@ int main( int argc, char** argv )
    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
    viewer->webView()->setFocus(Qt::ActiveWindowFocusReason);
 
-   mainWindow.resize(1200,800);
    mainWindow.setCentralWidget(viewer);
    mainWindow.setMenuBar(menuBar);
 

@@ -23,7 +23,9 @@ To create installation package, type:
 
 ### Windows
 
-Clone qt_wallet repo into bitshares_toolkit/programs/qt_wallet.
+Clone qt_wallet repo into bitshares_toolkit\programs\qt_wallet.
+
+Create/update bitshares_toolkit\programs\qt_wallet\htdocs with the files generated on 'make buildweb' step in Unix section unless you have Windows installation of node.js and lineman.
 
 Download and install Windows binary version of QT 5.3 into the same folder as bitshares_toolkit.
 

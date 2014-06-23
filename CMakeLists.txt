@@ -36,6 +36,7 @@ set( SOURCES
   main.cpp
   ClientWrapper.cpp 
   Utilities.cpp 
+  MainWindow.cpp
   html5viewer/html5viewer.cpp
   images/bitshares.icns
 )

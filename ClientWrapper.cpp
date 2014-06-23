@@ -54,7 +54,7 @@ ClientWrapper::~ClientWrapper()
 
 void ClientWrapper::initialize()
 {
-    QSettings settings;
+    QSettings settings("BitShares", BTS_BLOCKCHAIN_NAME);
     bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
     uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
     Q_UNUSED(p2pport);
