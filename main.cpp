@@ -67,17 +67,6 @@ int main( int argc, char** argv )
    QApplication app(argc, argv);
    app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
-   auto menuBar = new QMenuBar(nullptr);
-   auto fileMenu = menuBar->addMenu("&File");
-   fileMenu->addAction("&Import Wallet")->setEnabled(false);
-   fileMenu->addAction("&Export Wallet")->setEnabled(false);
-   fileMenu->addAction("&Change Password")->setEnabled(false);
-   fileMenu->addAction("&Quit", &app, SLOT(quit()));
-   auto accountMenu = menuBar->addMenu("&Accounts");
-   //We'll populate this menu below, in the handler for loadFinished
-   //We don't know the URL yet!
-   menuBar->show();
-
    QTimer fc_tasks;
    fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
    fc_tasks.start(33);
@@ -91,6 +80,7 @@ int main( int argc, char** argv )
    QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
 
    MainWindow mainWindow;
+   mainWindow.fileMenu()->addAction("&Quit", &app, SLOT(quit()));
    auto viewer = new Html5Viewer;
    ClientWrapper client;
 
@@ -102,7 +92,7 @@ int main( int argc, char** argv )
    viewer->webView()->setFocus(Qt::ActiveWindowFocusReason);
 
    mainWindow.setCentralWidget(viewer);
-   mainWindow.setMenuBar(menuBar);
+   QMenu* accountMenu = mainWindow.accountMenu();
 
    QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
                     [&client](QNetworkReply*, QAuthenticator *auth) {
