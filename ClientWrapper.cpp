@@ -95,7 +95,7 @@ void ClientWrapper::initialize()
 
       _client->set_daemon_mode(true);
       _client->start();
-      _client->run_delegate();
+      _client->start_delegate_loop();
       if( !_actual_httpd_endpoint )
       {
           main_thread->async( [&](){ Q_EMIT error( tr("Unable to start HTTP server...")); });
