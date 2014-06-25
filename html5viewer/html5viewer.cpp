@@ -1132,6 +1132,11 @@ Html5Viewer::Html5Viewer(QWidget *parent)
     : QWidget(parent)
     , m_d(new Html5ViewerPrivate(this))
 {
+    webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
+    setOrientation(Html5Viewer::ScreenOrientationAuto);
+    webView()->setAcceptHoverEvents(true);
+    webView()->setFocus(Qt::ActiveWindowFocusReason);
+
     connect(m_d, SIGNAL(quitRequested()), SLOT(close()));
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(m_d);

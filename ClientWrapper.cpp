@@ -67,9 +67,7 @@ void ClientWrapper::initialize()
 
     auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
 
-
     fc::thread* main_thread = &fc::thread::current();
-    Q_UNUSED(main_thread);
 
     _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport](){
 
@@ -121,7 +119,6 @@ QUrl ClientWrapper::http_url() const
 
 QVariant ClientWrapper::get_info(  )
 {
-///    from_json( to_json(p1) );
     fc::variant_object result = _bitshares_thread.async( [this](){ return _client->get_info(); }).wait();
     std::string sresult = fc::json::to_string( result );
     return QJsonDocument::fromJson( QByteArray( sresult.c_str(), sresult.length() ) ).toVariant();

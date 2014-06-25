@@ -59,6 +59,65 @@
 #include "config_dev.hpp"
 #endif
 
+class UrlReceiver : public QObject {
+public:
+    UrlReceiver(QObject* parent = 0):QObject(parent){}
+    virtual bool eventFilter(QObject *, QEvent* event) {
+        if (event->type() == QEvent::FileOpen) {
+            ilog("Got FOE");
+            return true;
+        }
+        ilog("No FOE");
+        return false;
+    }
+};
+
+void setupMenus(Html5Viewer* viewer, ClientWrapper* client, MainWindow* mainWindow)
+{
+    auto accountMenu = mainWindow->accountMenu();
+
+    QObject::connect(accountMenu->addAction("&Go to My Accounts"), &QAction::triggered, [viewer,client](){
+        viewer->loadUrl(client->http_url().toString() + "/#/accounts");
+    });
+    QObject::connect(accountMenu->addAction("&Create Account"), &QAction::triggered, [viewer,client](){
+        viewer->loadUrl(client->http_url().toString() + "/#/create/account");
+    });
+    accountMenu->addAction("&Import Account")->setEnabled(false);
+
+    //Enable accountMenu only when wallet is unlocked.
+    accountMenu->setEnabled(false);
+    client->get_client()->get_wallet()->wallet_lock_state_changed.connect([accountMenu](bool locked){
+        accountMenu->setEnabled(!locked);
+    });
+}
+
+void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)
+{
+    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
+    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
+
+    QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
+                     [client](QNetworkReply*, QAuthenticator *auth) {
+       auth->setUser(client->http_url().userName());
+       auth->setPassword(client->http_url().password());
+    });
+    client->connect(client, &ClientWrapper::initialized, [viewer,client,mainWindow]() {
+       ilog( "Client initialized; loading web interface from ${url}", ("url", client->http_url().toString().toStdString()) );
+       viewer->webView()->load(client->http_url());
+       //Now we know the URL of the app, so we can create the items in the Accounts menu
+       setupMenus(viewer, client, mainWindow);
+    });
+    viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow,splash,viewer](bool ok) {
+       ilog( "Webview loaded: ${status}", ("status", ok) );
+       mainWindow->show();
+       splash->finish(mainWindow);
+    });
+    client->connect(client, &ClientWrapper::error, [&](QString errorString) {
+       splash->showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
+       fc::usleep( fc::seconds(3) );
+    });
+}
+
 int main( int argc, char** argv )
 {
    QCoreApplication::setOrganizationName( "BitShares" );
@@ -66,6 +125,12 @@ int main( int argc, char** argv )
    QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
    QApplication app(argc, argv);
    app.setWindowIcon(QIcon(":/images/qtapp.ico"));
+
+#ifdef __APPLE__
+   //Install OSX event handler
+   ilog("Installing URL open event filter");
+   app.installEventFilter(new UrlReceiver(&app));
+#endif
 
    QTimer fc_tasks;
    fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
@@ -80,52 +145,10 @@ int main( int argc, char** argv )
    QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
 
    MainWindow mainWindow;
-   mainWindow.fileMenu()->addAction("&Quit", &app, SLOT(quit()));
    auto viewer = new Html5Viewer;
    ClientWrapper client;
-
-   viewer->webView()->page()->settings()->setAttribute( QWebSettings::PluginsEnabled, false );
-   viewer->setOrientation(Html5Viewer::ScreenOrientationAuto);
-   viewer->webView()->setAcceptHoverEvents(true);
-   viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", &client);
-   viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
-   viewer->webView()->setFocus(Qt::ActiveWindowFocusReason);
-
    mainWindow.setCentralWidget(viewer);
-   QMenu* accountMenu = mainWindow.accountMenu();
-
-   QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
-                    [&client](QNetworkReply*, QAuthenticator *auth) {
-      auth->setUser(client.http_url().userName());
-      auth->setPassword(client.http_url().password());
-   });
-   client.connect(&client, &ClientWrapper::initialized, [&viewer,&client,accountMenu]() {
-      ilog( "Client initialized; loading web interface from ${url}", ("url", client.http_url().toString().toStdString()) );
-      viewer->webView()->load(client.http_url());
-      //Now we know the URL of the app, so we can create the items in the Accounts menu
-      QObject::connect(accountMenu->addAction("&Go to My Accounts"), &QAction::triggered, [&viewer,&client](){
-          viewer->loadUrl(client.http_url().toString() + "/#/accounts");
-      });
-      QObject::connect(accountMenu->addAction("&Create Account"), &QAction::triggered, [&viewer,&client](){
-          viewer->loadUrl(client.http_url().toString() + "/#/create/account");
-      });
-      accountMenu->addAction("&Import Account")->setEnabled(false);
-
-      //Enable accountMenu only when wallet is unlocked.
-      accountMenu->setEnabled(false);
-      client.get_client()->get_wallet()->wallet_lock_state_changed.connect([accountMenu](bool locked){
-          accountMenu->setEnabled(!locked);
-      });
-   });
-   viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [&mainWindow,&splash,&viewer](bool ok) {
-      ilog( "Webview loaded: ${status}", ("status", ok) );
-      mainWindow.show();
-      splash.finish(&mainWindow);
-   });
-   client.connect(&client, &ClientWrapper::error, [&](QString errorString) {
-      splash.showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
-      fc::usleep( fc::seconds(3) );
-   });
+   prepareStartupSequence(&client, viewer, &mainWindow, &splash);
 
    try {
     client.initialize();

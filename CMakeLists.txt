@@ -4,6 +4,9 @@ message(STATUS "Configuring QT Wallet")
 
 project(qt_wallet)
 
+# Tell CMake where to find our custom Info.plist template
+list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
+
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
@@ -65,6 +68,8 @@ IF( APPLE )
     SET( MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" )
+    SET( MACOSX_BUNDLE_URL_HANDLER_NAME "org.bitshares.xts" )
+    SET( MACOSX_BUNDLE_URL_HANDLER_SCHEME "bitsharesxts" )
     set_source_files_properties("images/bitshares.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 ENDIF()
 
