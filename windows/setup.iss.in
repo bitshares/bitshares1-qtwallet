@@ -13,7 +13,7 @@
 #endif
 
 ;#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
-#define VERSION "0.0.3"
+#define VERSION "0.0.6"
 
 [Setup]
 AppPublisher=BitShares
@@ -44,6 +44,7 @@ DisableProgramGroupPage=true
 DisableReadyPage=true
 OutputDir=.
 OutputBaseFilename={#APPNAME}-{#VERSION}
+WizardImageFile=@CMAKE_CURRENT_SOURCE_DIR@/images/inno_setup_img.bmp
 #ifdef WIN64
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
