@@ -112,7 +112,7 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
        splash->finish(mainWindow);
     });
     client->connect(client, &ClientWrapper::error, [=](QString errorString) {
-       splash->showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
+       splash->showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::red);
        fc::usleep( fc::seconds(3) );
        qApp->exit(1);
     });
