@@ -2,6 +2,7 @@
 
 #include <bts/net/upnp.hpp>
 
+#include <QApplication>
 #include <QResource>
 #include <QSettings>
 #include <QJsonDocument>
@@ -107,9 +108,14 @@ void ClientWrapper::initialize()
 
         main_thread->async( [&](){ Q_EMIT initialized(); });
       }
+      catch (const bts::db::db_in_use_exception &e)
+      {
+        main_thread->async( [&](){ Q_EMIT error( tr("An instance of %1 is already running! Please close it and try again.").arg(qApp->applicationName())); });
+      }
       catch (const fc::exception &e)
       {
-        ilog(e.to_detail_string());
+        ilog("Failure when attempting to initialize client: ${error}", ("error", e.to_detail_string()));
+        main_thread->async( [&](){ Q_EMIT error( tr("An error occurred while trying to start: %1").arg(e.what())); });
       }
     });
 }
