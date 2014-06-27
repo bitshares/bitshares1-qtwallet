@@ -108,7 +108,7 @@ void ClientWrapper::initialize()
 
         main_thread->async( [&](){ Q_EMIT initialized(); });
       }
-      catch (const bts::db::db_in_use_exception &e)
+      catch (const bts::db::db_in_use_exception&)
       {
         main_thread->async( [&](){ Q_EMIT error( tr("An instance of %1 is already running! Please close it and try again.").arg(qApp->applicationName())); });
       }
