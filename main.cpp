@@ -67,7 +67,6 @@ public:
             ilog("Got FOE");
             return true;
         }
-        ilog("No FOE");
         return false;
     }
 };

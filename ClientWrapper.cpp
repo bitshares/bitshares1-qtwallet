@@ -11,7 +11,6 @@
 
 void get_htdocs_file( const fc::path& filename, const fc::http::server::response& r )
 {
-//   elog( "${file}", ("file",filename) );
    std::cout << filename.generic_string() << "\n";
    QResource  file_to_send( ("/htdocs/htdocs/" + filename.generic_string()).c_str() );
    if( !file_to_send.data() )
@@ -70,42 +69,48 @@ void ClientWrapper::initialize()
     fc::thread* main_thread = &fc::thread::current();
 
     _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport](){
-
-      _client = std::make_shared<bts::client::client>();
-      _client->open( data_dir );
-
-      // setup  RPC / HTTP services
-      _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
-      _client->get_rpc_server()->configure( _cfg.rpc );
-      _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
-
-      // load config for p2p node.. creates cli
-      _client->configure( data_dir );
-      _client->init_cli();
-
-      _client->listen_on_port(0, false /*don't wait if not available*/);
-      fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
-
-      _client->connect_to_p2p_network();
-
-      for (std::string default_peer : _cfg.default_peers)
-        _client->connect_to_peer(default_peer);
-
-      _client->set_daemon_mode(true);
-      _client->start();
-      _client->start_delegate_loop();
-      if( !_actual_httpd_endpoint )
+      try
       {
-          main_thread->async( [&](){ Q_EMIT error( tr("Unable to start HTTP server...")); });
-      }
+        _client = std::make_shared<bts::client::client>();
+        _client->open( data_dir );
 
-      if( upnp )
+        // setup  RPC / HTTP services
+        _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
+        _client->get_rpc_server()->configure( _cfg.rpc );
+        _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
+
+        // load config for p2p node.. creates cli
+        _client->configure( data_dir );
+        _client->init_cli();
+
+        _client->listen_on_port(0, false /*don't wait if not available*/);
+        fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
+
+        _client->connect_to_p2p_network();
+
+        for (std::string default_peer : _cfg.default_peers)
+          _client->connect_to_peer(default_peer);
+
+        _client->set_daemon_mode(true);
+        _client->start();
+        _client->start_delegate_loop();
+        if( !_actual_httpd_endpoint )
+        {
+            main_thread->async( [&](){ Q_EMIT error( tr("Unable to start HTTP server...")); });
+        }
+
+        if( upnp )
+        {
+           auto upnp_service = new bts::net::upnp_service();
+           upnp_service->map_port( actual_p2p_endpoint.port() );
+        }
+
+        main_thread->async( [&](){ Q_EMIT initialized(); });
+      }
+      catch (const fc::exception &e)
       {
-         auto upnp_service = new bts::net::upnp_service();
-         upnp_service->map_port( actual_p2p_endpoint.port() );
+        ilog(e.to_detail_string());
       }
-
-      main_thread->async( [&](){ Q_EMIT initialized(); });
     });
 }
 
