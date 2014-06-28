@@ -1,5 +1,5 @@
 ;#define WIN64
-#define APPNAME "@CPACK_BUNDLE_NAME@"
+#define APPNAME "@APP_NAME@"
 #define QT_PATH "@QT_PATH@""
 
 #ifdef WIN64
@@ -67,7 +67,7 @@ LanguageCodePage=0
 
 [Files]
 ;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
-Source: Release\qt_wallet.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: Release\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
 

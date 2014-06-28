@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8.11)
 message(STATUS "Configuring QT Wallet")
 
 project(qt_wallet)
+set( APP_NAME "BitSharesXT" )
 
 # Tell CMake where to find our custom Info.plist template
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
@@ -44,7 +45,7 @@ set( SOURCES
   images/bitshares.icns
 )
 
-set( CPACK_BUNDLE_NAME "BitSharesXT" )
+set( CPACK_BUNDLE_NAME ${APP_NAME} )
 set( CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME} )
 set( CPACK_PACKAGE_EXECUTABLES qt_wallet ${CPACK_BUNDLE_NAME} )
 set( CPACK_PACKAGE_DESCRIPTION_SUMMARY "package description summary" )
@@ -90,7 +91,7 @@ ELSE()
 ENDIF()
 
 # Tell CMake to create the qt_wallet executable
-add_executable( qt_wallet WIN32 MACOSX_BUNDLE ${SOURCES} )
+add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} )
 
 # Workaround because CMake is broken and won't copy the stupid icon in itself
 #IF( APPLE )
@@ -101,13 +102,13 @@ QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 
 # Use the Widgets module from Qt 5.
-target_link_libraries( qt_wallet Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
+target_link_libraries( BitSharesXT Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
   bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static )
 
 include( DeployQt4 )
 include( InstallRequiredSystemLibraries )
-install( TARGETS qt_wallet DESTINATION "." )
+install( TARGETS ${APP_NAME} DESTINATION "." )
 
 IF( APPLE )
   set( CPACK_GENERATOR "DragNDrop" )
@@ -115,7 +116,7 @@ IF( APPLE )
   set( PLUGINS "")
   list( APPEND PLUGINS "${QT_PATH}/plugins/platforms/libqcocoa.dylib" )
   list( APPEND PLUGINS "${QT_PATH}/plugins/imageformats/libqjpeg.dylib" )
-  install_qt4_executable( qt_wallet.app "${PLUGINS}" )
+  install_qt4_executable( ${APP_NAME}.app "${PLUGINS}" )
 ENDIF()
 
 
