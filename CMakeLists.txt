@@ -95,14 +95,14 @@ add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} )
 
 # Workaround because CMake is broken and won't copy the stupid icon in itself
 #IF( APPLE )
-#    add_custom_command(TARGET qt_wallet POST_BUILD COMMAND cp "${OSX_ICON_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/qt_wallet.app/Contents/Resources/" )
+#    add_custom_command(TARGET ${APP_NAME} POST_BUILD COMMAND cp "${OSX_ICON_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.app/Contents/Resources/" )
 #ENDIF()
 
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 
 # Use the Widgets module from Qt 5.
-target_link_libraries( BitSharesXT Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
+target_link_libraries( ${APP_NAME} Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
   bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static )
 

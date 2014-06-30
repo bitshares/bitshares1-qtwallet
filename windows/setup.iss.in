@@ -105,12 +105,12 @@ Source: {#QT_PATH}\plugins\audio\qtaudio_windows.dll; DestDir: {app}\bin\audio; 
 Source: {#QT_PATH}\plugins\printsupport\windowsprintersupport.dll; DestDir: {app}\bin\printsupport; Flags: ignoreversion
 
 [Icons]
-Name: {group}\{#APPNAME}; Filename: {app}\bin\qt_wallet.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {group}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 Name: {group}\Uninstall; Filename: {app}\{uninstallexe}
-Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\qt_wallet.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 
 [Run]
-Filename: {app}\bin\qt_wallet.exe; Flags: postinstall; Description: Run 
+Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run 
 
 [Registry]
 
