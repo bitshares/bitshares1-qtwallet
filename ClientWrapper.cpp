@@ -72,10 +72,12 @@ void ClientWrapper::initialize()
     _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport](){
       try
       {
+        main_thread->async( [&](){ Q_EMIT status_update(tr("Starting %1 client").arg(qApp->applicationName())); });
         _client = std::make_shared<bts::client::client>();
         _client->open( data_dir );
 
         // setup  RPC / HTTP services
+        main_thread->async( [&](){ Q_EMIT status_update(tr("Loading interface")); });
         _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
         _client->get_rpc_server()->configure( _cfg.rpc );
         _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
@@ -84,6 +86,7 @@ void ClientWrapper::initialize()
         _client->configure( data_dir );
         _client->init_cli();
 
+        main_thread->async( [&](){ Q_EMIT status_update(tr("Connecting to %1 network").arg(qApp->applicationName())); });
         _client->listen_on_port(0, false /*don't wait if not available*/);
         fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
 
@@ -100,6 +103,7 @@ void ClientWrapper::initialize()
             main_thread->async( [&](){ Q_EMIT error( tr("Unable to start HTTP server...")); });
         }
 
+        main_thread->async( [&](){ Q_EMIT status_update(tr("Forwarding port")); });
         if( upnp )
         {
            auto upnp_service = new bts::net::upnp_service();

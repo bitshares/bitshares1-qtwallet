@@ -102,6 +102,7 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
     });
     client->connect(client, &ClientWrapper::initialized, [viewer,client,mainWindow]() {
        ilog( "Client initialized; loading web interface from ${url}", ("url", client->http_url().toString().toStdString()) );
+       client->status_update("Calculating last 3 digits of pi");
        viewer->webView()->load(client->http_url());
        //Now we know the URL of the app, so we can create the items in the Accounts menu
        setupMenus(viewer, client, mainWindow);
@@ -115,6 +116,9 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
        splash->showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::red);
        fc::usleep( fc::seconds(3) );
        qApp->exit(1);
+    });
+    client->connect(client, &ClientWrapper::status_update, [=](QString messageString) {
+       splash->showMessage(messageString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
     });
 }
 

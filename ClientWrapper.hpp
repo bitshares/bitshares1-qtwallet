@@ -24,6 +24,7 @@ class ClientWrapper : public QObject
 
    signals:
        void initialized();
+       void status_update(QString statusString);
        void error(QString errorString);
 
    private:
