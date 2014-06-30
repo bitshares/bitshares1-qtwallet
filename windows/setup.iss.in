@@ -1,5 +1,5 @@
 ;#define WIN64
-#define APPNAME "@CPACK_BUNDLE_NAME@"
+#define APPNAME "@APP_NAME@"
 #define QT_PATH "@QT_PATH@""
 
 #ifdef WIN64
@@ -67,7 +67,7 @@ LanguageCodePage=0
 
 [Files]
 ;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
-Source: Release\qt_wallet.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: Release\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
 
@@ -105,12 +105,12 @@ Source: {#QT_PATH}\plugins\audio\qtaudio_windows.dll; DestDir: {app}\bin\audio; 
 Source: {#QT_PATH}\plugins\printsupport\windowsprintersupport.dll; DestDir: {app}\bin\printsupport; Flags: ignoreversion
 
 [Icons]
-Name: {group}\{#APPNAME}; Filename: {app}\bin\qt_wallet.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {group}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 Name: {group}\Uninstall; Filename: {app}\{uninstallexe}
-Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\qt_wallet.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 
 [Run]
-Filename: {app}\bin\qt_wallet.exe; Flags: postinstall; Description: Run 
+Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run 
 
 [Registry]
 
