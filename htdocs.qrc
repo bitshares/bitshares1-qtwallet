@@ -4,6 +4,7 @@
     <file>htdocs/favicon.ico</file>
     <file>htdocs/index.html</file>
     <file>htdocs/css/app.css</file>
+    <file>htdocs/img/bg-head.jpg</file>
     <file>htdocs/img/bitsharesIcon.png</file>
     <file>htdocs/img/bitsharesTransparentLow.png</file>
     <file>htdocs/img/bs-double-trans.png</file>
@@ -15,8 +16,10 @@
     <file>htdocs/img/signal_2.png</file>
     <file>htdocs/img/signal_3.png</file>
     <file>htdocs/img/signal_4.png</file>
+    <file>htdocs/img/xt-background-dark.jpg</file>
     <file>htdocs/img/xt-background.jpg</file>
     <file>htdocs/img/xt-icon.png</file>
+    <file>htdocs/img/xts-logo-head.png</file>
     <file>htdocs/img/xts-logo-xl-white-shadow.png</file>
     <file>htdocs/js/app.js</file>
     <file>htdocs/webfonts/fontawesome-webfont.eot</file>
@@ -28,6 +31,7 @@
     <file>htdocs/webfonts/glyphicons-halflings-regular.svg</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.ttf</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.woff</file>
+    <file>htdocs/webfonts/opensans-light.woff</file>
     <file>htdocs/webfonts/opensans-regular.eot</file>
     <file>htdocs/webfonts/opensans-regular.svg</file>
     <file>htdocs/webfonts/opensans-regular.ttf</file>
