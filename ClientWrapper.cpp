@@ -139,4 +139,12 @@ QVariant ClientWrapper::get_info(  )
     return QJsonDocument::fromJson( QByteArray( sresult.c_str(), sresult.length() ) ).toVariant();
 }
 
+QString ClientWrapper::get_http_auth_token()
+{
+    QByteArray result = _cfg.rpc.rpc_user.c_str();
+    result += ":";
+    result += _cfg.rpc.rpc_password.c_str();
+    return result.toBase64( QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals );
+}
+
 

@@ -20,6 +20,7 @@ class ClientWrapper : public QObject
        QUrl http_url() const;
 
        Q_INVOKABLE QVariant get_info();
+       Q_INVOKABLE QString get_http_auth_token();
        std::shared_ptr<bts::client::client> get_client() { return _client; }
 
    signals:
