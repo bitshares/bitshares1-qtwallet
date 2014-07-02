@@ -59,28 +59,12 @@
 #include "config_dev.hpp"
 #endif
 
-class UrlReceiver : public QObject {
-public:
-    UrlReceiver(QObject* parent = 0):QObject(parent){}
-    virtual bool eventFilter(QObject *, QEvent* event) {
-        if (event->type() == QEvent::FileOpen) {
-            ilog("Got FOE");
-            return true;
-        }
-        return false;
-    }
-};
-
-void setupMenus(Html5Viewer* viewer, ClientWrapper* client, MainWindow* mainWindow)
+void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
 {
     auto accountMenu = mainWindow->accountMenu();
 
-    QObject::connect(accountMenu->addAction("&Go to My Accounts"), &QAction::triggered, [viewer,client](){
-        viewer->loadUrl(client->http_url().toString() + "/#/accounts");
-    });
-    QObject::connect(accountMenu->addAction("&Create Account"), &QAction::triggered, [viewer,client](){
-        viewer->loadUrl(client->http_url().toString() + "/#/create/account");
-    });
+    accountMenu->addAction("&Go to My Accounts", mainWindow, SLOT(goToMyAccounts()));
+    accountMenu->addAction("&Create Account", mainWindow, SLOT(goToCreateAccount()));
     accountMenu->addAction("&Import Account")->setEnabled(false);
 
     //Enable accountMenu only when wallet is unlocked.
@@ -105,7 +89,7 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
        client->status_update("Calculating last 3 digits of pi");
        viewer->webView()->load(client->http_url());
        //Now we know the URL of the app, so we can create the items in the Accounts menu
-       setupMenus(viewer, client, mainWindow);
+       setupMenus(client, mainWindow);
     });
     viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow,splash,viewer](bool ok) {
        ilog( "Webview loaded: ${status}", ("status", ok) );
@@ -130,10 +114,17 @@ int main( int argc, char** argv )
    QApplication app(argc, argv);
    app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
+   MainWindow mainWindow;
+   auto viewer = new Html5Viewer;
+   ClientWrapper client;
+
+   mainWindow.setCentralWidget(viewer);
+   mainWindow.setClientWrapper(&client);
+
 #ifdef __APPLE__
    //Install OSX event handler
    ilog("Installing URL open event filter");
-   app.installEventFilter(new UrlReceiver(&app));
+   app.installEventFilter(&mainWindow);
 #endif
 
    QTimer fc_tasks;
@@ -146,13 +137,9 @@ int main( int argc, char** argv )
                       Qt::AlignCenter | Qt::AlignBottom, Qt::white);
    splash.show();
 
-   QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
-
-   MainWindow mainWindow;
-   auto viewer = new Html5Viewer;
-   ClientWrapper client;
-   mainWindow.setCentralWidget(viewer);
    prepareStartupSequence(&client, viewer, &mainWindow, &splash);
+
+   QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
 
    try {
     client.initialize();

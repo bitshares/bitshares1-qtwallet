@@ -79,7 +79,7 @@ void ClientWrapper::initialize()
         // setup  RPC / HTTP services
         main_thread->async( [&](){ Q_EMIT status_update(tr("Loading interface")); });
         _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
-        _client->get_rpc_server()->configure( _cfg.rpc );
+        _client->get_rpc_server()->configure_http( _cfg.rpc );
         _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
 
         // load config for p2p node.. creates cli

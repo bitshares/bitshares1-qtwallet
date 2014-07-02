@@ -8,25 +8,26 @@
 #include <bts/blockchain/config.hpp>
 
 MainWindow::MainWindow()
-: settings("BitShares", BTS_BLOCKCHAIN_NAME)
+: settings("BitShares", BTS_BLOCKCHAIN_NAME),
+  _clientWrapper(nullptr)
 
 {
     readSettings();
     initMenu();
 }
 
+#ifdef __APPLE__
 bool MainWindow::eventFilter(QObject* object, QEvent* event)
 {
-    ilog("Got event, parsing...");
     if ( event->type() == QEvent::FileOpen )
     {
         QFileOpenEvent* urlEvent = static_cast<QFileOpenEvent*>(event);
-        ilog("Got URL to open: ${url}", ("url", urlEvent->url().toString().toStdString()));
+        ilog("Got URL to open: ${url}", ("url", urlEvent->file().toStdString()));
         return true;
     }
-    ilog("Uninteresting event.");
     return false;
 }
+#endif
 
 ClientWrapper *MainWindow::clientWrapper() const
 {
@@ -38,6 +39,31 @@ void MainWindow::setClientWrapper(ClientWrapper *clientWrapper)
     _clientWrapper = clientWrapper;
 }
 
+void MainWindow::goToMyAccounts()
+{
+    if( !walletIsUnlocked() )
+      return;
+
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/accounts");
+}
+
+void MainWindow::goToCreateAccount()
+{
+    if( !walletIsUnlocked() )
+        return;
+
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
+}
+
+Html5Viewer* MainWindow::getViewer()
+{
+    return static_cast<Html5Viewer*>(centralWidget());
+}
+
+bool MainWindow::walletIsUnlocked()
+{
+    return _clientWrapper && _clientWrapper->get_client()->get_wallet()->is_unlocked();
+}
 
 void MainWindow::readSettings()
 {
