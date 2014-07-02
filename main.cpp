@@ -66,12 +66,6 @@ void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
     accountMenu->addAction("&Go to My Accounts", mainWindow, SLOT(goToMyAccounts()));
     accountMenu->addAction("&Create Account", mainWindow, SLOT(goToCreateAccount()));
     accountMenu->addAction("&Import Account")->setEnabled(false);
-
-    //Enable accountMenu only when wallet is unlocked.
-    accountMenu->setEnabled(false);
-    client->get_client()->get_wallet()->wallet_lock_state_changed.connect([accountMenu](bool locked){
-        accountMenu->setEnabled(!locked);
-    });
 }
 
 void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)

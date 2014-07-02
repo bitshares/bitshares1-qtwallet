@@ -4,8 +4,10 @@
 #include <QString>
 #include <QMenuBar>
 #include <QFileOpenEvent>
+#include <QInputDialog>
 
 #include <bts/blockchain/config.hpp>
+#include <bts/wallet/config.hpp>
 
 MainWindow::MainWindow()
 : settings("BitShares", BTS_BLOCKCHAIN_NAME),
@@ -60,9 +62,41 @@ Html5Viewer* MainWindow::getViewer()
     return static_cast<Html5Viewer*>(centralWidget());
 }
 
-bool MainWindow::walletIsUnlocked()
+bool MainWindow::walletIsUnlocked(bool promptToUnlock)
 {
-    return _clientWrapper && _clientWrapper->get_client()->get_wallet()->is_unlocked();
+    if( !_clientWrapper )
+        return false;
+    if( _clientWrapper->get_client()->get_wallet()->is_unlocked() )
+        return true;
+
+    bool badPassword = false;
+    while( promptToUnlock )
+    {
+        QString password = QInputDialog::getText(this,
+                                                 tr("Unlock Wallet"),
+                                                 (badPassword?
+                                                      tr("Incorrect password. Please enter your password to continue."):
+                                                      tr("Please enter your password to continue.")),
+                                                 QLineEdit::Password,
+                                                 QString(),
+                                                 &promptToUnlock);
+
+        //If user did not click cancel...
+        if( promptToUnlock )
+        {
+            try
+            {
+                _clientWrapper->get_client()->get_wallet()->unlock( password.toStdString(), BTS_WALLET_DEFAULT_UNLOCK_TIME_SEC );
+                promptToUnlock = false;
+            }
+            catch (...)
+            {
+                badPassword = true;
+            }
+        }
+    }
+
+    return _clientWrapper->get_client()->get_wallet()->is_unlocked();
 }
 
 void MainWindow::readSettings()

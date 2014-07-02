@@ -35,7 +35,7 @@ private:
     ClientWrapper* _clientWrapper;
 
     Html5Viewer *getViewer();
-    bool walletIsUnlocked();
+    bool walletIsUnlocked(bool promptToUnlock = true);
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
