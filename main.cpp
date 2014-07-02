@@ -112,6 +112,14 @@ int main( int argc, char** argv )
    auto viewer = new Html5Viewer;
    ClientWrapper client;
 
+#ifdef NDEBUG
+   app.connect(&app, &QApplication::aboutToQuit, [&client](){
+       client.get_client()->get_wallet()->close();
+       client.get_client()->get_chain()->close();
+       exit(0);
+   });
+#endif
+
    mainWindow.setCentralWidget(viewer);
    mainWindow.setClientWrapper(&client);
 
