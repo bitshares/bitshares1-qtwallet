@@ -57,6 +57,7 @@ void ClientWrapper::initialize()
     QSettings settings("BitShares", BTS_BLOCKCHAIN_NAME);
     bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
     uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
+    std::string default_wallet_name = settings.value("client/default_wallet_name", "default").toString().toStdString();
     Q_UNUSED(p2pport);
 
     _cfg.rpc.rpc_user     = "randomuser";
@@ -69,7 +70,7 @@ void ClientWrapper::initialize()
 
     fc::thread* main_thread = &fc::thread::current();
 
-    _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport](){
+    _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport,default_wallet_name](){
       try
       {
         main_thread->async( [&](){ Q_EMIT status_update(tr("Starting %1 client").arg(qApp->applicationName())); });
@@ -109,6 +110,8 @@ void ClientWrapper::initialize()
            auto upnp_service = new bts::net::upnp_service();
            upnp_service->map_port( actual_p2p_endpoint.port() );
         }
+
+        _client->wallet_open(default_wallet_name);
 
         main_thread->async( [&](){ Q_EMIT initialized(); });
       }

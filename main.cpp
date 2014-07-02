@@ -85,10 +85,13 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
        //Now we know the URL of the app, so we can create the items in the Accounts menu
        setupMenus(client, mainWindow);
     });
-    viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow,splash,viewer](bool ok) {
+    auto loadFinishedConnection = std::make_shared<QMetaObject::Connection>();
+    *loadFinishedConnection = viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow,splash,viewer,loadFinishedConnection](bool ok) {
        ilog( "Webview loaded: ${status}", ("status", ok) );
+       viewer->disconnect(*loadFinishedConnection);
        mainWindow->show();
        splash->finish(mainWindow);
+       mainWindow->processDeferredUrl();
     });
     client->connect(client, &ClientWrapper::error, [=](QString errorString) {
        splash->showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::red);

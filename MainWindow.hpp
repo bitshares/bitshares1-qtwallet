@@ -11,9 +11,10 @@
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    QSettings settings;
+    QSettings _settings;
     QMenu* _fileMenu;
     QMenu* _accountMenu;
+    QString _deferredUrl;
     
 public:
     MainWindow();
@@ -31,8 +32,12 @@ public slots:
     void goToMyAccounts();
     void goToCreateAccount();
 
+    ///Used to schedule a custom URL for processing later, once the app has finished starting
+    void deferCustomUrl(QString url);
+    ///Triggers the deferred URL processign. Call once app has finished starting
+    void processDeferredUrl();
+    ///Used to process a custom URL now (only call if app has finished starting)
     void processCustomUrl(QString url);
-
 private:
     ClientWrapper* _clientWrapper;
 

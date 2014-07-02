@@ -11,7 +11,7 @@
 #include <bts/wallet/config.hpp>
 
 MainWindow::MainWindow()
-: settings("BitShares", BTS_BLOCKCHAIN_NAME),
+: _settings("BitShares", BTS_BLOCKCHAIN_NAME),
   _clientWrapper(nullptr)
 
 {
@@ -26,12 +26,32 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
     {
         QFileOpenEvent* urlEvent = static_cast<QFileOpenEvent*>(event);
         ilog("Got URL to open: ${url}", ("url", urlEvent->file().toStdString()));
-        processCustomUrl(urlEvent->file());
+        if( isVisible() )
+          processCustomUrl(urlEvent->file());
+        else
+          deferCustomUrl(urlEvent->file());
         return true;
     }
     return false;
 }
 #endif
+
+void MainWindow::deferCustomUrl(QString url)
+{
+    if( isVisible() )
+    {
+        processCustomUrl(url);
+        return;
+    }
+
+    _deferredUrl = url;
+}
+
+void MainWindow::processDeferredUrl()
+{
+    processCustomUrl(_deferredUrl);
+    _deferredUrl.clear();
+}
 
 void MainWindow::processCustomUrl(QString url)
 {
@@ -42,6 +62,7 @@ void MainWindow::processCustomUrl(QString url)
     }
 
     url = url.mid(url.indexOf(':') + 1);
+    while( url.startsWith('/') ) url.remove(0, 1);
     ilog("Processing custom URL request for ${url}", ("url", url.toStdString()));
 }
 
@@ -115,10 +136,10 @@ bool MainWindow::walletIsUnlocked(bool promptToUnlock)
 
 void MainWindow::readSettings()
 {
-    if( settings.contains("geometry") )
+    if( _settings.contains("geometry") )
     {
-        restoreGeometry(settings.value("geometry").toByteArray());
-        restoreState(settings.value("windowState").toByteArray());
+        restoreGeometry(_settings.value("geometry").toByteArray());
+        restoreState(_settings.value("windowState").toByteArray());
     }
     else {
         resize(1024,768);
@@ -127,9 +148,9 @@ void MainWindow::readSettings()
 
 void MainWindow::closeEvent( QCloseEvent* event )
 {
-    settings.setValue("test","bla-bla-bla");
-    settings.setValue("geometry", saveGeometry());
-    settings.setValue("windowState", saveState());
+    _settings.setValue("test","bla-bla-bla");
+    _settings.setValue("geometry", saveGeometry());
+    _settings.setValue("windowState", saveState());
     QMainWindow::closeEvent(event);
 }
 
