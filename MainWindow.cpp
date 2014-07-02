@@ -64,6 +64,25 @@ void MainWindow::processCustomUrl(QString url)
     url = url.mid(url.indexOf(':') + 1);
     while( url.startsWith('/') ) url.remove(0, 1);
     ilog("Processing custom URL request for ${url}", ("url", url.toStdString()));
+
+    QStringList components = url.split('/', QString::SkipEmptyParts);
+
+    if( components[0].toLower() == components[0] )
+    {
+        //This is a username.
+    }
+    else if( components[0].size() > QString(BTS_ADDRESS_PREFIX).size() && components[0].startsWith(BTS_ADDRESS_PREFIX) )
+    {
+        //This is a key.
+    }
+    else if( components[0].size() >= BTS_BLOCKCHAIN_MIN_SYMBOL_SIZE && components[0].size() <= BTS_BLOCKCHAIN_MAX_SYMBOL_SIZE && components[0].toUpper() == components[0] )
+    {
+        //This is an asset symbol.
+    }
+    else if( components[0] == "Login" )
+    {
+        //This is a login request
+    }
 }
 
 ClientWrapper *MainWindow::clientWrapper() const
