@@ -1,4 +1,5 @@
 #include "MainWindow.hpp"
+#include "config.hpp"
 
 #include <QApplication>
 #include <QString>
@@ -25,11 +26,24 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
     {
         QFileOpenEvent* urlEvent = static_cast<QFileOpenEvent*>(event);
         ilog("Got URL to open: ${url}", ("url", urlEvent->file().toStdString()));
+        processCustomUrl(urlEvent->file());
         return true;
     }
     return false;
 }
 #endif
+
+void MainWindow::processCustomUrl(QString url)
+{
+    if( url.left(url.indexOf(':')).toLower() != CUSTOM_URL_SCHEME )
+    {
+        elog("Got URL of unknown scheme: ${url}", ("url", url.toStdString()));
+        return;
+    }
+
+    url = url.mid(url.indexOf(':') + 1);
+    ilog("Processing custom URL request for ${url}", ("url", url.toStdString()));
+}
 
 ClientWrapper *MainWindow::clientWrapper() const
 {

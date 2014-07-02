@@ -45,6 +45,9 @@ set( SOURCES
   images/bitshares.icns
 )
 
+set( CUSTOM_URL_SCHEME "xts" )
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/config.hpp" )
+
 set( CPACK_BUNDLE_NAME ${APP_NAME} )
 set( CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME} )
 set( CPACK_PACKAGE_EXECUTABLES qt_wallet ${CPACK_BUNDLE_NAME} )
@@ -70,7 +73,7 @@ IF( APPLE )
     SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
     SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 God" )
     SET( MACOSX_BUNDLE_URL_HANDLER_NAME "org.bitshares.xts" )
-    SET( MACOSX_BUNDLE_URL_HANDLER_SCHEME "bitsharesxts" )
+    SET( MACOSX_BUNDLE_URL_HANDLER_SCHEME "${CUSTOM_URL_SCHEME}" )
     set_source_files_properties("images/bitshares.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 ENDIF()
 

@@ -31,6 +31,8 @@ public slots:
     void goToMyAccounts();
     void goToCreateAccount();
 
+    void processCustomUrl(QString url);
+
 private:
     ClientWrapper* _clientWrapper;
 
