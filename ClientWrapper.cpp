@@ -111,7 +111,12 @@ void ClientWrapper::initialize()
            upnp_service->map_port( actual_p2p_endpoint.port() );
         }
 
-        _client->wallet_open(default_wallet_name);
+        try
+        {
+          _client->wallet_open(default_wallet_name);
+        }
+        catch(...)
+        {}
 
         main_thread->async( [&](){ Q_EMIT initialized(); });
       }
@@ -121,8 +126,8 @@ void ClientWrapper::initialize()
       }
       catch (const fc::exception &e)
       {
-        ilog("Failure when attempting to initialize client: ${error}", ("error", e.to_detail_string()));
-        main_thread->async( [&](){ Q_EMIT error( tr("An error occurred while trying to start: %1").arg(e.what())); });
+        ilog("Failure when attempting to initialize client");
+        main_thread->async( [&](){ Q_EMIT error( tr("An error occurred while trying to start")); });
       }
     });
 }
