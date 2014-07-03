@@ -121,6 +121,7 @@ QLocalServer* startSingleInstanceServer(MainWindow* mainWindow)
         }
         std::cerr << "Success.\n";
     }
+
     std::cout << "Listening for new instances on " << singleInstanceServer->fullServerName().toStdString() << std::endl;
     singleInstanceServer->connect(singleInstanceServer, &QLocalServer::newConnection, [singleInstanceServer,mainWindow](){
         QLocalSocket* zygote = singleInstanceServer->nextPendingConnection();
@@ -129,6 +130,9 @@ QLocalServer* startSingleInstanceServer(MainWindow* mainWindow)
         zygote->connect(zygote, &QLocalSocket::readyRead, &waitLoop, &QEventLoop::quit);
         QTimer::singleShot(1000, &waitLoop, SLOT(quit()));
         waitLoop.exec();
+
+        mainWindow->raise();
+        mainWindow->activateWindow();
 
         if( zygote->bytesAvailable() )
         {
@@ -159,7 +163,6 @@ int main( int argc, char** argv )
    //Windows and Linux will just run our program with the URL as an argument.
 #ifdef __APPLE__
    //Install OSX event handler
-   ilog("Installing URL open event filter");
    app.installEventFilter(&mainWindow);
 #endif
 
@@ -175,12 +178,11 @@ int main( int argc, char** argv )
            sock->write(argv[1]);
            sock->waitForBytesWritten();
            sock->close();
-           delete sock;
-           return 0;
        }
-       //Note that we connected, but may not have sent anything. That means there's already an instance
-       //but we have no custom URL to pass to it. This is OK; we'll just fail to lock the database later
-       //on and display a message saying another instance was running.
+       //Note that we connected, but may not have sent anything. This means that another instance is already
+       //running. The fact that we connected prompted it to request focus; we will just exit now.
+       delete sock;
+       return 0;
    }
    else
    {
