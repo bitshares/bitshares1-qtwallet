@@ -2,6 +2,7 @@
 #include "ClientWrapper.hpp"
 #include "Utilities.hpp"
 #include "MainWindow.hpp"
+#include "config.hpp"
 
 #include <boost/thread.hpp>
 #include <bts/blockchain/config.hpp>
@@ -26,6 +27,9 @@
 #include <QMainWindow>
 #include <QMenuBar>
 #include <QLayout>
+#include <QLocalSocket>
+#include <QLocalServer>
+#include <QMessageBox>
 
 #include <boost/program_options.hpp>
 
@@ -94,13 +98,50 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
        mainWindow->processDeferredUrl();
     });
     client->connect(client, &ClientWrapper::error, [=](QString errorString) {
-       splash->showMessage(errorString, Qt::AlignCenter | Qt::AlignBottom, Qt::red);
-       fc::usleep( fc::seconds(3) );
-       qApp->exit(1);
+       splash->hide();
+       QMessageBox::critical(nullptr, QObject::tr("Error"), errorString);
+       exit(1);
     });
     client->connect(client, &ClientWrapper::status_update, [=](QString messageString) {
        splash->showMessage(messageString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
     });
+}
+
+QLocalServer* startSingleInstanceServer(MainWindow* mainWindow)
+{
+    QLocalServer* singleInstanceServer = new QLocalServer();
+    if( !singleInstanceServer->listen(BTS_BLOCKCHAIN_NAME) )
+    {
+        std::cerr << "Could not start new instance listener. Attempting to remove defunct listener... ";
+        QLocalServer::removeServer(BTS_BLOCKCHAIN_NAME);
+        if( !singleInstanceServer->listen(BTS_BLOCKCHAIN_NAME) )
+        {
+            std::cerr << "Failed to start new instance listener: " << singleInstanceServer->errorString().toStdString() << std::endl;
+            exit(1);
+        }
+        std::cerr << "Success.\n";
+    }
+    std::cout << "Listening for new instances on " << singleInstanceServer->fullServerName().toStdString() << std::endl;
+    singleInstanceServer->connect(singleInstanceServer, &QLocalServer::newConnection, [singleInstanceServer,mainWindow](){
+        QLocalSocket* zygote = singleInstanceServer->nextPendingConnection();
+        QEventLoop waitLoop;
+
+        zygote->connect(zygote, &QLocalSocket::readyRead, &waitLoop, &QEventLoop::quit);
+        QTimer::singleShot(1000, &waitLoop, SLOT(quit()));
+        waitLoop.exec();
+
+        if( zygote->bytesAvailable() )
+        {
+            QByteArray message = zygote->readLine();
+            ilog("Got message from new instance: ${msg}", ("msg",message.data()));
+            mainWindow->processCustomUrl(message);
+        }
+        zygote->close();
+
+        delete zygote;
+    });
+
+    return singleInstanceServer;
 }
 
 int main( int argc, char** argv )
@@ -112,11 +153,54 @@ int main( int argc, char** argv )
    app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
    MainWindow mainWindow;
+
+   //Custom URL handling. OSX handles this differently from Windows and Linux
+   //On OSX, the OS will always pass the URL as an event to QApplication.
+   //Windows and Linux will just run our program with the URL as an argument.
+#ifdef __APPLE__
+   //Install OSX event handler
+   ilog("Installing URL open event filter");
+   app.installEventFilter(&mainWindow);
+#endif
+
+   //We'll go ahead and leave Win/Lin URL handling available in OSX too
+   QLocalSocket* sock = new QLocalSocket();
+   sock->connectToServer(BTS_BLOCKCHAIN_NAME);
+   if( sock->waitForConnected(100) )
+   {
+       if( argc > 1 && app.arguments()[1].startsWith(QString(CUSTOM_URL_SCHEME) + ":") )
+       {
+           //Need to open a custom URL. Pass it to pre-existing instance.
+           std::cout << "Found instance already running. Sending message and exiting." << std::endl;
+           sock->write(argv[1]);
+           sock->waitForBytesWritten();
+           sock->close();
+           delete sock;
+           return 0;
+       }
+       //Note that we connected, but may not have sent anything. That means there's already an instance
+       //but we have no custom URL to pass to it. This is OK; we'll just fail to lock the database later
+       //on and display a message saying another instance was running.
+   }
+   else
+   {
+       if( argc > 1 && app.arguments()[1].startsWith(QString(CUSTOM_URL_SCHEME) + ":") )
+       {
+           //No other instance running. Handle URL when we get started up.
+           mainWindow.deferCustomUrl(app.arguments()[1]);
+       }
+
+       //Could not connect to already-running instance. Start a server so future instances connect to us
+       QLocalServer* singleInstanceServer = startSingleInstanceServer(&mainWindow);
+       app.connect(&app, &QApplication::aboutToQuit, singleInstanceServer, &QLocalServer::deleteLater);
+   }
+   delete sock;
+
    auto viewer = new Html5Viewer;
    ClientWrapper client;
 
 #ifdef NDEBUG
-   app.connect(&app, &QApplication::aboutToQuit, [&client](){
+   app.connect(&app, &QApplication::aboutToQuit, [&client,&singleInstanceServer](){
        client.get_client()->get_wallet()->close();
        client.get_client()->get_chain()->close();
        exit(0);
@@ -125,12 +209,6 @@ int main( int argc, char** argv )
 
    mainWindow.setCentralWidget(viewer);
    mainWindow.setClientWrapper(&client);
-
-#ifdef __APPLE__
-   //Install OSX event handler
-   ilog("Installing URL open event filter");
-   app.installEventFilter(&mainWindow);
-#endif
 
    QTimer fc_tasks;
    fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
