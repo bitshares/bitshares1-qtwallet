@@ -3,6 +3,7 @@
     <file>htdocs/blank.html</file>
     <file>htdocs/favicon.ico</file>
     <file>htdocs/index.html</file>
+    <file>htdocs/locale-en.json</file>
     <file>htdocs/css/app.css</file>
     <file>htdocs/img/bg-head.jpg</file>
     <file>htdocs/img/bitsharesIcon.png</file>
