@@ -28,7 +28,7 @@ public:
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper *clientWrapper);
 
-public slots:
+public Q_SLOTS:
     void goToMyAccounts();
     void goToCreateAccount();
 

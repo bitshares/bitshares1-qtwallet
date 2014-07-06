@@ -32,6 +32,8 @@ include_directories( "${CMAKE_SOURCE_DIR}/libraries/cli/include" )
 include_directories( "${CMAKE_SOURCE_DIR}/libraries/utilities/include" )
 include_directories( "${CMAKE_SOURCE_DIR}/libraries/bitcoin_import/include" )
 
+ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
+
 set( SOURCES
   htdocs.qrc
   bitshares.qrc
