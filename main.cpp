@@ -57,11 +57,6 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef NDEBUG
-#include "config_prod.hpp"
-#else
-#include "config_dev.hpp"
-#endif
 
 void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
 {
