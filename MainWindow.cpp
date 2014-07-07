@@ -6,9 +6,12 @@
 #include <QMenuBar>
 #include <QFileOpenEvent>
 #include <QInputDialog>
+#include <QMessageBox>
 
 #include <bts/blockchain/config.hpp>
+#include <bts/client/client.hpp>
 #include <bts/wallet/config.hpp>
+#include <bts/blockchain/account_record.hpp>
 
 MainWindow::MainWindow()
 : _settings("BitShares", BTS_BLOCKCHAIN_NAME),
@@ -67,9 +70,53 @@ void MainWindow::processCustomUrl(QString url)
 
     QStringList components = url.split('/', QString::SkipEmptyParts);
 
-    if( components[0].toLower() == components[0] )
+    if( components[0].contains(':') )
+    {
+        //This is a username:key pair
+        int colon = components[0].indexOf(':');
+        QString username = components[0].left(colon);
+        bts::blockchain::public_key_type key(components[0].mid(colon+1).toStdString());
+
+        try
+        {
+            _clientWrapper->get_client()->get_wallet()->add_contact_account(username.toStdString(), key);
+            goToAccount(username);
+        }
+        catch(const fc::exception& e)
+        {
+            //Display error from backend, but chop off the "Assert exception" stuff before the colon
+            QString error = e.to_string().c_str();
+            QMessageBox::warning(this, tr("Invalid Account"), tr("Could not create contact account:") + error.mid(error.indexOf(':')+1));
+            return;
+        }
+
+        if( walletIsUnlocked(false) && components.size() > 1 )
+        {
+            if( components[1] == "approve" )
+                _clientWrapper->confirm_and_set_approval(username, true);
+            else if( components[1] == "disapprove" )
+                _clientWrapper->confirm_and_set_approval(username, false);
+        }
+    }
+    else if( components[0].toLower() == components[0] )
     {
         //This is a username.
+        auto account = _clientWrapper->get_client()->blockchain_get_account(components[0].toStdString());
+        if( !account.valid() )
+        {
+            QMessageBox::warning(this, tr("Invalid Account"), tr("The requested account does not exist."));
+            return;
+        }
+        else
+            goToAccount(components[0]);
+
+        if( walletIsUnlocked(false) && components.size() > 1 )
+        {
+            if( components[1] == "approve" )
+                _clientWrapper->confirm_and_set_approval(components[0], true);
+            else if( components[1] == "disapprove" )
+                _clientWrapper->confirm_and_set_approval(components[0], false);
+        }
     }
     else if( components[0].size() > QString(BTS_ADDRESS_PREFIX).size() && components[0].startsWith(BTS_ADDRESS_PREFIX) )
     {
@@ -82,6 +129,25 @@ void MainWindow::processCustomUrl(QString url)
     else if( components[0] == "Login" )
     {
         //This is a login request
+    }
+    else if( components[0] == "Block" )
+    {
+        //This is a block ID or number
+        if( components[1] == "num" && components.size() > 2 )
+        {
+            bool ok = false;
+            uint32_t blockNumber = components[2].toInt(&ok);
+            if( ok )
+                goToBlock(blockNumber);
+            else
+                QMessageBox::warning(this, tr("Invalid Block Number"), tr("The specified block number does not exist."));
+        }
+        else
+            goToBlock(components[1]);
+    }
+    else if( components[0] == "Trx" )
+    {
+        goToTransaction(components[1]);
     }
 }
 
@@ -103,12 +169,49 @@ void MainWindow::goToMyAccounts()
     getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/accounts");
 }
 
+void MainWindow::goToAccount(QString accountName)
+{
+    if( !walletIsUnlocked() )
+      return;
+
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/accounts/" + accountName);
+}
+
 void MainWindow::goToCreateAccount()
 {
     if( !walletIsUnlocked() )
         return;
 
     getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
+}
+
+void MainWindow::goToBlock(uint32_t blockNumber)
+{
+    if( !walletIsUnlocked() )
+        return;
+
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/blocks/" + QString("%1").arg(blockNumber));
+}
+
+void MainWindow::goToBlock(QString blockId)
+{
+    try
+    {
+        auto block = _clientWrapper->get_client()->get_chain()->get_block_digest(bts::blockchain::block_id_type(blockId.toStdString()));
+        goToBlock(block.block_num);
+    }
+    catch(...)
+    {
+        QMessageBox::warning(this, tr("Invalid Block"), tr("The specified block ID does not exist."));
+    }
+}
+
+void MainWindow::goToTransaction(QString transactionId)
+{
+    if( !walletIsUnlocked() )
+        return;
+
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/tx/" + transactionId);
 }
 
 Html5Viewer* MainWindow::getViewer()

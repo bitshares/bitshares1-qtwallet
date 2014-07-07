@@ -23,7 +23,10 @@ class ClientWrapper : public QObject
        Q_INVOKABLE QString get_http_auth_token();
        std::shared_ptr<bts::client::client> get_client() { return _client; }
 
-   signals:
+public slots:
+       void confirm_and_set_approval(QString delegate_name, bool approve);
+
+signals:
        void initialized();
        void status_update(QString statusString);
        void error(QString errorString);

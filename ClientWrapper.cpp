@@ -7,6 +7,7 @@
 #include <QSettings>
 #include <QJsonDocument>
 #include <QUrl>
+#include <QMessageBox>
 
 #include <iostream>
 
@@ -155,4 +156,21 @@ QString ClientWrapper::get_http_auth_token()
     return result.toBase64( QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals );
 }
 
+void ClientWrapper::confirm_and_set_approval(QString delegate_name, bool approve)
+{
+    auto account = get_client()->blockchain_get_account(delegate_name.toStdString());
+    if( account.valid() && account->is_delegate() )
+    {
+      if( QMessageBox::question(nullptr,
+                                tr("Set Delegate Approval"),
+                                tr("Would you like to update approval rating of Delegate %1 to %2?")
+                                    .arg(delegate_name)
+                                    .arg(approve?"Approve":"Disapprove")
+                                )
+              == QMessageBox::Yes )
+        get_client()->wallet_approve_delegate(delegate_name.toStdString(), approve);
+    }
+    else
+        QMessageBox::warning(nullptr, tr("Invalid Account"), tr("Account %1 is not a delegate, so its approval cannot be set.").arg(delegate_name));
 
+}

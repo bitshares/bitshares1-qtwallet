@@ -30,6 +30,7 @@ public:
 
 public slots:
     void goToMyAccounts();
+    void goToAccount(QString accountName);
     void goToCreateAccount();
 
     ///Used to schedule a custom URL for processing later, once the app has finished starting
@@ -38,6 +39,9 @@ public slots:
     void processDeferredUrl();
     ///Used to process a custom URL now (only call if app has finished starting)
     void processCustomUrl(QString url);
+    void goToBlock(uint32_t blockNumber);
+    void goToBlock(QString blockId);
+    void goToTransaction(QString transactionId);
 private:
     ClientWrapper* _clientWrapper;
 
