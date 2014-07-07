@@ -16,7 +16,7 @@ class MainWindow : public QMainWindow
     QMenu* _accountMenu;
     QString _deferredUrl;
     
-public:
+  public:
     MainWindow();
     QMenu* fileMenu() { return _fileMenu; }
     QMenu* accountMenu() { return _accountMenu; }
@@ -28,7 +28,7 @@ public:
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper *clientWrapper);
 
-public slots:
+  public Q_SLOTS:
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
@@ -42,7 +42,7 @@ public slots:
     void goToBlock(uint32_t blockNumber);
     void goToBlock(QString blockId);
     void goToTransaction(QString transactionId);
-private:
+  private:
     ClientWrapper* _clientWrapper;
 
     Html5Viewer *getViewer();

@@ -50,10 +50,10 @@ public:
     virtual bool move(const QPointF &pressPoint) = 0;
     virtual bool release(const QPointF &pressPoint) = 0;
 
-signals:
+Q_SIGNALS:
     void positionChanged(const QPointF &point, const QPoint &startPressPoint);
 
-public slots:
+public Q_SLOTS:
     virtual void setRange(const QRectF &range) = 0;
 
 private:
@@ -95,10 +95,10 @@ public:
     virtual bool move(const QPointF &pressPoint);
     virtual bool release(const QPointF &pressPoint);
 
-signals:
+Q_SIGNALS:
     void setRange(const QRectF &range);
 
-public slots:
+public Q_SLOTS:
     void decelerationTimerFired();
     void changePosition(const QPointF &point);
     bool isFlick(const QPointF &point, int distance) const;
@@ -172,10 +172,10 @@ public:
     WebTouchScroller(QObject *parent = 0);
     virtual ~WebTouchScroller();
 
-signals:
+Q_SIGNALS:
     void rangeChanged(const QRectF &range);
 
-public slots:
+public Q_SLOTS:
     void setFrame(QWebFrame* frame);
     void scroll(const QPointF &delta, const QPoint &scrollStartPoint);
 
@@ -210,7 +210,7 @@ protected:
     void handleMoveEvent(const WebTouchEvent &event);
     void handleReleaseEvent(const WebTouchEvent &event);
 
-public slots:
+public Q_SLOTS:
     void hoverTimerFired();
     void downTimerFired();
     void quickDownTimerFired();
@@ -286,7 +286,7 @@ public:
     QWebPage* webPage() const;
     QGraphicsWebView* graphicsWebView() const;
 
-signals:
+Q_SIGNALS:
     void pauseNavigation();
     void resumeNavigation();
 
@@ -404,7 +404,7 @@ void WebTouchPhysics::changePosition(const QPointF &point)
 {
     m_inMotion = true;
     QPointF diff = m_previousPoint - point;
-    emit positionChanged(diff, m_startPressPoint);
+    Q_EMIT positionChanged(diff, m_startPressPoint);
 
     m_cumulativeDistance += (point - m_previousPoint);
     m_previousPoint = point;
@@ -428,7 +428,7 @@ void WebTouchPhysics::decelerationTimerFired()
     }
 
     m_decelerationSpeed *= KDecelerationSlowdownFactor;
-    emit positionChanged(QPoint(m_decelerationSpeed.x(), m_decelerationSpeed.y()), m_startPressPoint);
+    Q_EMIT positionChanged(QPoint(m_decelerationSpeed.x(), m_decelerationSpeed.y()), m_startPressPoint);
 }
 
 bool WebTouchPhysics::isFlick(const QPointF &pressPoint, int distance) const
@@ -1055,13 +1055,13 @@ public:
     void resizeEvent(QResizeEvent *event);
     static QString adjustPath(const QString &path);
 
-public slots:
+public Q_SLOTS:
     void quit();
 
-private slots:
+private Q_SLOTS:
     void addToJavaScript();
 
-signals:
+Q_SIGNALS:
     void quitRequested();
 
 public:
@@ -1120,7 +1120,7 @@ QString Html5ViewerPrivate::adjustPath(const QString &path)
 
 void Html5ViewerPrivate::quit()
 {
-    emit quitRequested();
+    Q_EMIT quitRequested();
 }
 
 void Html5ViewerPrivate::addToJavaScript()

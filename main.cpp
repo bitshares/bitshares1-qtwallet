@@ -57,182 +57,177 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef NDEBUG
-#include "config_prod.hpp"
-#else
-#include "config_dev.hpp"
-#endif
 
 void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
 {
-    auto accountMenu = mainWindow->accountMenu();
+  auto accountMenu = mainWindow->accountMenu();
 
-    accountMenu->addAction("&Go to My Accounts", mainWindow, SLOT(goToMyAccounts()));
-    accountMenu->addAction("&Create Account", mainWindow, SLOT(goToCreateAccount()));
-    accountMenu->addAction("&Import Account")->setEnabled(false);
+  accountMenu->addAction("&Go to My Accounts", mainWindow, SLOT(goToMyAccounts()));
+  accountMenu->addAction("&Create Account", mainWindow, SLOT(goToCreateAccount()));
+  accountMenu->addAction("&Import Account")->setEnabled(false);
 }
 
 void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)
 {
-    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
-    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
+  viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
+  viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
 
-    QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
-                     [client](QNetworkReply*, QAuthenticator *auth) {
-       auth->setUser(client->http_url().userName());
-       auth->setPassword(client->http_url().password());
-    });
-    client->connect(client, &ClientWrapper::initialized, [viewer,client,mainWindow]() {
-       ilog( "Client initialized; loading web interface from ${url}", ("url", client->http_url().toString().toStdString()) );
-       client->status_update("Calculating last 3 digits of pi");
-       viewer->webView()->load(client->http_url());
-       //Now we know the URL of the app, so we can create the items in the Accounts menu
-       setupMenus(client, mainWindow);
-    });
-    auto loadFinishedConnection = std::make_shared<QMetaObject::Connection>();
-    *loadFinishedConnection = viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow,splash,viewer,loadFinishedConnection](bool ok) {
-       ilog( "Webview loaded: ${status}", ("status", ok) );
-       viewer->disconnect(*loadFinishedConnection);
-       mainWindow->show();
-       splash->finish(mainWindow);
-       mainWindow->processDeferredUrl();
-    });
-    client->connect(client, &ClientWrapper::error, [=](QString errorString) {
-       splash->hide();
-       QMessageBox::critical(nullptr, QObject::tr("Error"), errorString);
-       exit(1);
-    });
-    client->connect(client, &ClientWrapper::status_update, [=](QString messageString) {
-       splash->showMessage(messageString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
-    });
+  QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
+                   [client](QNetworkReply*, QAuthenticator *auth) {
+    auth->setUser(client->http_url().userName());
+    auth->setPassword(client->http_url().password());
+  });
+  client->connect(client, &ClientWrapper::initialized, [viewer,client,mainWindow]() {
+    ilog( "Client initialized; loading web interface from ${url}", ("url", client->http_url().toString().toStdString()) );
+    client->status_update("Calculating last 3 digits of pi");
+    viewer->webView()->load(client->http_url());
+    //Now we know the URL of the app, so we can create the items in the Accounts menu
+    setupMenus(client, mainWindow);
+  });
+  auto loadFinishedConnection = std::make_shared<QMetaObject::Connection>();
+  *loadFinishedConnection = viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow,splash,viewer,loadFinishedConnection](bool ok) {
+    ilog( "Webview loaded: ${status}", ("status", ok) );
+    viewer->disconnect(*loadFinishedConnection);
+    mainWindow->show();
+    splash->finish(mainWindow);
+    mainWindow->processDeferredUrl();
+  });
+  client->connect(client, &ClientWrapper::error, [=](QString errorString) {
+    splash->hide();
+    QMessageBox::critical(nullptr, QObject::tr("Error"), errorString);
+    exit(1);
+  });
+  client->connect(client, &ClientWrapper::status_update, [=](QString messageString) {
+    splash->showMessage(messageString, Qt::AlignCenter | Qt::AlignBottom, Qt::white);
+  });
 }
 
 QLocalServer* startSingleInstanceServer(MainWindow* mainWindow)
 {
-    QLocalServer* singleInstanceServer = new QLocalServer();
+  QLocalServer* singleInstanceServer = new QLocalServer();
+  if( !singleInstanceServer->listen(BTS_BLOCKCHAIN_NAME) )
+  {
+    std::cerr << "Could not start new instance listener. Attempting to remove defunct listener... ";
+    QLocalServer::removeServer(BTS_BLOCKCHAIN_NAME);
     if( !singleInstanceServer->listen(BTS_BLOCKCHAIN_NAME) )
     {
-        std::cerr << "Could not start new instance listener. Attempting to remove defunct listener... ";
-        QLocalServer::removeServer(BTS_BLOCKCHAIN_NAME);
-        if( !singleInstanceServer->listen(BTS_BLOCKCHAIN_NAME) )
-        {
-            std::cerr << "Failed to start new instance listener: " << singleInstanceServer->errorString().toStdString() << std::endl;
-            exit(1);
-        }
-        std::cerr << "Success.\n";
+      std::cerr << "Failed to start new instance listener: " << singleInstanceServer->errorString().toStdString() << std::endl;
+      exit(1);
     }
+    std::cerr << "Success.\n";
+  }
 
-    std::cout << "Listening for new instances on " << singleInstanceServer->fullServerName().toStdString() << std::endl;
-    singleInstanceServer->connect(singleInstanceServer, &QLocalServer::newConnection, [singleInstanceServer,mainWindow](){
-        QLocalSocket* zygote = singleInstanceServer->nextPendingConnection();
-        QEventLoop waitLoop;
+  std::cout << "Listening for new instances on " << singleInstanceServer->fullServerName().toStdString() << std::endl;
+  singleInstanceServer->connect(singleInstanceServer, &QLocalServer::newConnection, [singleInstanceServer,mainWindow](){
+    QLocalSocket* zygote = singleInstanceServer->nextPendingConnection();
+    QEventLoop waitLoop;
 
-        zygote->connect(zygote, &QLocalSocket::readyRead, &waitLoop, &QEventLoop::quit);
-        QTimer::singleShot(1000, &waitLoop, SLOT(quit()));
-        waitLoop.exec();
+    zygote->connect(zygote, &QLocalSocket::readyRead, &waitLoop, &QEventLoop::quit);
+    QTimer::singleShot(1000, &waitLoop, SLOT(quit()));
+    waitLoop.exec();
 
-        mainWindow->raise();
-        mainWindow->activateWindow();
+    mainWindow->raise();
+    mainWindow->activateWindow();
 
-        if( zygote->bytesAvailable() )
-        {
-            QByteArray message = zygote->readLine();
-            ilog("Got message from new instance: ${msg}", ("msg",message.data()));
-            mainWindow->processCustomUrl(message);
-        }
-        zygote->close();
+    if( zygote->bytesAvailable() )
+    {
+      QByteArray message = zygote->readLine();
+      ilog("Got message from new instance: ${msg}", ("msg",message.data()));
+      mainWindow->processCustomUrl(message);
+    }
+    zygote->close();
 
-        delete zygote;
-    });
+    delete zygote;
+  });
 
-    return singleInstanceServer;
+  return singleInstanceServer;
 }
 
 int main( int argc, char** argv )
 {
-   QCoreApplication::setOrganizationName( "BitShares" );
-   QCoreApplication::setOrganizationDomain( "bitshares.org" );
-   QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
-   QApplication app(argc, argv);
-   app.setWindowIcon(QIcon(":/images/qtapp.ico"));
+  QCoreApplication::setOrganizationName( "BitShares" );
+  QCoreApplication::setOrganizationDomain( "bitshares.org" );
+  QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
+  QApplication app(argc, argv);
+  app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
-   MainWindow mainWindow;
+  MainWindow mainWindow;
 
-   //Custom URL handling. OSX handles this differently from Windows and Linux
-   //On OSX, the OS will always pass the URL as an event to QApplication.
-   //Windows and Linux will just run our program with the URL as an argument.
+  //Custom URL handling. OSX handles this differently from Windows and Linux
+  //On OSX, the OS will always pass the URL as an event to QApplication.
+  //Windows and Linux will just run our program with the URL as an argument.
 #ifdef __APPLE__
-   //Install OSX event handler
-   app.installEventFilter(&mainWindow);
+  //Install OSX event handler
+  app.installEventFilter(&mainWindow);
 #endif
 
-   //We'll go ahead and leave Win/Lin URL handling available in OSX too
-   QLocalSocket* sock = new QLocalSocket();
-   sock->connectToServer(BTS_BLOCKCHAIN_NAME);
-   if( sock->waitForConnected(100) )
-   {
-       if( argc > 1 && app.arguments()[1].startsWith(QString(CUSTOM_URL_SCHEME) + ":") )
-       {
-           //Need to open a custom URL. Pass it to pre-existing instance.
-           std::cout << "Found instance already running. Sending message and exiting." << std::endl;
-           sock->write(argv[1]);
-           sock->waitForBytesWritten();
-           sock->close();
-       }
-       //Note that we connected, but may not have sent anything. This means that another instance is already
-       //running. The fact that we connected prompted it to request focus; we will just exit now.
-       delete sock;
-       return 0;
-   }
-   else
-   {
-       if( argc > 1 && app.arguments()[1].startsWith(QString(CUSTOM_URL_SCHEME) + ":") )
-       {
-           //No other instance running. Handle URL when we get started up.
-           mainWindow.deferCustomUrl(app.arguments()[1]);
-       }
+  //We'll go ahead and leave Win/Lin URL handling available in OSX too
+  QLocalSocket* sock = new QLocalSocket();
+  sock->connectToServer(BTS_BLOCKCHAIN_NAME);
+  if( sock->waitForConnected(100) )
+  {
+    if( argc > 1 && app.arguments()[1].startsWith(QString(CUSTOM_URL_SCHEME) + ":") )
+    {
+      //Need to open a custom URL. Pass it to pre-existing instance.
+      std::cout << "Found instance already running. Sending message and exiting." << std::endl;
+      sock->write(argv[1]);
+      sock->waitForBytesWritten();
+      sock->close();
+    }
+    //Note that we connected, but may not have sent anything. This means that another instance is already
+    //running. The fact that we connected prompted it to request focus; we will just exit now.
+    delete sock;
+    return 0;
+  }
+  else
+  {
+    if( argc > 1 && app.arguments()[1].startsWith(QString(CUSTOM_URL_SCHEME) + ":") )
+    {
+      //No other instance running. Handle URL when we get started up.
+      mainWindow.deferCustomUrl(app.arguments()[1]);
+    }
 
-       //Could not connect to already-running instance. Start a server so future instances connect to us
-       QLocalServer* singleInstanceServer = startSingleInstanceServer(&mainWindow);
-       app.connect(&app, &QApplication::aboutToQuit, singleInstanceServer, &QLocalServer::deleteLater);
-   }
-   delete sock;
+    //Could not connect to already-running instance. Start a server so future instances connect to us
+    QLocalServer* singleInstanceServer = startSingleInstanceServer(&mainWindow);
+    app.connect(&app, &QApplication::aboutToQuit, singleInstanceServer, &QLocalServer::deleteLater);
+  }
+  delete sock;
 
-   auto viewer = new Html5Viewer;
-   ClientWrapper client;
+  auto viewer = new Html5Viewer;
+  ClientWrapper client;
 
-//#ifdef NDEBUG
-   app.connect(&app, &QApplication::aboutToQuit, [&client](){
-       client.get_client()->get_wallet()->close();
-       client.get_client()->get_chain()->close();
-       exit(0);
-   });
-//#endif
+  //#ifdef NDEBUG
+  app.connect(&app, &QApplication::aboutToQuit, [&client](){
+    client.get_client()->get_wallet()->close();
+    client.get_client()->get_chain()->close();
+    exit(0);
+  });
+  //#endif
 
-   mainWindow.setCentralWidget(viewer);
-   mainWindow.setClientWrapper(&client);
+  mainWindow.setCentralWidget(viewer);
+  mainWindow.setClientWrapper(&client);
 
-   QTimer fc_tasks;
-   fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
-   fc_tasks.start(33);
+  QTimer fc_tasks;
+  fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
+  fc_tasks.start(33);
 
-   QPixmap pixmap(":/images/splash_screen.jpg");
-   QSplashScreen splash(pixmap);
-   splash.showMessage(QObject::tr("Loading configuration..."),
-                      Qt::AlignCenter | Qt::AlignBottom, Qt::white);
-   splash.show();
+  QPixmap pixmap(":/images/splash_screen.jpg");
+  QSplashScreen splash(pixmap);
+  splash.showMessage(QObject::tr("Loading configuration..."),
+                     Qt::AlignCenter | Qt::AlignBottom, Qt::white);
+  splash.show();
 
-   prepareStartupSequence(&client, viewer, &mainWindow, &splash);
+  prepareStartupSequence(&client, viewer, &mainWindow, &splash);
 
-   QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
+  QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
 
-   try {
+  try {
     client.initialize();
     return app.exec();
-   }
-   catch ( const fc::exception& e) 
-   {
-      elog( "${e}", ("e",e.to_detail_string() ) );
-      QErrorMessage::qtHandler()->showMessage( e.to_string().c_str() );
-   }
+  }
+  catch ( const fc::exception& e)
+  {
+    elog( "${e}", ("e",e.to_detail_string() ) );
+    QErrorMessage::qtHandler()->showMessage( e.to_string().c_str() );
+  }
 }

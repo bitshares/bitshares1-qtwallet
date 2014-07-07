@@ -6,10 +6,14 @@
 
 Download and install QT 5.3, see http://qt-project.org/downloads
 Set envronment variable CMAKE_PREFIX_PATH to point to clang_64 in your QT directory, e.g.:
+```
     $ export CMAKE_PREFIX_PATH=/Users/user/Qt5.3.0/5.3/clang_64
+```    
 
 Use CMake to configure bitshares_toolkit, set INCLUDE_QT_WALLET to TRUE or to ON, e.g.
+```
     $ cmake -DINCLUDE_QT_WALLET=ON ../bitshares_toolkit
+```
 
 The wallet needs access to the built web application in order to build. This can be built automatically by invoking the 'buildweb' rule via 'make buildweb'.
 Note that the web wallet is expected to be in .../bitshares_toolkit/programs/web_wallet.
@@ -18,8 +22,9 @@ If there were no compilation errors, the executable will be located in programs/
 Now you need to run it in a way similar to bitshares_client - it accepts the same command line parameters as bitshares_client or reads them from config.json.
 
 To create installation package, type:
+```
     $ make package
-
+```
 
 ### Windows
 
