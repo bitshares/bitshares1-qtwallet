@@ -296,7 +296,15 @@ bool MainWindow::walletIsUnlocked(bool promptToUnlock)
 std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
 {
   auto serverAccount = _clientWrapper->get_client()->get_chain()->get_account_record(serverKey);
-  QString serverName = (serverAccount.valid()? serverAccount->name.c_str() : "UNRECOGNIZED");
+  if( !serverAccount.valid() )
+  {
+    QMessageBox::critical(this,
+                          tr("Misconfigured Server"),
+                          tr("The website you are trying to log into is experiencing problems, and cannot accept logins at this time."));
+    return std::string();
+  }
+
+  QString serverName = serverAccount->name.c_str();
 
   QDialog userSelecterDialog(this);
   userSelecterDialog.setWindowModality(Qt::WindowModal);
@@ -305,11 +313,16 @@ std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
   auto wallet_accounts = _clientWrapper->get_client()->wallet_list_my_accounts();
   if( wallet_accounts.size() == 1 )
   {
-    if( QMessageBox::question(this, tr("Login"),
-                              tr("You are about to log in with %1 as %2. Would you like to continue?")
-                                  .arg(serverName)
-                                  .arg(wallet_accounts[0].name.c_str()))
-        == QMessageBox::Yes )
+    QMessageBox loginAuthBox(QMessageBox::Question,
+                             tr("Login"),
+                             tr("You are about to log in to %1 as %2. Would you like to continue?")
+                                .arg(serverName)
+                                .arg(wallet_accounts[0].name.c_str()),
+                             QMessageBox::Yes | QMessageBox::No,
+                             this);
+    loginAuthBox.setDefaultButton(QMessageBox::Yes);
+    loginAuthBox.setWindowModality(Qt::WindowModal);
+    if( loginAuthBox.exec() == QMessageBox::Yes )
       return wallet_accounts[0].name;
     else
       return std::string();
@@ -329,7 +342,7 @@ std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
 
   QFormLayout* userSelecterLayout = new QFormLayout(&userSelecterDialog);
   QHBoxLayout* buttonsLayout = new QHBoxLayout(&userSelecterDialog);
-  userSelecterLayout->addRow(tr("You are logging in with %1. Please select the account to login with:").arg(serverName), userSelecterBox);
+  userSelecterLayout->addRow(tr("You are logging in to %1. Please select the account to login with:").arg(serverName), userSelecterBox);
   userSelecterLayout->addRow(buttonsLayout);
   userSelecterDialog.setLayout(userSelecterLayout);
   buttonsLayout->addStretch();
@@ -393,6 +406,7 @@ void MainWindow::doLogin(QStringList components)
     QUrl url("http://" + QStringList(components.mid(2)).join('/'));
     QUrlQuery query;
     query.addQueryItem("client_key", myOneTimeKey.get_public_key().to_base58().c_str());
+    query.addQueryItem("client_name", loginUser.c_str());
     query.addQueryItem("server_key", serverOneTimeKey.to_base58().c_str());
     fc::ecc::compact_signature signature = _clientWrapper->get_client()->wallet_sign_hash(loginUser, fc::sha256::hash(secret.data(), 512/8));
     query.addQueryItem("signed_secret", fc::variant(signature).as_string().c_str());
