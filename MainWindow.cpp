@@ -16,6 +16,7 @@
 #include <QStringListModel>
 #include <QPushButton>
 #include <QFormLayout>
+#include <QNetworkReply>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -165,7 +166,7 @@ void MainWindow::processCustomUrl(QString url)
     }
 
     QNetworkAccessManager net;
-    QNetworkRequest request(QUrl(components[1] + "/" LOGIN_QUERY_PAGE));
+    QNetworkRequest request(QUrl("http://" + components[1] + "/" LOGIN_QUERY_PAGE));
 
     try
     {
