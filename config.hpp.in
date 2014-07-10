@@ -4,3 +4,4 @@
 #pragma once
 
 #define CUSTOM_URL_SCHEME "@CUSTOM_URL_SCHEME@"
+#define LOGIN_QUERY_PAGE CUSTOM_URL_SCHEME "Login"

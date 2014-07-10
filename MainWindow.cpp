@@ -7,6 +7,9 @@
 #include <QFileOpenEvent>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QUrlQuery>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -69,6 +72,12 @@ void MainWindow::processCustomUrl(QString url)
   ilog("Processing custom URL request for ${url}", ("url", url.toStdString()));
 
   QStringList components = url.split('/', QString::SkipEmptyParts);
+  if( components.empty() )
+  {
+    elog("Invalid URL has no contents!");
+    QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
+    return;
+  }
 
   if( components[0].contains(':') )
   {
@@ -129,10 +138,45 @@ void MainWindow::processCustomUrl(QString url)
   else if( components[0] == "Login" )
   {
     //This is a login request
+    if( components.size() != 3 )
+    {
+      elog("Invalid URL has ${url_parts} parts, but should have 2.", ("url_parts", components.size()));
+      QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
+      return;
+    }
+
+    QNetworkAccessManager net;
+    QNetworkRequest request(QUrl(components[1] + "/" LOGIN_QUERY_PAGE));
+
+    fc::ecc::private_key myKey = fc::ecc::private_key::generate();
+    fc::ecc::public_key serverKey = fc::ecc::public_key::from_base58(components[2].toStdString());
+    auto secret = myKey.get_shared_secret(serverKey);
+    fc::ecc::signature signature = _clientWrapper->get_client()->wallet_sign_hash("nathan", fc::sha256::hash(secret.data(), 512/8));
+
+    QUrlQuery query;
+    query.addQueryItem("client_key", myKey.get_public_key().to_base58().c_str());
+    query.addQueryItem("server_key", serverKey.to_base58().c_str());
+    query.addQueryItem("signed_secret",
+                       QByteArray(signature.begin(),
+                                  signature.size()).toBase64(QByteArray::OmitTrailingEquals));
+    QUrl postQuery;
+    postQuery.setQuery(query);
+
+    ilog("Sending login package with one-time key ${key} and signature ${sgn} to ${host}",
+         ("key",myKey.get_public_key().to_base58())
+         ("sgn", fc::base64_encode((unsigned char*)signature.begin(), signature.size()))
+         ("host", request.url().toString().toStdString()));
+    net.post(request, postQuery.toEncoded(QUrl::RemoveFragment));
   }
   else if( components[0] == "Block" )
   {
     //This is a block ID or number
+    if( components.size() == 1 )
+    {
+      elog("Invalid URL has only one part, but should have at least two.");
+      QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
+      return;
+    }
     if( components[1] == "num" && components.size() > 2 )
     {
       bool ok = false;
