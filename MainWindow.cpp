@@ -174,6 +174,7 @@ void MainWindow::processCustomUrl(QString url)
       try {
         serverKey = fc::ecc::public_key::from_base58(components[2].toStdString());
       } catch (const fc::exception& e) {
+        elog("Unable to parse public key ${key}", ("key", components[2].toStdString()));
         QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
         return;
       }
