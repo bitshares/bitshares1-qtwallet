@@ -1,4 +1,5 @@
 #include "MainWindow.hpp"
+#include "Utilities.hpp"
 #include "config.hpp"
 
 #include <QApplication>
@@ -17,6 +18,7 @@
 #include <QPushButton>
 #include <QFormLayout>
 #include <QNetworkReply>
+#include <QFileDialog>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -147,62 +149,16 @@ void MainWindow::processCustomUrl(QString url)
   else if( components[0] == "Login" )
   {
     //This is a login request
-    if( components.size() != 3 )
+    if( components.size() < 4 )
     {
-      elog("Invalid URL has ${url_parts} parts, but should have 2.", ("url_parts", components.size()));
+      elog("Invalid URL has ${url_parts} parts, but should have at least 4.", ("url_parts", components.size()));
       QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
       return;
     }
     if( !walletIsUnlocked() )
       return;
 
-    std::string loginUser = getLoginUser();
-    if( loginUser.empty() )
-      return;
-    if( loginUser == "EMPTY" )
-    {
-      QMessageBox::warning(this, tr("No Accounts Available"), tr("Could not find any accounts to log in with. Create an account and try again."));
-      return goToCreateAccount();
-    }
-
-    QNetworkAccessManager net;
-    QNetworkRequest request(QUrl("http://" + components[1] + "/" LOGIN_QUERY_PAGE));
-
-    try
-    {
-      fc::ecc::private_key myKey = fc::ecc::private_key::generate();
-      fc::ecc::public_key serverKey;
-      try {
-        serverKey = fc::ecc::public_key::from_base58(components[2].toStdString());
-      } catch (const fc::exception& e) {
-        elog("Unable to parse public key ${key}", ("key", components[2].toStdString()));
-        QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
-        return;
-      }
-      auto secret = myKey.get_shared_secret(serverKey);
-      fc::ecc::signature signature = _clientWrapper->get_client()->wallet_sign_hash(loginUser,
-                                                                                    fc::sha256::hash(secret.data(),
-                                                                                                     512/8));
-
-      QUrlQuery query;
-      query.addQueryItem("client_key", myKey.get_public_key().to_base58().c_str());
-      query.addQueryItem("server_key", serverKey.to_base58().c_str());
-      query.addQueryItem("signed_secret",
-                         QByteArray(signature.begin(),
-                                    signature.size()).toBase64(QByteArray::OmitTrailingEquals));
-      QUrl postQuery;
-      postQuery.setQuery(query);
-
-      ilog("Sending login package with one-time key ${key} and signature ${sgn} to ${host}",
-           ("key",myKey.get_public_key().to_base58())
-           ("sgn", fc::base64_encode((unsigned char*)signature.begin(), signature.size()))
-           ("host", request.url().toString().toStdString()));
-      net.post(request, postQuery.toEncoded(QUrl::RemoveFragment));
-    }
-    catch( const fc::exception& e )
-    {
-      QMessageBox::warning(this, tr("Unable to Login"), tr("An error occurred during login: %1").arg(e.to_string().c_str()));
-    }
+    doLogin(components.mid(1));
   }
   else if( components[0] == "Block" )
   {
@@ -337,15 +293,27 @@ bool MainWindow::walletIsUnlocked(bool promptToUnlock)
   return _clientWrapper->get_client()->get_wallet()->is_unlocked();
 }
 
-std::string MainWindow::getLoginUser()
+std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
 {
+  auto serverAccount = _clientWrapper->get_client()->get_chain()->get_account_record(serverKey);
+  QString serverName = (serverAccount.valid()? serverAccount->name.c_str() : "UNRECOGNIZED");
+
   QDialog userSelecterDialog(this);
   userSelecterDialog.setWindowModality(Qt::WindowModal);
 
   QStringList accounts;
   auto wallet_accounts = _clientWrapper->get_client()->wallet_list_my_accounts();
   if( wallet_accounts.size() == 1 )
-    return wallet_accounts[0].name;
+  {
+    if( QMessageBox::question(this, tr("Login"),
+                              tr("You are about to log in with %1 as %2. Would you like to continue?")
+                                  .arg(serverName)
+                                  .arg(wallet_accounts[0].name.c_str()))
+        == QMessageBox::Yes )
+      return wallet_accounts[0].name;
+    else
+      return std::string();
+  }
   if( wallet_accounts.size() == 0 )
     return "EMPTY";
 
@@ -361,7 +329,7 @@ std::string MainWindow::getLoginUser()
 
   QFormLayout* userSelecterLayout = new QFormLayout(&userSelecterDialog);
   QHBoxLayout* buttonsLayout = new QHBoxLayout(&userSelecterDialog);
-  userSelecterLayout->addRow(tr("Select the account to login with:"), userSelecterBox);
+  userSelecterLayout->addRow(tr("You are logging in with %1. Please select the account to login with:").arg(serverName), userSelecterBox);
   userSelecterLayout->addRow(buttonsLayout);
   userSelecterDialog.setLayout(userSelecterLayout);
   buttonsLayout->addStretch();
@@ -374,6 +342,72 @@ std::string MainWindow::getLoginUser()
   if( userSelecterDialog.exec() == QDialog::Accepted )
     return userSelecterBox->currentText().toStdString();
   return "";
+}
+
+void MainWindow::doLogin(QStringList components)
+{
+  try
+  {
+    fc::ecc::private_key myOneTimeKey = fc::ecc::private_key::generate();
+    fc::ecc::public_key serverOneTimeKey;
+    try {
+      serverOneTimeKey = fc::ecc::public_key::from_base58(components[0].toStdString());
+    } catch (const fc::exception& e) {
+      elog("Unable to parse public key ${key}: ${e}", ("key", components[0].toStdString())("e", e.to_detail_string()));
+      QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
+      return;
+    }
+
+    //Calculate server account public key
+    fc::ecc::public_key serverAccountKey;
+    try {
+      serverAccountKey = fc::ecc::public_key(fc::variant(components[1].toStdString()).as<fc::ecc::compact_signature>(),
+                                             fc::sha256::hash(serverOneTimeKey.to_base58()));
+    } catch (const fc::exception& e) {
+      elog("Unable to derive server account public key: ${e}",
+           ("e", e.to_detail_string()));
+      QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
+      return;
+    }
+
+    //Calculate shared secret
+    fc::sha512 secret;
+    try {
+      secret = myOneTimeKey.get_shared_secret(serverOneTimeKey);
+    } catch (const fc::exception& e) {
+      elog("Unable to derive shared secret: ${e}", ("e", e.to_detail_string()));
+      QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
+      return;
+    }
+
+    //Prompt user to login with server
+    std::string loginUser = getLoginUser(serverAccountKey);
+    if( loginUser.empty() )
+      return;
+    if( loginUser == "EMPTY" )
+    {
+      QMessageBox::warning(this, tr("No Accounts Available"), tr("Could not find any accounts to log in with. Create an account and try again."));
+      return goToCreateAccount();
+    }
+
+    QUrl url("http://" + QStringList(components.mid(2)).join('/'));
+    QUrlQuery query;
+    query.addQueryItem("client_key", myOneTimeKey.get_public_key().to_base58().c_str());
+    query.addQueryItem("server_key", serverOneTimeKey.to_base58().c_str());
+    fc::ecc::compact_signature signature = _clientWrapper->get_client()->wallet_sign_hash(loginUser, fc::sha256::hash(secret.data(), 512/8));
+    query.addQueryItem("signed_secret", fc::variant(signature).as_string().c_str());
+    url.setQuery(query);
+
+    ilog("Spawning login window with one-time key ${key} and signature ${sgn} to ${host}",
+         ("key",myOneTimeKey.get_public_key().to_base58())
+         ("sgn", fc::variant(signature).as_string())
+         ("host", url.toString().toStdString()));
+    Utilities::open_in_external_browser(url);
+  }
+  catch( const fc::exception& e )
+  {
+    QMessageBox::warning(this, tr("Unable to Login"), tr("An error occurred during login: %1").arg(e.to_string().c_str()));
+  }
 }
 
 void MainWindow::readSettings()
@@ -403,7 +437,13 @@ void MainWindow::initMenu()
 
   _fileMenu = menuBar->addMenu("&File");
   _fileMenu->addAction("&Import Wallet")->setEnabled(false);
-  _fileMenu->addAction("&Export Wallet")->setEnabled(false);
+
+  connect(_fileMenu->addAction("E&xport Wallet"), &QAction::triggered, [this](){
+    QString savePath = QFileDialog::getSaveFileName(this, tr("Export Wallet"), QString(), tr("Wallet Backups (*.json)"));
+    if( !savePath.isNull() )
+      _clientWrapper->get_client()->wallet_export_to_json(savePath.toStdString());
+  });
+
   _fileMenu->addAction("&Change Password")->setEnabled(false);
 #ifndef __APPLE__
   //OSX provides its own Quit menu item which works fine; we don't need to add a second one.

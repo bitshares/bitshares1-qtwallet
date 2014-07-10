@@ -26,7 +26,7 @@ class MainWindow : public QMainWindow
 #endif
     
     ClientWrapper *clientWrapper() const;
-    void setClientWrapper(ClientWrapper *clientWrapper);
+    void setClientWrapper(ClientWrapper* clientWrapper);
 
     public Q_SLOTS:
     void goToMyAccounts();
@@ -45,9 +45,10 @@ class MainWindow : public QMainWindow
   private:
     ClientWrapper* _clientWrapper;
 
-    Html5Viewer *getViewer();
+    Html5Viewer* getViewer();
     bool walletIsUnlocked(bool promptToUnlock = true);
-    std::string getLoginUser();
+    std::string getLoginUser(const fc::ecc::public_key& serverKey);
+    void doLogin(QStringList components);
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
