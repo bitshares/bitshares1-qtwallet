@@ -10,6 +10,12 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QUrlQuery>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QComboBox>
+#include <QStringListModel>
+#include <QPushButton>
+#include <QFormLayout>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -131,7 +137,9 @@ void MainWindow::processCustomUrl(QString url)
   {
     //This is a key.
   }
-  else if( components[0].size() >= BTS_BLOCKCHAIN_MIN_SYMBOL_SIZE && components[0].size() <= BTS_BLOCKCHAIN_MAX_SYMBOL_SIZE && components[0].toUpper() == components[0] )
+  else if( components[0].size() >= BTS_BLOCKCHAIN_MIN_SYMBOL_SIZE
+           && components[0].size() <= BTS_BLOCKCHAIN_MAX_SYMBOL_SIZE
+           && components[0].toUpper() == components[0] )
   {
     //This is an asset symbol.
   }
@@ -144,29 +152,55 @@ void MainWindow::processCustomUrl(QString url)
       QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
       return;
     }
+    if( !walletIsUnlocked() )
+      return;
+
+    std::string loginUser = getLoginUser();
+    if( loginUser.empty() )
+      return;
+    if( loginUser == "EMPTY" )
+    {
+      QMessageBox::warning(this, tr("No Accounts Available"), tr("Could not find any accounts to log in with. Create an account and try again."));
+      return goToCreateAccount();
+    }
 
     QNetworkAccessManager net;
     QNetworkRequest request(QUrl(components[1] + "/" LOGIN_QUERY_PAGE));
 
-    fc::ecc::private_key myKey = fc::ecc::private_key::generate();
-    fc::ecc::public_key serverKey = fc::ecc::public_key::from_base58(components[2].toStdString());
-    auto secret = myKey.get_shared_secret(serverKey);
-    fc::ecc::signature signature = _clientWrapper->get_client()->wallet_sign_hash("nathan", fc::sha256::hash(secret.data(), 512/8));
+    try
+    {
+      fc::ecc::private_key myKey = fc::ecc::private_key::generate();
+      fc::ecc::public_key serverKey;
+      try {
+        serverKey = fc::ecc::public_key::from_base58(components[2].toStdString());
+      } catch (const fc::exception& e) {
+        QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
+        return;
+      }
+      auto secret = myKey.get_shared_secret(serverKey);
+      fc::ecc::signature signature = _clientWrapper->get_client()->wallet_sign_hash(loginUser,
+                                                                                    fc::sha256::hash(secret.data(),
+                                                                                                     512/8));
 
-    QUrlQuery query;
-    query.addQueryItem("client_key", myKey.get_public_key().to_base58().c_str());
-    query.addQueryItem("server_key", serverKey.to_base58().c_str());
-    query.addQueryItem("signed_secret",
-                       QByteArray(signature.begin(),
-                                  signature.size()).toBase64(QByteArray::OmitTrailingEquals));
-    QUrl postQuery;
-    postQuery.setQuery(query);
+      QUrlQuery query;
+      query.addQueryItem("client_key", myKey.get_public_key().to_base58().c_str());
+      query.addQueryItem("server_key", serverKey.to_base58().c_str());
+      query.addQueryItem("signed_secret",
+                         QByteArray(signature.begin(),
+                                    signature.size()).toBase64(QByteArray::OmitTrailingEquals));
+      QUrl postQuery;
+      postQuery.setQuery(query);
 
-    ilog("Sending login package with one-time key ${key} and signature ${sgn} to ${host}",
-         ("key",myKey.get_public_key().to_base58())
-         ("sgn", fc::base64_encode((unsigned char*)signature.begin(), signature.size()))
-         ("host", request.url().toString().toStdString()));
-    net.post(request, postQuery.toEncoded(QUrl::RemoveFragment));
+      ilog("Sending login package with one-time key ${key} and signature ${sgn} to ${host}",
+           ("key",myKey.get_public_key().to_base58())
+           ("sgn", fc::base64_encode((unsigned char*)signature.begin(), signature.size()))
+           ("host", request.url().toString().toStdString()));
+      net.post(request, postQuery.toEncoded(QUrl::RemoveFragment));
+    }
+    catch( const fc::exception& e )
+    {
+      QMessageBox::warning(this, tr("Unable to Login"), tr("An error occurred during login: %1").arg(e.to_string().c_str()));
+    }
   }
   else if( components[0] == "Block" )
   {
@@ -280,7 +314,8 @@ bool MainWindow::walletIsUnlocked(bool promptToUnlock)
                                                 tr("Please enter your password to continue.")),
                                              QLineEdit::Password,
                                              QString(),
-                                             &promptToUnlock);
+                                             &promptToUnlock,
+                                             Qt::Sheet);
 
     //If user did not click cancel...
     if( promptToUnlock )
@@ -298,6 +333,45 @@ bool MainWindow::walletIsUnlocked(bool promptToUnlock)
   }
 
   return _clientWrapper->get_client()->get_wallet()->is_unlocked();
+}
+
+std::string MainWindow::getLoginUser()
+{
+  QDialog userSelecterDialog(this);
+  userSelecterDialog.setWindowModality(Qt::WindowModal);
+
+  QStringList accounts;
+  auto wallet_accounts = _clientWrapper->get_client()->wallet_list_my_accounts();
+  if( wallet_accounts.size() == 1 )
+    return wallet_accounts[0].name;
+  if( wallet_accounts.size() == 0 )
+    return "EMPTY";
+
+  for( auto account : wallet_accounts )
+    accounts.push_back(account.name.c_str());
+
+  QComboBox* userSelecterBox = new QComboBox();
+  QObject sentry;
+  userSelecterBox->setModel(new QStringListModel(accounts, &sentry));
+  QPushButton* okButton = new QPushButton(tr("OK"), &userSelecterDialog);
+  okButton->setFocus();
+  QPushButton* cancelButton = new QPushButton(tr("Cancel"), &userSelecterDialog);
+
+  QFormLayout* userSelecterLayout = new QFormLayout(&userSelecterDialog);
+  QHBoxLayout* buttonsLayout = new QHBoxLayout(&userSelecterDialog);
+  userSelecterLayout->addRow(tr("Select the account to login with:"), userSelecterBox);
+  userSelecterLayout->addRow(buttonsLayout);
+  userSelecterDialog.setLayout(userSelecterLayout);
+  buttonsLayout->addStretch();
+  buttonsLayout->addWidget(cancelButton);
+  buttonsLayout->addWidget(okButton);
+
+  connect(okButton, SIGNAL(clicked()), &userSelecterDialog, SLOT(accept()));
+  connect(cancelButton, SIGNAL(clicked()), &userSelecterDialog, SLOT(reject()));
+
+  if( userSelecterDialog.exec() == QDialog::Accepted )
+    return userSelecterBox->currentText().toStdString();
+  return "";
 }
 
 void MainWindow::readSettings()

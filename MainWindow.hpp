@@ -28,7 +28,7 @@ class MainWindow : public QMainWindow
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper *clientWrapper);
 
-  public Q_SLOTS:
+    public Q_SLOTS:
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
@@ -47,6 +47,7 @@ class MainWindow : public QMainWindow
 
     Html5Viewer *getViewer();
     bool walletIsUnlocked(bool promptToUnlock = true);
+    std::string getLoginUser();
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
