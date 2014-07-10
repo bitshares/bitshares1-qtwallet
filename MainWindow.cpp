@@ -257,7 +257,7 @@ Html5Viewer* MainWindow::getViewer()
 
 bool MainWindow::walletIsUnlocked(bool promptToUnlock)
 {
-  if( !_clientWrapper )
+  if( !_clientWrapper || !_clientWrapper->get_client()->get_wallet()->is_open() )
     return false;
   if( _clientWrapper->get_client()->get_wallet()->is_unlocked() )
     return true;
