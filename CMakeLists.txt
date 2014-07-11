@@ -47,9 +47,6 @@ set( SOURCES
   images/bitshares.icns
 )
 
-set( CUSTOM_URL_SCHEME "xts" )
-configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/config.hpp.in" "${CMAKE_CURRENT_BINARY_DIR}/config.hpp" )
-
 set( CPACK_BUNDLE_NAME ${APP_NAME} )
 set( CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME} )
 set( CPACK_PACKAGE_EXECUTABLES qt_wallet ${CPACK_BUNDLE_NAME} )

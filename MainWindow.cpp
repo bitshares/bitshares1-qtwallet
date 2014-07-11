@@ -341,10 +341,9 @@ std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
   QPushButton* cancelButton = new QPushButton(tr("Cancel"), &userSelecterDialog);
 
   QFormLayout* userSelecterLayout = new QFormLayout(&userSelecterDialog);
-  QHBoxLayout* buttonsLayout = new QHBoxLayout(&userSelecterDialog);
+  QHBoxLayout* buttonsLayout = new QHBoxLayout();
   userSelecterLayout->addRow(tr("You are logging in to %1. Please select the account to login with:").arg(serverName), userSelecterBox);
   userSelecterLayout->addRow(buttonsLayout);
-  userSelecterDialog.setLayout(userSelecterLayout);
   buttonsLayout->addStretch();
   buttonsLayout->addWidget(cancelButton);
   buttonsLayout->addWidget(okButton);
@@ -362,9 +361,10 @@ void MainWindow::doLogin(QStringList components)
   try
   {
     fc::ecc::private_key myOneTimeKey = fc::ecc::private_key::generate();
-    fc::ecc::public_key serverOneTimeKey;
+    bts::blockchain::public_key_type serverOneTimeKey;
+
     try {
-      serverOneTimeKey = fc::ecc::public_key::from_base58(components[0].toStdString());
+      serverOneTimeKey = fc::variant(components[0].toStdString()).as<bts::blockchain::public_key_type>();
     } catch (const fc::exception& e) {
       elog("Unable to parse public key ${key}: ${e}", ("key", components[0].toStdString())("e", e.to_detail_string()));
       QMessageBox::warning(this, tr("Invalid URL"), tr("The URL provided is not valid."));
@@ -375,7 +375,7 @@ void MainWindow::doLogin(QStringList components)
     fc::ecc::public_key serverAccountKey;
     try {
       serverAccountKey = fc::ecc::public_key(fc::variant(components[1].toStdString()).as<fc::ecc::compact_signature>(),
-                                             fc::sha256::hash(serverOneTimeKey.to_base58()));
+                                             fc::sha256::hash((char*)&serverOneTimeKey,sizeof(serverOneTimeKey)));
     } catch (const fc::exception& e) {
       elog("Unable to derive server account public key: ${e}",
            ("e", e.to_detail_string()));
@@ -405,17 +405,17 @@ void MainWindow::doLogin(QStringList components)
 
     QUrl url("http://" + QStringList(components.mid(2)).join('/'));
     QUrlQuery query;
-    query.addQueryItem("client_key", myOneTimeKey.get_public_key().to_base58().c_str());
+    query.addQueryItem("client_key",  fc::variant(bts::blockchain::public_key_type(myOneTimeKey.get_public_key())).as_string().c_str());
     query.addQueryItem("client_name", loginUser.c_str());
-    query.addQueryItem("server_key", serverOneTimeKey.to_base58().c_str());
-    fc::ecc::compact_signature signature = _clientWrapper->get_client()->wallet_sign_hash(loginUser, fc::sha256::hash(secret.data(), 512/8));
+    query.addQueryItem("server_key", fc::variant(serverOneTimeKey).as_string().c_str());
+    fc::ecc::compact_signature signature = _clientWrapper->get_client()->wallet_sign_hash(loginUser, fc::sha256::hash(secret.data(), sizeof(secret)));
     query.addQueryItem("signed_secret", fc::variant(signature).as_string().c_str());
     url.setQuery(query);
+    url.setFragment(secret.str().c_str());
 
-    ilog("Spawning login window with one-time key ${key} and signature ${sgn} to ${host}",
+    ilog("Spawning login window with one-time key ${key} and signature ${sgn}",
          ("key",myOneTimeKey.get_public_key().to_base58())
-         ("sgn", fc::variant(signature).as_string())
-         ("host", url.toString().toStdString()));
+         ("sgn", fc::variant(signature).as_string()));
     Utilities::open_in_external_browser(url);
   }
   catch( const fc::exception& e )
