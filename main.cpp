@@ -5,6 +5,7 @@
 
 #include <boost/thread.hpp>
 #include <bts/blockchain/config.hpp>
+#include <bts/wallet/url.hpp>
 #include <signal.h>
 
 #include <QApplication>

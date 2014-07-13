@@ -22,6 +22,7 @@
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
 #include <bts/wallet/config.hpp>
+#include <bts/wallet/url.hpp>
 #include <bts/blockchain/account_record.hpp>
 
 MainWindow::MainWindow()
