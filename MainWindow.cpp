@@ -1,6 +1,5 @@
 #include "MainWindow.hpp"
 #include "Utilities.hpp"
-#include "config.hpp"
 
 #include <QApplication>
 #include <QString>
