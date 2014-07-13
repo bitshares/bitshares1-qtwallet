@@ -5,9 +5,12 @@ Makefile
 moc_*
 *.moc
 build/
+htdocs/
 *.app
 *.sw*
 *.cmake
 CMakeFiles
-qt_wallet
-qt_wallet_automoc.cpp
+BitSharesXT
+BitSharesXT_automoc.cpp
+*.depends
+qrc_*.cpp
