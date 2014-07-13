@@ -2,7 +2,6 @@
 #include "ClientWrapper.hpp"
 #include "Utilities.hpp"
 #include "MainWindow.hpp"
-#include "config.hpp"
 
 #include <boost/thread.hpp>
 #include <bts/blockchain/config.hpp>
