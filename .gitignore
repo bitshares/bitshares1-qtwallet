@@ -9,8 +9,13 @@ htdocs/
 *.app
 *.sw*
 *.cmake
+*.cbp
 CMakeFiles
 BitSharesXT
-BitSharesXT_automoc.cpp
-*.depends
+qt_wallet
+*_automoc.cpp
 qrc_*.cpp
+*.depends
+.DS_STORE
+htdocs/
+qrcgen/
