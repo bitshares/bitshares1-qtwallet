@@ -145,8 +145,8 @@ QLocalServer* startSingleInstanceServer(MainWindow* mainWindow)
 
 int main( int argc, char** argv )
 {
-  QCoreApplication::setOrganizationName( "BitShares" );
-  QCoreApplication::setOrganizationDomain( "bitshares.org" );
+  QCoreApplication::setOrganizationName( "Dac Sun Limited" );
+  QCoreApplication::setOrganizationDomain( "www.dacsunlimited.org" );
   QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
   QApplication app(argc, argv);
   app.setWindowIcon(QIcon(":/images/qtapp.ico"));
