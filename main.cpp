@@ -195,13 +195,7 @@ int main( int argc, char** argv )
 
   auto viewer = new Html5Viewer;
   ClientWrapper* client = new ClientWrapper;
-
-  //#ifdef NDEBUG
-  app.connect(&app, &QApplication::aboutToQuit, [client](){
-    client->close();
-    exit(0);
-  });
-  //#endif
+  app.connect(&app, &QApplication::aboutToQuit, client, &ClientWrapper::close);
 
   mainWindow.setCentralWidget(viewer);
   mainWindow.setClientWrapper(client);
