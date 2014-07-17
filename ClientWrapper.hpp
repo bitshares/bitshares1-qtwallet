@@ -25,6 +25,7 @@ class ClientWrapper : public QObject
 
   public Q_SLOTS:
     void confirm_and_set_approval(QString delegate_name, bool approve);
+    void close();
 
   Q_SIGNALS:
     void initialized();

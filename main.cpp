@@ -194,18 +194,17 @@ int main( int argc, char** argv )
   delete sock;
 
   auto viewer = new Html5Viewer;
-  ClientWrapper client;
+  ClientWrapper* client = new ClientWrapper;
 
   //#ifdef NDEBUG
-  app.connect(&app, &QApplication::aboutToQuit, [&client](){
-    client.get_client()->get_wallet()->close();
-    client.get_client()->get_chain()->close();
+  app.connect(&app, &QApplication::aboutToQuit, [client](){
+    client->close();
     exit(0);
   });
   //#endif
 
   mainWindow.setCentralWidget(viewer);
-  mainWindow.setClientWrapper(&client);
+  mainWindow.setClientWrapper(client);
 
   QTimer fc_tasks;
   fc_tasks.connect( &fc_tasks, &QTimer::timeout, [](){ fc::usleep( fc::microseconds( 1000 ) ); } );
@@ -217,12 +216,12 @@ int main( int argc, char** argv )
                      Qt::AlignCenter | Qt::AlignBottom, Qt::white);
   splash.show();
 
-  prepareStartupSequence(&client, viewer, &mainWindow, &splash);
+  prepareStartupSequence(client, viewer, &mainWindow, &splash);
 
   QWebSettings::globalSettings()->setAttribute( QWebSettings::PluginsEnabled, false );
 
   try {
-    client.initialize();
+    client->initialize();
     return app.exec();
   }
   catch ( const fc::exception& e)
