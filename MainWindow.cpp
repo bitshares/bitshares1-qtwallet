@@ -298,9 +298,14 @@ std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
   auto serverAccount = _clientWrapper->get_client()->get_chain()->get_account_record(serverKey);
   if( !serverAccount.valid() )
   {
-    QMessageBox::critical(this,
-                          tr("Misconfigured Server"),
-                          tr("The website you are trying to log into is experiencing problems, and cannot accept logins at this time."));
+    if(_clientWrapper->get_client()->blockchain_is_synced())
+      QMessageBox::critical(this,
+                            tr("Misconfigured Website"),
+                            tr("The website you are trying to log into is experiencing problems, and cannot accept logins at this time."));
+    else
+      QMessageBox::warning(this,
+                           tr("Out of Sync"),
+                           tr("Cannot login right now because your computer is out of sync with the %1 network. Please try again later.").arg(qAppName()));
     return std::string();
   }
 
