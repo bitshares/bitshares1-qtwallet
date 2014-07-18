@@ -11,7 +11,7 @@
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    QSettings _settings;
+    mutable QSettings _settings;
     QMenu* _fileMenu;
     QMenu* _accountMenu;
     QString _deferredUrl;
@@ -20,6 +20,11 @@ class MainWindow : public QMainWindow
     MainWindow();
     QMenu* fileMenu() { return _fileMenu; }
     QMenu* accountMenu() { return _accountMenu; }
+
+    QSettings* settings() const
+    {
+      return &_settings;
+    }
 
 #ifdef __APPLE__
     bool eventFilter(QObject* object, QEvent* event);

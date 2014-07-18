@@ -431,6 +431,8 @@ void MainWindow::doLogin(QStringList components)
 
 void MainWindow::readSettings()
 {
+  ilog("Initializing Qt wallet with settings from ${path}", ("path", _settings.fileName().toStdString()));
+
   if( _settings.contains("geometry") )
   {
     restoreGeometry(_settings.value("geometry").toByteArray());
