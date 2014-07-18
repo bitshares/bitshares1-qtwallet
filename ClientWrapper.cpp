@@ -133,6 +133,16 @@ void ClientWrapper::initialize()
   });
 }
 
+void ClientWrapper::close()
+{
+  _bitshares_thread.async([this]{
+    _client->get_wallet()->close();
+    _client->get_chain()->close();
+    _client->get_rpc_server()->shutdown_rpc_server();
+    _client->get_rpc_server()->wait_till_rpc_server_shutdown();
+  }).wait();
+}
+
 QUrl ClientWrapper::http_url() const
 {
   QUrl url = QString::fromStdString("http://" + std::string( *_actual_httpd_endpoint ) );
