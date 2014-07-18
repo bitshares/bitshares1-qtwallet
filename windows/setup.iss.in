@@ -13,11 +13,11 @@
 #endif
 
 ;#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
-#define VERSION "0.0.6"
+#define VERSION "0.0.1"
 
 [Setup]
-AppPublisher=BitShares
-AppPublisherURL=http://bitshares.org
+AppPublisher=DACSunlimited
+AppPublisherURL=http://dacsunlimited.com
 AppVersion={#VERSION}
 AppName={#APPNAME}{#PLATFORM_TITLE}
 AppVerName={#APPNAME}{#PLATFORM_TITLE} {#VERSION}
@@ -28,12 +28,12 @@ SolidCompression=true
 VersionInfoVersion={#VERSION}
 VersionInfoCompany=BitShares
 VersionInfoDescription={#APPNAME}
-AppCopyright=©2014 God
+AppCopyright=ï¿½2014  DACSunlimited
 DirExistsWarning=no
 DisableStartupPrompt=true
 WindowVisible=false
-AppSupportURL=http://bitshares.org
-AppUpdatesURL=http://bitshares.org
+AppSupportURL=http://bitshares-x.info
+AppUpdatesURL=http://bitshares-x.info
 ;AppReadmeFile={app}\README.TXT
 ShowLanguageDialog=no
 LanguageDetectionMethod=none
