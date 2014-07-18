@@ -46,7 +46,6 @@ set( SOURCES
   html5viewer/html5viewer.cpp
   images/bitshares.icns
   qml/LicenseAgreement.qml
-  license.txt
 )
 
 set( CPACK_BUNDLE_NAME ${APP_NAME} )

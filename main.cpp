@@ -199,9 +199,6 @@ int main( int argc, char** argv )
   if( !mainWindow.settings()->value("license_accepted", false).toBool() )
   {
     QQmlApplicationEngine engine(QUrl("qrc:/qml/LicenseAgreement.qml"));
-    QFile license(":/license.txt");
-    license.open(QIODevice::ReadOnly);
-    engine.rootObjects()[0]->setProperty("licenseText", license.readAll());
     app.exec();
     mainWindow.settings()->setValue("license_accepted", engine.rootObjects()[0]->property("accepted"));
   }
