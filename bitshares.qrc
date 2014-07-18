@@ -1,6 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource prefix="/">
+    <file>license.txt</file>
     <file>qml/LicenseAgreement.qml</file>
     <file>images/splash_screen.jpg</file>
     <file>images/background.jpg</file>
