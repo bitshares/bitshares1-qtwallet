@@ -1,9 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
   <qresource prefix="/">
-    <file>qml/LicenseAgreement.qml</file>
     <file>images/splash_screen.jpg</file>
-    <file>images/background.jpg</file>
     <file>images/qtapp.ico</file>
   </qresource>
 </RCC>

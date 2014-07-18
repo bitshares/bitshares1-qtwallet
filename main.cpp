@@ -30,8 +30,6 @@
 #include <QLocalSocket>
 #include <QLocalServer>
 #include <QMessageBox>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
 
 #include <boost/program_options.hpp>
 
@@ -194,16 +192,6 @@ int main( int argc, char** argv )
     app.connect(&app, &QApplication::aboutToQuit, singleInstanceServer, &QLocalServer::deleteLater);
   }
   delete sock;
-
-  //License agreement
-  if( !mainWindow.settings()->value("license_accepted", false).toBool() )
-  {
-    QQmlApplicationEngine engine(QUrl("qrc:/qml/LicenseAgreement.qml"));
-    app.exec();
-    mainWindow.settings()->setValue("license_accepted", engine.rootObjects()[0]->property("accepted"));
-  }
-  if( !mainWindow.settings()->value("license_accepted", false).toBool() )
-    return 0;
 
   auto viewer = new Html5Viewer;
   ClientWrapper* client = new ClientWrapper;
