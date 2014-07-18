@@ -196,6 +196,7 @@ int main( int argc, char** argv )
   delete sock;
 
   //License agreement
+#ifdef REQUIRE_LICENSE_AGREEMENT
   if( !mainWindow.settings()->value("license_accepted", false).toBool() )
   {
     QQmlApplicationEngine engine(QUrl("qrc:/qml/LicenseAgreement.qml"));
@@ -207,6 +208,7 @@ int main( int argc, char** argv )
   }
   if( !mainWindow.settings()->value("license_accepted", false).toBool() )
     return 0;
+#endif
 
   auto viewer = new Html5Viewer;
   ClientWrapper* client = new ClientWrapper;
