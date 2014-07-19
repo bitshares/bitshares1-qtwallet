@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=${APP_NAME}
+Comment=A decentralized bank and exchange
+Exec=${APP_NAME} %u
+Icon=/usr/local/share/icons/${APP_NAME}.png
+Type=Application
+Encoding=UTF-8
+Categories=Network;Finance;P2P;Qt;
+MimeType=x-scheme-handler/${CUSTOM_URL_SCHEME};

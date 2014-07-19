@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 2.8.11)
 
-message(STATUS "Configuring QT Wallet")
-
 project(qt_wallet)
 set( APP_NAME "BitSharesX" )
 
@@ -74,6 +72,10 @@ IF( APPLE )
     SET( MACOSX_BUNDLE_URL_HANDLER_NAME "${MACOSX_BUNDLE_GUI_IDENTIFIER}" )
     SET( MACOSX_BUNDLE_URL_HANDLER_SCHEME "${CUSTOM_URL_SCHEME}" )
     set_source_files_properties("images/bitshares.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+ENDIF()
+
+IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Linux" )
+    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/BitSharesXT.desktop.in" "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.desktop")
 ENDIF()
 
 IF( WIN32 )
