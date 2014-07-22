@@ -18,6 +18,7 @@
 #include <QFormLayout>
 #include <QNetworkReply>
 #include <QFileDialog>
+#include <QClipboard>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -462,8 +463,21 @@ void MainWindow::initMenu()
     if( !savePath.isNull() )
       _clientWrapper->get_client()->wallet_export_to_json(savePath.toStdString());
   });
+  connect(_fileMenu->addAction("Open &URL"), &QAction::triggered, [this]{
+    bool ok = false;
+    QString url = QInputDialog::getText(this,
+                                        tr("Open URL"),
+                                        tr("Please enter a URL to open"),
+                                        QLineEdit::Normal,
+                                        qApp->clipboard()->text(),
+                                        &ok,
+                                        Qt::Sheet);
+    if( ok )
+      processCustomUrl(url);
+  });
 
   _fileMenu->addAction("&Change Password")->setEnabled(false);
+
 #ifndef __APPLE__
   //OSX provides its own Quit menu item which works fine; we don't need to add a second one.
   _fileMenu->addAction("&Quit", qApp, SLOT(quit()));
