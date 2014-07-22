@@ -107,7 +107,7 @@ Source: {#QT_PATH}\plugins\printsupport\windowsprintersupport.dll; DestDir: {app
 
 [Icons]
 Name: {group}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
-Name: {group}\Uninstall; Filename: {app}\{uninstallexe}
+Name: "{group}\Uninstall {#APPNAME}"; Filename: "{uninstallexe}"
 Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 
 [Run]
