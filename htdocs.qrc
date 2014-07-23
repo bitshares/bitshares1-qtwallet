@@ -5,7 +5,7 @@
     <file>htdocs/index.html</file>
     <file>htdocs/locale-de.json</file>
     <file>htdocs/locale-en.json</file>
-    <file>htdocs/locale-zh-CN.json</file>
+    <file>htdocs/locale-zh_CN.json</file>
     <file>htdocs/css/app.css</file>
     <file>htdocs/img/bg-head.jpg</file>
     <file>htdocs/img/bitsharesIcon.png</file>
