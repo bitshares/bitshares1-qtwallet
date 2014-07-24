@@ -55,8 +55,11 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
   {
     //If we're using a tray icon, close to tray instead of exiting
 #ifdef __APPLE__
-    ProcessSerialNumber psn;
-    MacGetCurrentProcess(&psn);
+    //Workaround: if user clicks quit in dock menu, a non-spontaneous close event shows up. We should quit when this happens.
+    if( !event->spontaneous() )
+      return QMainWindow::eventFilter(object, event);
+
+    ProcessSerialNumber psn = { 0, kCurrentProcess };
     ShowHideProcess(&psn, false);
 #else
     setVisible(false);
@@ -250,9 +253,12 @@ void MainWindow::setupTrayIcon()
     if( reason == QSystemTrayIcon::Trigger )
     {
 #ifdef __APPLE__
-      ProcessSerialNumber psn;
-      MacGetCurrentProcess(&psn);
-      ShowHideProcess(&psn, !IsProcessVisible(&psn));
+      ProcessSerialNumber psn = { 0, kCurrentProcess };
+      bool visible = !IsProcessVisible(&psn);
+      ShowHideProcess(&psn, visible);
+
+      if( visible )
+        SetFrontProcess(&psn);
 #else
       setVisible(!isVisible());
 #endif
@@ -515,11 +521,8 @@ void MainWindow::initMenu()
   });
 
   _fileMenu->addAction("&Change Password")->setEnabled(false);
+  _fileMenu->addAction("Quit", qApp, SLOT(quit()));
 
-#ifndef __APPLE__
-  //OSX provides its own Quit menu item which works fine; we don't need to add a second one.
-  _fileMenu->addAction("&Quit", qApp, SLOT(quit()));
-#endif
   _accountMenu = menuBar->addMenu("&Accounts");
   setMenuBar(menuBar);
 }
