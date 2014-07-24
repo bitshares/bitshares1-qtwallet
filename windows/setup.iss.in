@@ -68,7 +68,6 @@ LanguageCodePage=0
 [Files]
 ;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
 Source: Release\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
-Source: ..\client\Release\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
 
