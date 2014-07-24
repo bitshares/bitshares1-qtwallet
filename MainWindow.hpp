@@ -6,6 +6,7 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <QMenu>
+#include <QSystemTrayIcon>
 
 class MainWindow : public QMainWindow
 {
@@ -14,6 +15,7 @@ class MainWindow : public QMainWindow
     QMenu* _fileMenu;
     QMenu* _accountMenu;
     QString _deferredUrl;
+    QSystemTrayIcon* _trayIcon;
     
   public:
     MainWindow();
@@ -29,6 +31,8 @@ class MainWindow : public QMainWindow
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
+
+    void setupTrayIcon();
 
     ///Used to schedule a custom URL for processing later, once the app has finished starting
     void deferCustomUrl(QString url);

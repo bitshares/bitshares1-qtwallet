@@ -26,16 +26,19 @@
 #include <bts/wallet/url.hpp>
 #include <bts/blockchain/account_record.hpp>
 
+#ifdef __APPLE__
+#include <Carbon/Carbon.h>
+#endif
+
 MainWindow::MainWindow()
   : _settings("BitShares", BTS_BLOCKCHAIN_NAME),
+    _trayIcon(nullptr),
     _clientWrapper(nullptr)
-
 {
   readSettings();
   initMenu();
 }
 
-#ifdef __APPLE__
 bool MainWindow::eventFilter(QObject* object, QEvent* event)
 {
   if ( event->type() == QEvent::FileOpen )
@@ -48,9 +51,21 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
       deferCustomUrl(urlEvent->file());
     return true;
   }
-  return false;
-}
+  else if( object == this && event->type() == QEvent::Close && _trayIcon )
+  {
+    //If we're using a tray icon, close to tray instead of exiting
+#ifdef __APPLE__
+    ProcessSerialNumber psn;
+    MacGetCurrentProcess(&psn);
+    ShowHideProcess(&psn, false);
+#else
+    setVisible(false);
 #endif
+    event->ignore();
+    return true;
+  }
+  return QMainWindow::eventFilter(object, event);
+}
 
 void MainWindow::deferCustomUrl(QString url)
 {
@@ -220,6 +235,29 @@ void MainWindow::goToCreateAccount()
     return;
 
   getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
+}
+
+void MainWindow::setupTrayIcon()
+{
+  if( !QSystemTrayIcon::isSystemTrayAvailable() )
+    return;
+
+  _trayIcon = new QSystemTrayIcon;
+  _trayIcon->setIcon(QIcon(":/images/tray_icon.png"));
+  _trayIcon->show();
+
+  connect(_trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason){
+    if( reason == QSystemTrayIcon::Trigger )
+    {
+#ifdef __APPLE__
+      ProcessSerialNumber psn;
+      MacGetCurrentProcess(&psn);
+      ShowHideProcess(&psn, !IsProcessVisible(&psn));
+#else
+      setVisible(!isVisible());
+#endif
+    }
+  });
 }
 
 void MainWindow::goToBlock(uint32_t blockNumber)
