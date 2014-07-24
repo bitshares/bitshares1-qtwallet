@@ -90,6 +90,7 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
     viewer->disconnect(*loadFinishedConnection);
     mainWindow->show();
     splash->finish(mainWindow);
+    mainWindow->setupTrayIcon();
     mainWindow->processDeferredUrl();
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
