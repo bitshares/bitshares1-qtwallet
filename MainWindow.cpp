@@ -26,6 +26,10 @@
 #include <bts/wallet/url.hpp>
 #include <bts/blockchain/account_record.hpp>
 
+#ifdef __APPLE__
+#include <Carbon/Carbon.h>
+#endif
+
 MainWindow::MainWindow()
   : _settings("BitShares", BTS_BLOCKCHAIN_NAME),
     _trayIcon(nullptr),
@@ -50,7 +54,13 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
   else if( object == this && event->type() == QEvent::Close && _trayIcon )
   {
     //If we're using a tray icon, close to tray instead of exiting
+#ifdef __APPLE__
+    ProcessSerialNumber psn;
+    MacGetCurrentProcess(&psn);
+    ShowHideProcess(&psn, false);
+#else
     setVisible(false);
+#endif
     event->ignore();
     return true;
   }
@@ -238,7 +248,15 @@ void MainWindow::setupTrayIcon()
 
   connect(_trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason){
     if( reason == QSystemTrayIcon::Trigger )
+    {
+#ifdef __APPLE__
+      ProcessSerialNumber psn;
+      MacGetCurrentProcess(&psn);
+      ShowHideProcess(&psn, !IsProcessVisible(&psn));
+#else
       setVisible(!isVisible());
+#endif
+    }
   });
 }
 
