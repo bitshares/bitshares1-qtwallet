@@ -32,7 +32,9 @@ Clone qt_wallet repo into bitshares_toolkit\programs\qt_wallet.
 
 Create/update bitshares_toolkit\programs\qt_wallet\htdocs with the files generated on 'make buildweb' step in Unix section.
 
-Create/update bitshares_toolkit\programs\qt_wallet\htdocs on Windows:Download and install nodejs from http://nodejs.org/download/
+Create/update bitshares_toolkit\programs\qt_wallet\htdocs on Windows.
+
+Download and install nodejs from http://nodejs.org/download/
 
 Run console
 ```
