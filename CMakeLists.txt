@@ -18,17 +18,17 @@ find_package(Qt5Widgets REQUIRED)
 find_package(Qt5WebKit REQUIRED)
 find_package(Qt5WebKitWidgets REQUIRED)
 
-include_directories( ${CMAKE_SOURCE_DIR} ${Qt5WebKitWidgets_INCLUDE_DIRS} )
+include_directories( ${CMAKE_CURRENT_SOURCE_DIR} ${Qt5WebKitWidgets_INCLUDE_DIRS} )
 include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/db/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/blockchain/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/wallet/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/client/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/net/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/rpc/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/cli/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/utilities/include" )
-include_directories( "${CMAKE_SOURCE_DIR}/libraries/bitcoin_import/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/db/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/blockchain/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/wallet/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/client/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/net/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/rpc/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/cli/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/utilities/include" )
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/libraries/bitcoin_import/include" )
 
 ADD_DEFINITIONS(-DQT_NO_KEYWORDS)
 
@@ -86,16 +86,18 @@ IF( WIN32 )
     configure_file( windows/setup.iss.in setup.iss )
 ENDIF()
 
-IF( IS_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet" )
-    add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/programs/web_wallet")
-    add_custom_target(NukeHtdocs rm -rf "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs")
-    add_custom_target(buildweb cp -r "${CMAKE_SOURCE_DIR}/programs/web_wallet/dist" "${CMAKE_SOURCE_DIR}/programs/qt_wallet/htdocs" DEPENDS Lineman NukeHtdocs)
+# Tell CMake to create the qt_wallet executable
+add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} )
+
+IF( IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet" )
+    add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")
+    add_custom_target(NukeHtdocs rm -rf "${CMAKE_CURRENT_SOURCE_DIR}/htdocs")
+    add_custom_target(buildweb cp -r "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet/dist" "${CMAKE_CURRENT_SOURCE_DIR}/htdocs" DEPENDS Lineman NukeHtdocs)
+    add_dependencies(${APP_NAME} buildweb)
 ELSE()
     message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
 ENDIF()
 
-# Tell CMake to create the qt_wallet executable
-add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} )
 
 # Workaround because CMake is broken and won't copy the stupid icon in itself
 #IF( APPLE )
