@@ -7,7 +7,6 @@
 #include <QSettings>
 #include <QMenu>
 
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -21,9 +20,7 @@ class MainWindow : public QMainWindow
     QMenu* fileMenu() { return _fileMenu; }
     QMenu* accountMenu() { return _accountMenu; }
 
-#ifdef __APPLE__
     bool eventFilter(QObject* object, QEvent* event);
-#endif
     
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper* clientWrapper);
