@@ -499,15 +499,16 @@ void MainWindow::initMenu()
 {
   auto menuBar = new QMenuBar(nullptr);
 
-  _fileMenu = menuBar->addMenu("&File");
-  _fileMenu->addAction("&Import Wallet")->setEnabled(false);
+  _fileMenu = menuBar->addMenu("File");
+  _fileMenu->addAction("Import Wallet")->setEnabled(false);
 
-  connect(_fileMenu->addAction("E&xport Wallet"), &QAction::triggered, [this](){
+  connect(_fileMenu->addAction("Export Wallet"), &QAction::triggered, [this](){
     QString savePath = QFileDialog::getSaveFileName(this, tr("Export Wallet"), QString(), tr("Wallet Backups (*.json)"));
     if( !savePath.isNull() )
       _clientWrapper->get_client()->wallet_export_to_json(savePath.toStdString());
   });
-  connect(_fileMenu->addAction("Open &URL"), &QAction::triggered, [this]{
+  _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
+  connect(_fileMenu->addAction("Open URL"), &QAction::triggered, [this]{
     bool ok = false;
     QString url = QInputDialog::getText(this,
                                         tr("Open URL"),
@@ -519,10 +520,11 @@ void MainWindow::initMenu()
     if( ok )
       processCustomUrl(url);
   });
+  _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
 
-  _fileMenu->addAction("&Change Password")->setEnabled(false);
-  _fileMenu->addAction("Quit", qApp, SLOT(quit()));
+  _fileMenu->addAction("Change Password")->setEnabled(false);
+  _fileMenu->addAction("Quit", qApp, SLOT(quit()), QKeySequence(tr("Ctrl+Q")));
 
-  _accountMenu = menuBar->addMenu("&Accounts");
+  _accountMenu = menuBar->addMenu("Accounts");
   setMenuBar(menuBar);
 }
