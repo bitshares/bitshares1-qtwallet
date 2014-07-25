@@ -509,16 +509,18 @@ void MainWindow::initMenu()
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
   connect(_fileMenu->addAction("Open URL"), &QAction::triggered, [this]{
-    bool ok = false;
-    QString url = QInputDialog::getText(this,
-                                        tr("Open URL"),
-                                        tr("Please enter a URL to open"),
-                                        QLineEdit::Normal,
-                                        qApp->clipboard()->text(),
-                                        &ok,
-                                        Qt::Sheet);
-    if( ok )
-      processCustomUrl(url);
+    QInputDialog urlGetter(this);
+    urlGetter.setWindowTitle(tr("Open URL"));
+    urlGetter.setLabelText(tr("Please enter a URL to open"));
+    urlGetter.setTextValue(qApp->clipboard()->text().startsWith(CUSTOM_URL_SCHEME ":")
+                           ?qApp->clipboard()->text() : CUSTOM_URL_SCHEME ":");
+    urlGetter.setWindowModality(Qt::WindowModal);
+    auto geometry = urlGetter.geometry();
+    geometry.setWidth(width() / 2);
+    urlGetter.setGeometry(geometry);
+
+    if( urlGetter.exec() == QInputDialog::Accepted )
+      processCustomUrl(urlGetter.textValue());
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
 
