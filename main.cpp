@@ -153,14 +153,7 @@ int main( int argc, char** argv )
   app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
   MainWindow mainWindow;
-
-  //Custom URL handling. OSX handles this differently from Windows and Linux
-  //On OSX, the OS will always pass the URL as an event to QApplication.
-  //Windows and Linux will just run our program with the URL as an argument.
-#ifdef __APPLE__
-  //Install OSX event handler
   app.installEventFilter(&mainWindow);
-#endif
 
   //We'll go ahead and leave Win/Lin URL handling available in OSX too
   QLocalSocket* sock = new QLocalSocket();

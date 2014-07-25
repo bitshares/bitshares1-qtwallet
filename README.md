@@ -30,7 +30,24 @@ To create installation package, type:
 
 Clone qt_wallet repo into bitshares_toolkit\programs\qt_wallet.
 
-Create/update bitshares_toolkit\programs\qt_wallet\htdocs with the files generated on 'make buildweb' step in Unix section unless you have Windows installation of node.js and lineman.
+Create/update bitshares_toolkit\programs\qt_wallet\htdocs with the files generated on 'make buildweb' step in Unix section.
+
+Create/update bitshares_toolkit\programs\qt_wallet\htdocs on Windows.
+
+Download and install nodejs from http://nodejs.org/download/
+
+Run console
+```
+    $ npm install grunt
+    $ npm install -g lineman
+    $ npm install lineman-angular
+    $ npm install lineman-less
+```
+cd .\bitshares_toolkit\programs\web_wallet\
+```
+ $ lineman build
+```
+Copy directory .\bitshares_toolkit\programs\web_wallet\generated\ to .\bitshares_toolkit\programs\qt_wallet\htdocs\
 
 Download and install Windows binary version of QT 5.3 into the same folder as bitshares_toolkit.
 
