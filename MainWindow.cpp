@@ -505,7 +505,7 @@ void MainWindow::initMenu()
   connect(_fileMenu->addAction("Export Wallet"), &QAction::triggered, [this](){
     QString savePath = QFileDialog::getSaveFileName(this, tr("Export Wallet"), QString(), tr("Wallet Backups (*.json)"));
     if( !savePath.isNull() )
-      _clientWrapper->get_client()->wallet_export_to_json(savePath.toStdString());
+      _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
   connect(_fileMenu->addAction("Open URL"), &QAction::triggered, [this]{
