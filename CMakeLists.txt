@@ -98,11 +98,10 @@ ELSE()
     message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
 ENDIF()
 
-
-# Workaround because CMake is broken and won't copy the stupid icon in itself
-#IF( APPLE )
-#    add_custom_command(TARGET ${APP_NAME} POST_BUILD COMMAND cp "${OSX_ICON_FILE}" "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.app/Contents/Resources/" )
-#ENDIF()
+IF( APPLE )
+    find_library(APP_SERVICES_LIBRARY ApplicationServices)
+    target_link_libraries(${APP_NAME} ${APP_SERVICES_LIBRARY})
+ENDIF()
 
 QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
