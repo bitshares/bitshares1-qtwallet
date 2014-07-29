@@ -30,6 +30,8 @@
 #include <QLocalSocket>
 #include <QLocalServer>
 #include <QMessageBox>
+#include <QProxyStyle>
+#include <QComboBox>
 
 #include <boost/program_options.hpp>
 
@@ -151,6 +153,17 @@ int main( int argc, char** argv )
   QCoreApplication::setApplicationName( BTS_BLOCKCHAIN_NAME );
   QApplication app(argc, argv);
   app.setWindowIcon(QIcon(":/images/qtapp.ico"));
+
+  //This works around Qt bug 22410, which causes a crash when repeatedly clicking a QComboBox
+  class CrashWorkaroundStyle : public QProxyStyle {
+    public: virtual int styleHint(StyleHint hint, const QStyleOption *option = 0,
+                          const QWidget *widget = 0, QStyleHintReturn *returnData = 0) const{
+        if( hint == QStyle::SH_Menu_FlashTriggeredItem )
+          return 0;
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+      }
+  };
+  app.setStyle(new CrashWorkaroundStyle);
 
   MainWindow mainWindow;
   app.installEventFilter(&mainWindow);
