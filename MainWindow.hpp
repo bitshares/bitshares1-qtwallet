@@ -6,7 +6,7 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <QMenu>
-
+#include <QSystemTrayIcon>
 
 class MainWindow : public QMainWindow
 {
@@ -15,15 +15,14 @@ class MainWindow : public QMainWindow
     QMenu* _fileMenu;
     QMenu* _accountMenu;
     QString _deferredUrl;
+    QSystemTrayIcon* _trayIcon;
     
   public:
     MainWindow();
     QMenu* fileMenu() { return _fileMenu; }
     QMenu* accountMenu() { return _accountMenu; }
 
-#ifdef __APPLE__
     bool eventFilter(QObject* object, QEvent* event);
-#endif
     
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper* clientWrapper);
@@ -32,6 +31,9 @@ class MainWindow : public QMainWindow
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
+    void goToAddContact();
+
+    void setupTrayIcon();
 
     ///Used to schedule a custom URL for processing later, once the app has finished starting
     void deferCustomUrl(QString url);
@@ -42,6 +44,8 @@ class MainWindow : public QMainWindow
     void goToBlock(uint32_t blockNumber);
     void goToBlock(QString blockId);
     void goToTransaction(QString transactionId);
+
+    void importWallet();
   private:
     ClientWrapper* _clientWrapper;
 
@@ -49,6 +53,7 @@ class MainWindow : public QMainWindow
     bool walletIsUnlocked(bool promptToUnlock = true);
     std::string getLoginUser(const fc::ecc::public_key& serverKey);
     void doLogin(QStringList components);
+    void goToTransfer(QStringList components);
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();

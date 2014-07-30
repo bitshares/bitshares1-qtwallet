@@ -30,6 +30,8 @@
 #include <QLocalSocket>
 #include <QLocalServer>
 #include <QMessageBox>
+#include <QProxyStyle>
+#include <QComboBox>
 
 #include <boost/program_options.hpp>
 
@@ -62,9 +64,10 @@ void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
 {
   auto accountMenu = mainWindow->accountMenu();
 
-  accountMenu->addAction("&Go to My Accounts", mainWindow, SLOT(goToMyAccounts()));
-  accountMenu->addAction("&Create Account", mainWindow, SLOT(goToCreateAccount()));
-  accountMenu->addAction("&Import Account")->setEnabled(false);
+  accountMenu->addAction("Go to My Accounts", mainWindow, SLOT(goToMyAccounts()), QKeySequence(QObject::tr("Ctrl+Shift+A")));
+  accountMenu->addAction("Create Account", mainWindow, SLOT(goToCreateAccount()), QKeySequence(QObject::tr("Ctrl+Shift+C")));
+  accountMenu->addAction("Import Account")->setEnabled(false);
+  accountMenu->addAction("New Contact", mainWindow, SLOT(goToAddContact()), QKeySequence(QObject::tr("Ctrl+Shift+N")));
 }
 
 void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)
@@ -90,6 +93,7 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
     viewer->disconnect(*loadFinishedConnection);
     mainWindow->show();
     splash->finish(mainWindow);
+    mainWindow->setupTrayIcon();
     mainWindow->processDeferredUrl();
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
@@ -151,15 +155,19 @@ int main( int argc, char** argv )
   QApplication app(argc, argv);
   app.setWindowIcon(QIcon(":/images/qtapp.ico"));
 
-  MainWindow mainWindow;
+  //This works around Qt bug 22410, which causes a crash when repeatedly clicking a QComboBox
+  class CrashWorkaroundStyle : public QProxyStyle {
+    public: virtual int styleHint(StyleHint hint, const QStyleOption *option = 0,
+                          const QWidget *widget = 0, QStyleHintReturn *returnData = 0) const{
+        if( hint == QStyle::SH_Menu_FlashTriggeredItem )
+          return 0;
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+      }
+  };
+  app.setStyle(new CrashWorkaroundStyle);
 
-  //Custom URL handling. OSX handles this differently from Windows and Linux
-  //On OSX, the OS will always pass the URL as an event to QApplication.
-  //Windows and Linux will just run our program with the URL as an argument.
-#ifdef __APPLE__
-  //Install OSX event handler
+  MainWindow mainWindow;
   app.installEventFilter(&mainWindow);
-#endif
 
   //We'll go ahead and leave Win/Lin URL handling available in OSX too
   QLocalSocket* sock = new QLocalSocket();

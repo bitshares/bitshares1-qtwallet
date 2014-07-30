@@ -59,6 +59,7 @@ void ClientWrapper::initialize()
   bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
   uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
   std::string default_wallet_name = settings.value("client/default_wallet_name", "default").toString().toStdString();
+  settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
   Q_UNUSED(p2pport);
 
   _cfg.rpc.rpc_user     = "randomuser";
@@ -178,7 +179,7 @@ void ClientWrapper::confirm_and_set_approval(QString delegate_name, bool approve
                               .arg(approve?"Approve":"Disapprove")
                               )
         == QMessageBox::Yes )
-      get_client()->wallet_approve_delegate(delegate_name.toStdString(), approve);
+      get_client()->wallet_account_set_approval(delegate_name.toStdString(), approve);
   }
   else
     QMessageBox::warning(nullptr, tr("Invalid Account"), tr("Account %1 is not a delegate, so its approval cannot be set.").arg(delegate_name));

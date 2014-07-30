@@ -11,8 +11,27 @@
 
     $BITSHARES_USER_NAME = "test-server";
 
-    $LOGIN_PAGE_DOMAIN_AND_PATH = "localhost:8888/login.php";
+//    $LOGIN_PAGE_DOMAIN_AND_PATH = "Set this if login landing page != this page";
     //END CONFIG
+
+    //This code adapted from http://stackoverflow.com/questions/6768793/get-the-full-url-in-php
+    function url_origin($s, $use_forwarded_host=false)
+    {
+        $port = $s['SERVER_PORT'];
+        $port = ((!$ssl && $port=='80') || ($ssl && $port=='443')) ? '' : ':'.$port;
+        $host = ($use_forwarded_host && isset($s['HTTP_X_FORWARDED_HOST'])) ? $s['HTTP_X_FORWARDED_HOST'] : (isset($s['HTTP_HOST']) ? $s['HTTP_HOST'] : null);
+        $host = isset($host) ? $host : $s['SERVER_NAME'] . $port;
+        return $host;
+    }
+    function full_url($s, $use_forwarded_host=false)
+    {
+        return url_origin($s, $use_forwarded_host) . $s['REQUEST_URI'];
+    }
+    $absolute_url = full_url($_SERVER);
+    //End code adapted from http://stackoverflow.com/questions/6768793/get-the-full-url-in-php
+
+    if(isset($LOGIN_PAGE_DOMAIN_AND_PATH))
+        $absolute_url = $LOGIN_PAGE_DOMAIN_AND_PATH;
 
     // Using EasyBitcoin RPC client from https://github.com/aceat64/EasyBitcoin-PHP
     require_once "includes/easybitcoin.php";
@@ -37,7 +56,7 @@
             echo "<p>This is the VIP section, for delegates only.</p>";
     } else {
         $url = $bitshares->wallet_login_start($BITSHARES_USER_NAME);
-        $url .= $LOGIN_PAGE_DOMAIN_AND_PATH;
+        $url .= $absolute_url;
         ?>
 BitShares will now prompt you to complete the login in a new window. You may now close this window.
 <script type="text/javascript">location.href="<?=$url?>";</script>
