@@ -43,6 +43,8 @@ class MainWindow : public QMainWindow
     void goToBlock(uint32_t blockNumber);
     void goToBlock(QString blockId);
     void goToTransaction(QString transactionId);
+
+    void importWallet();
   private:
     ClientWrapper* _clientWrapper;
 

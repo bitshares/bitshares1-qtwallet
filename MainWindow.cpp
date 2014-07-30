@@ -19,6 +19,7 @@
 #include <QNetworkReply>
 #include <QFileDialog>
 #include <QClipboard>
+#include <QGraphicsWebView>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -495,13 +496,63 @@ void MainWindow::closeEvent( QCloseEvent* event )
 }
 
 
+void MainWindow::importWallet()
+{
+  QString walletPath = QFileDialog::getOpenFileName(this, tr("Import Wallet"), QString(), tr("Wallet Backups (*.json)"));
+  if( walletPath.isNull() || !QFileInfo(walletPath).exists() )
+    return;
+
+  clientWrapper()->get_client()->wallet_close();
+
+  QDir default_wallet_directory = QString::fromStdString(clientWrapper()->get_client()->get_wallet()->get_data_directory().generic_string());
+  QString default_wallet_name = _settings.value("client/default_wallet_name").toString();
+
+  if( QMessageBox::warning(this,
+                           tr("Restoring Wallet Backup"),
+                           tr("You are about to restore a wallet backup. This will back up and replace your current wallet! Are you sure you wish to continue?"),
+                           tr("Yes, back up and replace my wallet"),
+                           tr("Cancel"),
+                           QString(), 1)
+      != 0)
+    return;
+
+  QString backup_wallet_name = default_wallet_name + "-backup-" + QDateTime::currentDateTime().toString(Qt::ISODate).replace(':', "");
+
+  bool ok = false;
+  QString password = QInputDialog::getText(this,
+                                           tr("Import Wallet Passphrase"),
+                                           tr("Please enter the passphrase for the wallet you are restoring."),
+                                           QLineEdit::Password,
+                                           QString(),
+                                           &ok);
+  if(ok) {
+    if( default_wallet_directory.exists(default_wallet_name) )
+      default_wallet_directory.rename(default_wallet_name, backup_wallet_name);
+    try {
+      clientWrapper()->get_client()->wallet_backup_restore(walletPath.toStdString(),
+                                                           default_wallet_name.toStdString(),
+                                                           password.toStdString());
+    } catch (const fc::exception& e) {
+      if( default_wallet_directory.exists(default_wallet_name) )
+        QDir(default_wallet_directory.absoluteFilePath(default_wallet_name)).removeRecursively();
+      if( default_wallet_directory.exists(backup_wallet_name) )
+        default_wallet_directory.rename(backup_wallet_name, default_wallet_name);
+      QMessageBox::critical(this,
+                            tr("Wallet Restore Failed"),
+                            tr("Failed to restore wallet backup. Your original wallet has been restored. Error: %1").arg(e.to_string().c_str()));
+    }
+  } else return;
+
+  getViewer()->loadUrl(clientWrapper()->http_url());
+}
+
 void MainWindow::initMenu()
 {
   auto menuBar = new QMenuBar(nullptr);
 
   _fileMenu = menuBar->addMenu("File");
-  _fileMenu->addAction("Import Wallet")->setEnabled(false);
 
+  connect(_fileMenu->addAction("Import Wallet"), &QAction::triggered, this, &MainWindow::importWallet);
   connect(_fileMenu->addAction("Export Wallet"), &QAction::triggered, [this](){
     QString savePath = QFileDialog::getSaveFileName(this, tr("Export Wallet"), QString(), tr("Wallet Backups (*.json)"));
     if( !savePath.isNull() )
