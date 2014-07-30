@@ -19,6 +19,7 @@
 #include <QNetworkReply>
 #include <QFileDialog>
 #include <QClipboard>
+#include <QGraphicsWebView>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -55,8 +56,11 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
   {
     //If we're using a tray icon, close to tray instead of exiting
 #ifdef __APPLE__
-    ProcessSerialNumber psn;
-    MacGetCurrentProcess(&psn);
+    //Workaround: if user clicks quit in dock menu, a non-spontaneous close event shows up. We should quit when this happens.
+    if( !event->spontaneous() )
+      return QMainWindow::eventFilter(object, event);
+
+    ProcessSerialNumber psn = { 0, kCurrentProcess };
     ShowHideProcess(&psn, false);
 #else
     setVisible(false);
@@ -109,28 +113,12 @@ void MainWindow::processCustomUrl(QString url)
     //This is a username:key pair
     int colon = components[0].indexOf(':');
     QString username = components[0].left(colon);
-    bts::blockchain::public_key_type key(components[0].mid(colon+1).toStdString());
+    QString key(components[0].mid(colon+1));
 
-    try
-    {
-      _clientWrapper->get_client()->get_wallet()->add_contact_account(username.toStdString(), key);
-      goToAccount(username);
-    }
-    catch(const fc::exception& e)
-    {
-      //Display error from backend, but chop off the "Assert exception" stuff before the colon
-      QString error = e.to_string().c_str();
-      QMessageBox::warning(this, tr("Invalid Account"), tr("Could not create contact account:") + error.mid(error.indexOf(':')+1));
+    if(!walletIsUnlocked())
       return;
-    }
 
-    if( walletIsUnlocked(false) && components.size() > 1 )
-    {
-      if( components[1] == "approve" )
-        _clientWrapper->confirm_and_set_approval(username, true);
-      else if( components[1] == "disapprove" )
-        _clientWrapper->confirm_and_set_approval(username, false);
-    }
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact?name=" + username + "&key=" + key);
   }
   else if( components[0].toLower() == components[0] )
   {
@@ -150,6 +138,8 @@ void MainWindow::processCustomUrl(QString url)
         _clientWrapper->confirm_and_set_approval(components[0], true);
       else if( components[1] == "disapprove" )
         _clientWrapper->confirm_and_set_approval(components[0], false);
+      else if( components[1] == "transfer" )
+        goToTransfer(components);
     }
   }
   else if( components[0].size() > QString(BTS_ADDRESS_PREFIX).size() && components[0].startsWith(BTS_ADDRESS_PREFIX) )
@@ -237,6 +227,14 @@ void MainWindow::goToCreateAccount()
   getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
 }
 
+void MainWindow::goToAddContact()
+{
+  if( !walletIsUnlocked() )
+    return;
+
+  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact");
+}
+
 void MainWindow::setupTrayIcon()
 {
   if( !QSystemTrayIcon::isSystemTrayAvailable() )
@@ -250,9 +248,12 @@ void MainWindow::setupTrayIcon()
     if( reason == QSystemTrayIcon::Trigger )
     {
 #ifdef __APPLE__
-      ProcessSerialNumber psn;
-      MacGetCurrentProcess(&psn);
-      ShowHideProcess(&psn, !IsProcessVisible(&psn));
+      ProcessSerialNumber psn = { 0, kCurrentProcess };
+      bool visible = !IsProcessVisible(&psn);
+      ShowHideProcess(&psn, visible);
+
+      if( visible )
+        SetFrontProcess(&psn);
 #else
       setVisible(!isVisible());
 #endif
@@ -468,6 +469,39 @@ void MainWindow::doLogin(QStringList components)
   }
 }
 
+void MainWindow::goToTransfer(QStringList components)
+{
+  if(!walletIsUnlocked()) return;
+
+  QString sender;
+  QString amount;
+  QString asset;
+  QString memo;
+  QStringList parameters = components.mid(2);
+
+  while (!parameters.empty()) {
+    QString parameterName = parameters.takeFirst();
+    if (parameterName == "amount")
+      amount = parameters.takeFirst();
+    else if (parameterName == "memo")
+      memo = parameters.takeFirst();
+    else if (parameterName == "from")
+      sender = parameters.takeFirst();
+    else if (parameterName == "asset")
+      asset = parameters.takeFirst();
+    else
+      parameters.pop_front();
+  }
+
+  QString url = clientWrapper()->http_url().toString() + QStringLiteral("/#/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
+      .arg(sender)
+      .arg(components[0])
+      .arg(amount)
+      .arg(asset)
+      .arg(memo);
+  getViewer()->loadUrl(url);
+}
+
 void MainWindow::readSettings()
 {
   if( _settings.contains("geometry") )
@@ -489,37 +523,86 @@ void MainWindow::closeEvent( QCloseEvent* event )
 }
 
 
+void MainWindow::importWallet()
+{
+  QString walletPath = QFileDialog::getOpenFileName(this, tr("Import Wallet"), QString(), tr("Wallet Backups (*.json)"));
+  if( walletPath.isNull() || !QFileInfo(walletPath).exists() )
+    return;
+
+  clientWrapper()->get_client()->wallet_close();
+
+  QDir default_wallet_directory = QString::fromStdString(clientWrapper()->get_client()->get_wallet()->get_data_directory().generic_string());
+  QString default_wallet_name = _settings.value("client/default_wallet_name").toString();
+
+  if( QMessageBox::warning(this,
+                           tr("Restoring Wallet Backup"),
+                           tr("You are about to restore a wallet backup. This will back up and replace your current wallet! Are you sure you wish to continue?"),
+                           tr("Yes, back up and replace my wallet"),
+                           tr("Cancel"),
+                           QString(), 1)
+      != 0)
+    return;
+
+  QString backup_wallet_name = default_wallet_name + "-backup-" + QDateTime::currentDateTime().toString(Qt::ISODate).replace(':', "");
+
+  bool ok = false;
+  QString password = QInputDialog::getText(this,
+                                           tr("Import Wallet Passphrase"),
+                                           tr("Please enter the passphrase for the wallet you are restoring."),
+                                           QLineEdit::Password,
+                                           QString(),
+                                           &ok);
+  if(ok) {
+    if( default_wallet_directory.exists(default_wallet_name) )
+      default_wallet_directory.rename(default_wallet_name, backup_wallet_name);
+    try {
+      clientWrapper()->get_client()->wallet_backup_restore(walletPath.toStdString(),
+                                                           default_wallet_name.toStdString(),
+                                                           password.toStdString());
+    } catch (const fc::exception& e) {
+      if( default_wallet_directory.exists(default_wallet_name) )
+        QDir(default_wallet_directory.absoluteFilePath(default_wallet_name)).removeRecursively();
+      if( default_wallet_directory.exists(backup_wallet_name) )
+        default_wallet_directory.rename(backup_wallet_name, default_wallet_name);
+      QMessageBox::critical(this,
+                            tr("Wallet Restore Failed"),
+                            tr("Failed to restore wallet backup. Your original wallet has been restored. Error: %1").arg(e.to_string().c_str()));
+    }
+  } else return;
+
+  getViewer()->loadUrl(clientWrapper()->http_url());
+}
+
 void MainWindow::initMenu()
 {
   auto menuBar = new QMenuBar(nullptr);
 
-  _fileMenu = menuBar->addMenu("&File");
-  _fileMenu->addAction("&Import Wallet")->setEnabled(false);
+  _fileMenu = menuBar->addMenu("File");
 
-  connect(_fileMenu->addAction("E&xport Wallet"), &QAction::triggered, [this](){
+  connect(_fileMenu->addAction("Import Wallet"), &QAction::triggered, this, &MainWindow::importWallet);
+  connect(_fileMenu->addAction("Export Wallet"), &QAction::triggered, [this](){
     QString savePath = QFileDialog::getSaveFileName(this, tr("Export Wallet"), QString(), tr("Wallet Backups (*.json)"));
     if( !savePath.isNull() )
-      _clientWrapper->get_client()->wallet_export_to_json(savePath.toStdString());
+      _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
   });
-  connect(_fileMenu->addAction("Open &URL"), &QAction::triggered, [this]{
-    bool ok = false;
-    QString url = QInputDialog::getText(this,
-                                        tr("Open URL"),
-                                        tr("Please enter a URL to open"),
-                                        QLineEdit::Normal,
-                                        qApp->clipboard()->text(),
-                                        &ok,
-                                        Qt::Sheet);
-    if( ok )
-      processCustomUrl(url);
+  _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
+  connect(_fileMenu->addAction("Open URL"), &QAction::triggered, [this]{
+    QInputDialog urlGetter(this);
+    urlGetter.setWindowTitle(tr("Open URL"));
+    urlGetter.setLabelText(tr("Please enter a URL to open"));
+    urlGetter.setTextValue(qApp->clipboard()->text().startsWith(CUSTOM_URL_SCHEME ":")
+                           ?qApp->clipboard()->text() : CUSTOM_URL_SCHEME ":");
+    urlGetter.setWindowModality(Qt::WindowModal);
+    urlGetter.resize(width() / 2, 0);
+
+    if( urlGetter.exec() == QInputDialog::Accepted )
+      processCustomUrl(urlGetter.textValue());
   });
+  _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
 
-  _fileMenu->addAction("&Change Password")->setEnabled(false);
+  _fileMenu->addAction("Change Password")->setEnabled(false);
+  _fileMenu->addAction("Quit", qApp, SLOT(quit()), QKeySequence(tr("Ctrl+Q")));
 
-#ifndef __APPLE__
-  //OSX provides its own Quit menu item which works fine; we don't need to add a second one.
-  _fileMenu->addAction("&Quit", qApp, SLOT(quit()));
-#endif
-  _accountMenu = menuBar->addMenu("&Accounts");
+  _accountMenu = menuBar->addMenu("Accounts");
   setMenuBar(menuBar);
 }
