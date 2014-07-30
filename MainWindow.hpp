@@ -31,6 +31,7 @@ class MainWindow : public QMainWindow
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
+    void goToAddContact();
 
     void setupTrayIcon();
 

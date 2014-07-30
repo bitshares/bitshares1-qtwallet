@@ -113,28 +113,12 @@ void MainWindow::processCustomUrl(QString url)
     //This is a username:key pair
     int colon = components[0].indexOf(':');
     QString username = components[0].left(colon);
-    bts::blockchain::public_key_type key(components[0].mid(colon+1).toStdString());
+    QString key(components[0].mid(colon+1));
 
-    try
-    {
-      _clientWrapper->get_client()->get_wallet()->add_contact_account(username.toStdString(), key);
-      goToAccount(username);
-    }
-    catch(const fc::exception& e)
-    {
-      //Display error from backend, but chop off the "Assert exception" stuff before the colon
-      QString error = e.to_string().c_str();
-      QMessageBox::warning(this, tr("Invalid Account"), tr("Could not create contact account:") + error.mid(error.indexOf(':')+1));
+    if(!walletIsUnlocked())
       return;
-    }
 
-    if( walletIsUnlocked(false) && components.size() > 1 )
-    {
-      if( components[1] == "approve" )
-        _clientWrapper->confirm_and_set_approval(username, true);
-      else if( components[1] == "disapprove" )
-        _clientWrapper->confirm_and_set_approval(username, false);
-    }
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact?name=" + username + "&key=" + key);
   }
   else if( components[0].toLower() == components[0] )
   {
@@ -241,6 +225,14 @@ void MainWindow::goToCreateAccount()
     return;
 
   getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
+}
+
+void MainWindow::goToAddContact()
+{
+  if( !walletIsUnlocked() )
+    return;
+
+  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact");
 }
 
 void MainWindow::setupTrayIcon()
@@ -503,7 +495,6 @@ void MainWindow::goToTransfer(QStringList components)
       .arg(components[0])
       .arg(amount)
       .arg(memo);
-  qDebug("Loading url %s", url.toStdString().c_str());
   getViewer()->loadUrl(url);
 }
 
