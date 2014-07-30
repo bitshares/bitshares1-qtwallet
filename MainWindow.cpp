@@ -154,6 +154,8 @@ void MainWindow::processCustomUrl(QString url)
         _clientWrapper->confirm_and_set_approval(components[0], true);
       else if( components[1] == "disapprove" )
         _clientWrapper->confirm_and_set_approval(components[0], false);
+      else if( components[1] == "transfer" )
+        goToTransfer(components);
     }
   }
   else if( components[0].size() > QString(BTS_ADDRESS_PREFIX).size() && components[0].startsWith(BTS_ADDRESS_PREFIX) )
@@ -473,6 +475,36 @@ void MainWindow::doLogin(QStringList components)
   {
     QMessageBox::warning(this, tr("Unable to Login"), tr("An error occurred during login: %1").arg(e.to_string().c_str()));
   }
+}
+
+void MainWindow::goToTransfer(QStringList components)
+{
+  if(!walletIsUnlocked()) return;
+
+  QString sender;
+  QString amount;
+  QString memo;
+  QStringList parameters = components.mid(2);
+
+  while (!parameters.empty()) {
+    QString parameterName = parameters.takeFirst();
+    if (parameterName == "amount")
+      amount = parameters.takeFirst();
+    else if (parameterName == "memo")
+      memo = parameters.takeFirst();
+    else if (parameterName == "from")
+      sender = parameters.takeFirst();
+    else
+      parameters.pop_front();
+  }
+
+  QString url = clientWrapper()->http_url().toString() + QStringLiteral("/#/transfer?from=%1&to=%2&amount=%3&memo=%4")
+      .arg(sender)
+      .arg(components[0])
+      .arg(amount)
+      .arg(memo);
+  qDebug("Loading url %s", url.toStdString().c_str());
+  getViewer()->loadUrl(url);
 }
 
 void MainWindow::readSettings()
