@@ -566,9 +566,7 @@ void MainWindow::initMenu()
     urlGetter.setTextValue(qApp->clipboard()->text().startsWith(CUSTOM_URL_SCHEME ":")
                            ?qApp->clipboard()->text() : CUSTOM_URL_SCHEME ":");
     urlGetter.setWindowModality(Qt::WindowModal);
-    auto geometry = urlGetter.geometry();
-    geometry.setWidth(width() / 2);
-    urlGetter.setGeometry(geometry);
+    urlGetter.resize(width() / 2, 0);
 
     if( urlGetter.exec() == QInputDialog::Accepted )
       processCustomUrl(urlGetter.textValue());
