@@ -475,6 +475,7 @@ void MainWindow::goToTransfer(QStringList components)
 
   QString sender;
   QString amount;
+  QString asset;
   QString memo;
   QStringList parameters = components.mid(2);
 
@@ -486,14 +487,17 @@ void MainWindow::goToTransfer(QStringList components)
       memo = parameters.takeFirst();
     else if (parameterName == "from")
       sender = parameters.takeFirst();
+    else if (parameterName == "asset")
+      asset = parameters.takeFirst();
     else
       parameters.pop_front();
   }
 
-  QString url = clientWrapper()->http_url().toString() + QStringLiteral("/#/transfer?from=%1&to=%2&amount=%3&memo=%4")
+  QString url = clientWrapper()->http_url().toString() + QStringLiteral("/#/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
       .arg(sender)
       .arg(components[0])
       .arg(amount)
+      .arg(asset)
       .arg(memo);
   getViewer()->loadUrl(url);
 }
