@@ -67,6 +67,7 @@ void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
   accountMenu->addAction("Go to My Accounts", mainWindow, SLOT(goToMyAccounts()), QKeySequence(QObject::tr("Ctrl+Shift+A")));
   accountMenu->addAction("Create Account", mainWindow, SLOT(goToCreateAccount()), QKeySequence(QObject::tr("Ctrl+Shift+C")));
   accountMenu->addAction("Import Account")->setEnabled(false);
+  accountMenu->addAction("New Contact", mainWindow, SLOT(goToAddContact()), QKeySequence(QObject::tr("Ctrl+Shift+N")));
 }
 
 void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)

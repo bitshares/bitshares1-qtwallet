@@ -31,6 +31,7 @@ class MainWindow : public QMainWindow
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
+    void goToAddContact();
 
     void setupTrayIcon();
 
@@ -52,6 +53,7 @@ class MainWindow : public QMainWindow
     bool walletIsUnlocked(bool promptToUnlock = true);
     std::string getLoginUser(const fc::ecc::public_key& serverKey);
     void doLogin(QStringList components);
+    void goToTransfer(QStringList components);
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();

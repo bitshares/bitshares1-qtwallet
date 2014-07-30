@@ -113,28 +113,12 @@ void MainWindow::processCustomUrl(QString url)
     //This is a username:key pair
     int colon = components[0].indexOf(':');
     QString username = components[0].left(colon);
-    bts::blockchain::public_key_type key(components[0].mid(colon+1).toStdString());
+    QString key(components[0].mid(colon+1));
 
-    try
-    {
-      _clientWrapper->get_client()->get_wallet()->add_contact_account(username.toStdString(), key);
-      goToAccount(username);
-    }
-    catch(const fc::exception& e)
-    {
-      //Display error from backend, but chop off the "Assert exception" stuff before the colon
-      QString error = e.to_string().c_str();
-      QMessageBox::warning(this, tr("Invalid Account"), tr("Could not create contact account:") + error.mid(error.indexOf(':')+1));
+    if(!walletIsUnlocked())
       return;
-    }
 
-    if( walletIsUnlocked(false) && components.size() > 1 )
-    {
-      if( components[1] == "approve" )
-        _clientWrapper->confirm_and_set_approval(username, true);
-      else if( components[1] == "disapprove" )
-        _clientWrapper->confirm_and_set_approval(username, false);
-    }
+    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact?name=" + username + "&key=" + key);
   }
   else if( components[0].toLower() == components[0] )
   {
@@ -154,6 +138,8 @@ void MainWindow::processCustomUrl(QString url)
         _clientWrapper->confirm_and_set_approval(components[0], true);
       else if( components[1] == "disapprove" )
         _clientWrapper->confirm_and_set_approval(components[0], false);
+      else if( components[1] == "transfer" )
+        goToTransfer(components);
     }
   }
   else if( components[0].size() > QString(BTS_ADDRESS_PREFIX).size() && components[0].startsWith(BTS_ADDRESS_PREFIX) )
@@ -239,6 +225,14 @@ void MainWindow::goToCreateAccount()
     return;
 
   getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
+}
+
+void MainWindow::goToAddContact()
+{
+  if( !walletIsUnlocked() )
+    return;
+
+  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact");
 }
 
 void MainWindow::setupTrayIcon()
@@ -473,6 +467,39 @@ void MainWindow::doLogin(QStringList components)
   {
     QMessageBox::warning(this, tr("Unable to Login"), tr("An error occurred during login: %1").arg(e.to_string().c_str()));
   }
+}
+
+void MainWindow::goToTransfer(QStringList components)
+{
+  if(!walletIsUnlocked()) return;
+
+  QString sender;
+  QString amount;
+  QString asset;
+  QString memo;
+  QStringList parameters = components.mid(2);
+
+  while (!parameters.empty()) {
+    QString parameterName = parameters.takeFirst();
+    if (parameterName == "amount")
+      amount = parameters.takeFirst();
+    else if (parameterName == "memo")
+      memo = parameters.takeFirst();
+    else if (parameterName == "from")
+      sender = parameters.takeFirst();
+    else if (parameterName == "asset")
+      asset = parameters.takeFirst();
+    else
+      parameters.pop_front();
+  }
+
+  QString url = clientWrapper()->http_url().toString() + QStringLiteral("/#/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
+      .arg(sender)
+      .arg(components[0])
+      .arg(amount)
+      .arg(asset)
+      .arg(memo);
+  getViewer()->loadUrl(url);
 }
 
 void MainWindow::readSettings()
