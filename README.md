@@ -1,11 +1,11 @@
-# QT Wallet (Based on Web Wallet)
+# Qt Wallet (Based on Web Wallet)
 
 ## Configuration and installation
 
 ### Unix
 
-Download and install QT 5.3, see http://qt-project.org/downloads
-Set envronment variable CMAKE_PREFIX_PATH to point to clang_64 in your QT directory, e.g.:
+Download and install Qt 5.3, see http://qt-project.org/downloads
+Set envronment variable CMAKE_PREFIX_PATH to point to clang_64 in your Qt directory, e.g.:
 ```
     $ export CMAKE_PREFIX_PATH=/Users/user/Qt5.3.0/5.3/clang_64
 ```    
@@ -49,7 +49,7 @@ cd .\bitshares_toolkit\programs\web_wallet\
 ```
 Copy directory .\bitshares_toolkit\programs\web_wallet\generated\ to .\bitshares_toolkit\programs\qt_wallet\htdocs\
 
-Download and install Windows binary version of QT 5.3 into the same folder as bitshares_toolkit.
+Download and install Windows binary version of Qt 5.3 into the same folder as bitshares_toolkit.
 
 Edit setenv.bat and add CMAKE_PREFIX_PATH:
 
