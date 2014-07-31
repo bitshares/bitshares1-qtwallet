@@ -83,6 +83,7 @@ IF( WIN32 )
     configure_file( windows/resource.h resource.h COPYONLY )
     configure_file( images/qtapp.ico qtapp.ico COPYONLY )
     list( APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/resource.rc )
+    set(OPENSSL_ROOT_DIR $ENV{OPENSSL_ROOT_DIR} )
     configure_file( windows/setup.iss.in setup.iss )
 ENDIF()
 
