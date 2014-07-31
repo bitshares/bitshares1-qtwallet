@@ -55,6 +55,18 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
   else if( object == this && event->type() == QEvent::Close && _trayIcon )
   {
     //If we're using a tray icon, close to tray instead of exiting
+    if (_settings.value("showTrayIconMessage", true).toBool())
+    {
+      int showAgain = QMessageBox::information(this,
+                               tr("Closing to Tray"),
+                               tr("You have closed the %1 window. %1 will continue running in the system tray. To quit, use the Quit option in the menu.")
+                                  .arg(qApp->applicationName()),
+                               tr("OK"),
+                               tr("Don't Show Again"),
+                               QString(), 1);
+      _settings.setValue("showTrayIconMessage", showAgain == 0);
+    }
+
 #ifdef __APPLE__
     //Workaround: if user clicks quit in dock menu, a non-spontaneous close event shows up. We should quit when this happens.
     if( !event->spontaneous() )
@@ -65,6 +77,8 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
 #else
     setVisible(false);
 #endif
+
+
     event->ignore();
     return true;
   }
@@ -258,6 +272,11 @@ void MainWindow::setupTrayIcon()
       setVisible(!isVisible());
 #endif
     }
+  });
+
+  connect(qApp, &QApplication::aboutToQuit, [this]{
+    _trayIcon->deleteLater();
+    _trayIcon = nullptr;
   });
 }
 
