@@ -62,8 +62,13 @@ void ClientWrapper::initialize()
   settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
   Q_UNUSED(p2pport);
 
+#ifdef _WIN32
+  _cfg.rpc.rpc_user = "";
+  _cfg.rpc.rpc_password = "";
+#else
   _cfg.rpc.rpc_user     = "randomuser";
   _cfg.rpc.rpc_password = fc::variant(fc::ecc::private_key::generate()).as_string();
+#endif
   _cfg.rpc.httpd_endpoint = fc::ip::endpoint::from_string( "127.0.0.1:9999" );
   _cfg.rpc.httpd_endpoint.set_port(0);
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
