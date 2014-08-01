@@ -133,8 +133,7 @@ QLocalServer* startSingleInstanceServer(MainWindow* mainWindow)
     QTimer::singleShot(1000, &waitLoop, SLOT(quit()));
     waitLoop.exec();
 
-    mainWindow->raise();
-    mainWindow->activateWindow();
+    mainWindow->takeFocus();
 
     if( zygote->bytesAvailable() )
     {

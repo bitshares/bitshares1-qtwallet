@@ -249,6 +249,24 @@ void MainWindow::goToAddContact()
   getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact");
 }
 
+void MainWindow::takeFocus()
+{
+  if( !isVisible() )
+    setVisible(true);
+
+#ifdef __APPLE__
+  ProcessSerialNumber psn = { 0, kCurrentProcess };
+  if( !IsProcessVisible(&psn) )
+  {
+    ShowHideProcess(&psn, true);
+    SetFrontProcess(&psn);
+  }
+#endif
+
+  raise();
+  activateWindow();
+}
+
 void MainWindow::setupTrayIcon()
 {
   if( !QSystemTrayIcon::isSystemTrayAvailable() )
