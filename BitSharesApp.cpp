@@ -268,7 +268,30 @@ bool BitSharesApp::notify(QObject* receiver, QEvent* e)
   }
   catch (const fc::exception& e)
   {
-    elog("${e}", ("e", e.to_detail_string()));
-    QErrorMessage::qtHandler()->showMessage(e.to_string().c_str());
+    onExceptionCaught(e);
   }
+  catch (...)
+  {
+    onUnknownExceptionCaught();
+  }
+
+  return true;
+}
+
+void BitSharesApp::onExceptionCaught(const fc::exception& e)
+{
+  displayFailureInfo(e.to_detail_string());
+}
+
+void BitSharesApp::onUnknownExceptionCaught()
+{
+  std::string detail("Unknown exception caught");
+  displayFailureInfo(detail);
+}
+
+void BitSharesApp::displayFailureInfo(const std::string& detail)
+{
+  elog("${e}", ("e", detail));
+  QErrorMessage::qtHandler()->showMessage(detail.c_str());
+  QApplication::quit();
 }

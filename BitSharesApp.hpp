@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QApplication>
+#include <fc/exception/exception.hpp>
 
-#include <list>
+#include <QApplication>
 
 class ClientWrapper;
 class Html5Viewer;
@@ -26,8 +26,13 @@ class BitSharesApp : protected QApplication
     BitSharesApp(int& argc, char** argv);
     virtual ~BitSharesApp();
     int run();
+
     void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash);
     QLocalServer* startSingleInstanceServer(MainWindow* mainWindow);
+
+    void onExceptionCaught(const fc::exception& e);
+    void onUnknownExceptionCaught();
+    void displayFailureInfo(const std::string& detail);
 
     /// Overrided from QApplication to catch all exceptions.
     virtual bool notify(QObject * receiver, QEvent * e) override;
