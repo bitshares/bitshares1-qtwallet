@@ -41,6 +41,7 @@ set( SOURCES
   ClientWrapper.cpp 
   Utilities.cpp 
   MainWindow.cpp
+  BitSharesApp.cpp
   html5viewer/html5viewer.cpp
   images/bitshares.icns
 )
