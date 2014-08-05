@@ -96,7 +96,8 @@ IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be i
       add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")
       add_custom_target(NukeHtdocs ${CMAKE_COMMAND} -E remove_directory "${CMAKE_CURRENT_SOURCE_DIR}/htdocs")
       add_custom_target(buildweb ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet/dist" "${CMAKE_CURRENT_SOURCE_DIR}/htdocs" DEPENDS Lineman NukeHtdocs)
-      add_dependencies(${APP_NAME} buildweb)
+      # If you are tempted to uncomment the following line, DO NOT DO IT! Do not! Just run `make buildweb` manually.
+#      add_dependencies(${APP_NAME} buildweb)
   ELSE()
       message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
   ENDIF()
