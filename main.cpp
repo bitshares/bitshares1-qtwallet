@@ -90,7 +90,7 @@ void prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWind
   auto loadFinishedConnection = std::make_shared<QMetaObject::Connection>();
   *loadFinishedConnection = viewer->connect(viewer->webView(), &QGraphicsWebView::loadFinished, [mainWindow,splash,viewer,loadFinishedConnection](bool ok) {
     //Workaround for wallet_get_info RPC call failure in web_wallet
-    viewer->webView()->reload();
+    //viewer->webView()->reload();
 
     ilog( "Webview loaded: ${status}", ("status", ok) );
     viewer->disconnect(*loadFinishedConnection);
