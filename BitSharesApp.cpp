@@ -33,6 +33,7 @@
 #include <QMessageBox>
 #include <QProxyStyle>
 #include <QComboBox>
+#include <QTemporaryFile>
 
 #include <boost/program_options.hpp>
 
@@ -60,7 +61,136 @@
 #include <iostream>
 #include <iomanip>
 
+/// comment for now 
+#if 0 
+//#ifdef WIN32
+
+#define APP_TRY /*try*/
+#define APP_CATCH /*Nothing*/
+
+
+//#ifdef NDEBUG // enable crashrpt win32 release only
+#include "../../CrashRpt/include/CrashRpt.h"
+
+/* forwards SEH caught by fc's async tasks to CrashRpt */
+int unhandled_exception_filter(unsigned code, _EXCEPTION_POINTERS* info)
+{
+  return crExceptionFilter(code, info);
+}
+
+void installCrashRptHandler(const char* appName, const char* appVersion, const QFile& logFilePath)
+{
+  // Define CrashRpt configuration parameters
+  CR_INSTALL_INFO info = { 0 };
+  info.cb = sizeof(CR_INSTALL_INFO);
+  info.pszAppName = appName;
+  info.pszAppVersion = appVersion;
+  info.pszEmailSubject = nullptr;
+  info.pszEmailTo = "sales@syncad.com";
+  info.pszUrl = "http://invictus.syncad.com/crash_report.html";
+  info.uPriorities[CR_HTTP] = 3;  // First try send report over HTTP 
+  info.uPriorities[CR_SMTP] = 2;  // Second try send report over SMTP  
+  info.uPriorities[CR_SMAPI] = 1; // Third try send report over Simple MAPI    
+  // Install all available exception handlers
+  info.dwFlags = CR_INST_ALL_POSSIBLE_HANDLERS |
+                 CR_INST_CRT_EXCEPTION_HANDLERS |
+                 CR_INST_AUTO_THREAD_HANDLERS |
+                 CR_INST_SEND_QUEUED_REPORTS;
+  // Define the Privacy Policy URL 
+  info.pszPrivacyPolicyURL = "http://invictus.syncad.com/crash_privacy.html";
+
+  // Install crash reporting
+  int nResult = crInstall(&info);
+  if (nResult != 0)
+  {
+    // Something goes wrong. Get error message.
+    char szErrorMsg[512] = { 0 };
+    crGetLastErrorMsg(szErrorMsg, 512);
+    elog("Cannot install CrsshRpt error handler: ${e}", ("e", szErrorMsg));
+    return;
+  }
+  else
+  {
+    wlog("CrashRpt handler installed successfully");
+  }
+
+  auto logPathString = logFilePath.fileName().toStdString();
+
+  // Add our log file to the error report
+  crAddFile2(logPathString.c_str(), NULL, "Log File", CR_AF_MAKE_FILE_COPY);
+
+  // We want the screenshot of the entire desktop is to be added on crash
+  crAddScreenshot2(CR_AS_PROCESS_WINDOWS | CR_AS_USE_JPEG_FORMAT, 0);
+
+  fc::set_unhandled_structured_exception_filter(&unhandled_exception_filter);
+}
+
+void uninstallCrashRptHandler()
+{
+  crUninstall();
+}
+
+#endif // NDEBUG
+//#else // WIN32
+
+#define APP_TRY try
+#define APP_CATCH \
+  catch(const fc::exception& e) \
+  {\
+  onExceptionCaught(e);\
+  }\
+  catch(...)\
+  {\
+  onUnknownExceptionCaught();\
+  }
+//#endif
+
+/// comment for now
+//#if !defined(WIN32) || !defined(NDEBUG)
+void installCrashRptHandler(const char* appName, const char* appVersion, const QFile& logFilePath)
+{
+  /// Nothing to do here since no crash report support available
+}
+
+void uninstallCrashRptHandler()
+{
+  /// Nothing to do here since no crash report support available
+}
+//#endif
+
+
 BitSharesApp* BitSharesApp::_instance = nullptr;
+
+#define APP_NAME "BitSharesXT"
+
+static std::string CreateBitSharesVersionNumberString()
+{
+  std::ostringstream versionNumberStream;
+  /// TODO auto incrementing version
+  versionNumberStream << 0 << "." << 4 << "." << 1;
+  //versionNumberStream << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH;
+  return versionNumberStream.str();
+}
+
+QTemporaryFile gLogFile;
+
+void ConfigureLoggingToTemporaryFile()
+{
+  //create log file in temporary dir that lasts after application exits
+  gLogFile.setAutoRemove(false);
+  gLogFile.open();
+  gLogFile.close();
+
+  //configure logger to also write to log file
+  fc::file_appender::config ac;
+  /** \warning Use wstring to construct log file name since %TEMP% can point to path containing
+  native chars.
+  */
+  ac.filename = gLogFile.fileName().toStdWString();
+  ac.truncate = false;
+  ac.flush = true;
+  fc::logger::get().add_appender(fc::shared_ptr<fc::file_appender>(new fc::file_appender(fc::variant(ac))));
+}
 
 BitSharesApp::BitSharesApp(int& argc, char** argv)
   :QApplication(argc, argv)
@@ -79,9 +209,16 @@ BitSharesApp::~BitSharesApp()
 
 int BitSharesApp::run(int& argc, char** argv)
 {
-  BitSharesApp app(argc, argv);
+  ConfigureLoggingToTemporaryFile();
 
-  return app.run();
+  installCrashRptHandler(APP_NAME, CreateBitSharesVersionNumberString().c_str(), gLogFile);
+
+  BitSharesApp app(argc, argv);
+  int ec = app.run();
+
+  uninstallCrashRptHandler();
+
+  return ec;
 }
 
 int BitSharesApp::run()
@@ -159,15 +296,12 @@ int BitSharesApp::run()
 
   QWebSettings::globalSettings()->setAttribute(QWebSettings::PluginsEnabled, false);
 
-  try {
+  APP_TRY
+  {
     client->initialize();
     return exec();
   }
-  catch (const fc::exception& e)
-  {
-    elog("${e}", ("e", e.to_detail_string()));
-    QErrorMessage::qtHandler()->showMessage(e.to_string().c_str());
-  }
+  APP_CATCH
 }
 
 void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
@@ -262,18 +396,11 @@ QLocalServer* BitSharesApp::startSingleInstanceServer(MainWindow* mainWindow)
 
 bool BitSharesApp::notify(QObject* receiver, QEvent* e)
 {
-  try
+  APP_TRY
   {
     return QApplication::notify(receiver, e);
   }
-  catch (const fc::exception& e)
-  {
-    onExceptionCaught(e);
-  }
-  catch (...)
-  {
-    onUnknownExceptionCaught();
-  }
+  APP_CATCH
 
   return true;
 }
