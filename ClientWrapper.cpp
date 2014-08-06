@@ -98,8 +98,6 @@ void ClientWrapper::initialize()
       _client->listen_on_port(0, false /*don't wait if not available*/);
       fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
 
-      _client->connect_to_p2p_network();
-
       for (std::string default_peer : _cfg.default_peers)
         _client->connect_to_peer(default_peer);
 
