@@ -33,6 +33,9 @@ class MainWindow : public QMainWindow
     void goToCreateAccount();
     void goToAddContact();
 
+    //Causes this window to attempt to become the front window on the desktop
+    void takeFocus();
+
     void setupTrayIcon();
 
     ///Used to schedule a custom URL for processing later, once the app has finished starting
