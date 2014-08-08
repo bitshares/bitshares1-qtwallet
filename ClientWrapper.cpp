@@ -98,9 +98,6 @@ void ClientWrapper::initialize()
       _client->listen_on_port(0, false /*don't wait if not available*/);
       fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
 
-      for (std::string default_peer : _cfg.default_peers)
-        _client->connect_to_peer(default_peer);
-
       _client->set_daemon_mode(true);
       _client->start();
       if( !_actual_httpd_endpoint )
@@ -108,7 +105,10 @@ void ClientWrapper::initialize()
         main_thread->async( [&]{ Q_EMIT error( tr("Unable to start HTTP server...")); });
       }
 
-      _client->start_networking();
+      _client->start_networking([=]{
+        for (std::string default_peer : _cfg.default_peers)
+          _client->connect_to_peer(default_peer);
+      });
 
       main_thread->async( [&]{ Q_EMIT status_update(tr("Forwarding port")); });
       if( upnp )
