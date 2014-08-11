@@ -1,6 +1,7 @@
 #include "ClientWrapper.hpp"
 
 #include <bts/net/upnp.hpp>
+#include <bts/db/exception.hpp>
 
 #include <QApplication>
 #include <QResource>
