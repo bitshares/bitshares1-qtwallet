@@ -75,6 +75,9 @@ void ClientWrapper::initialize()
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
   auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
+  int data_dir_index = qApp->arguments().indexOf("--data-dir");
+  if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
+      data_dir = qApp->arguments()[data_dir_index+1].toStdString();
 
   fc::thread* main_thread = &fc::thread::current();
 
