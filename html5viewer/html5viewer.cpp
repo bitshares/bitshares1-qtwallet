@@ -15,6 +15,7 @@
 #include <QVBoxLayout>
 #include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsWebView>
 #include <QWebFrame>
@@ -1080,7 +1081,13 @@ Html5ViewerPrivate::Html5ViewerPrivate(QWidget *parent)
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    m_webView = new QGraphicsWebView;
+    class NoContextMenuWebView : public QGraphicsWebView {
+        virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
+          event->ignore();
+        }
+    };
+
+    m_webView = new NoContextMenuWebView;
     m_webView->setAcceptTouchEvents(true);
     m_webView->setAcceptHoverEvents(false);
     setAttribute(Qt::WA_AcceptTouchEvents, true);
