@@ -78,6 +78,7 @@ void ClientWrapper::initialize()
   int data_dir_index = qApp->arguments().indexOf("--data-dir");
   if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
       data_dir = qApp->arguments()[data_dir_index+1].toStdString();
+  wlog("Starting client with data-dir: ${ddir}", ("ddir", data_dir));
 
   fc::thread* main_thread = &fc::thread::current();
 
