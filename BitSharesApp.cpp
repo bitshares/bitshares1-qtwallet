@@ -312,9 +312,11 @@ void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
 
 void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)
 {
-  viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
-  viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
-
+  viewer->connect(viewer->webView(), &QGraphicsWebView::urlChanged, [viewer,client] {
+    //Rebirth of the magic unicorn: When the page is reloaded, the magic unicorn dies. Make a new one.
+    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
+    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
+  });
   QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
     [client](QNetworkReply*, QAuthenticator *auth) {
     auth->setUser(client->http_url().userName());
