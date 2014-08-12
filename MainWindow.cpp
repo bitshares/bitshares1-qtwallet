@@ -562,7 +562,7 @@ void MainWindow::closeEvent( QCloseEvent* event )
 
 void MainWindow::importWallet()
 {
-  QString walletPath = QFileDialog::getOpenFileName(this, tr("Import Wallet"), QString(), tr("Wallet Backups (*.json)"));
+  QString walletPath = QFileDialog::getOpenFileName(this, tr("Import Wallet"), QDir::homePath(), tr("Wallet Backups (*.json)"));
   if( walletPath.isNull() || !QFileInfo(walletPath).exists() )
     return;
 
@@ -618,7 +618,10 @@ void MainWindow::initMenu()
 
   connect(_fileMenu->addAction("Import Wallet"), &QAction::triggered, this, &MainWindow::importWallet);
   connect(_fileMenu->addAction("Export Wallet"), &QAction::triggered, [this](){
-    QString savePath = QFileDialog::getSaveFileName(this, tr("Export Wallet"), QString(), tr("Wallet Backups (*.json)"));
+    QString savePath = QFileDialog::getSaveFileName(this,
+                                                    tr("Export Wallet"),
+                                                    QDir::homePath().append(QStringLiteral("/%1 Wallet Backup.json").arg(qApp->applicationName())),
+                                                    tr("Wallet Backups (*.json)"));
     if( !savePath.isNull() )
       _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
   });
