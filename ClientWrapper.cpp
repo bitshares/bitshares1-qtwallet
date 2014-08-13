@@ -1,6 +1,7 @@
 #include "ClientWrapper.hpp"
 
 #include <bts/net/upnp.hpp>
+#include <bts/db/exception.hpp>
 
 #include <QApplication>
 #include <QResource>
@@ -74,6 +75,10 @@ void ClientWrapper::initialize()
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
   auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
+  int data_dir_index = qApp->arguments().indexOf("--data-dir");
+  if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
+      data_dir = qApp->arguments()[data_dir_index+1].toStdString();
+  wlog("Starting client with data-dir: ${ddir}", ("ddir", data_dir));
 
   fc::thread* main_thread = &fc::thread::current();
 
@@ -98,9 +103,6 @@ void ClientWrapper::initialize()
       _client->listen_on_port(0, false /*don't wait if not available*/);
       fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
 
-      for (std::string default_peer : _cfg.default_peers)
-        _client->connect_to_peer(default_peer);
-
       _client->set_daemon_mode(true);
       _client->start();
       if( !_actual_httpd_endpoint )
@@ -108,7 +110,10 @@ void ClientWrapper::initialize()
         main_thread->async( [&]{ Q_EMIT error( tr("Unable to start HTTP server...")); });
       }
 
-      _client->start_networking();
+      _client->start_networking([=]{
+        for (std::string default_peer : _cfg.default_peers)
+          _client->connect_to_peer(default_peer);
+      });
 
       main_thread->async( [&]{ Q_EMIT status_update(tr("Forwarding port")); });
       if( upnp )
