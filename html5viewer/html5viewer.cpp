@@ -20,6 +20,8 @@
 #include <QGraphicsWebView>
 #include <QWebFrame>
 
+#include <bts/blockchain/config.hpp>
+
 #ifdef TOUCH_OPTIMIZED_NAVIGATION
 #include <QTimer>
 #include <QGraphicsSceneMouseEvent>
@@ -1087,7 +1089,11 @@ Html5ViewerPrivate::Html5ViewerPrivate(QWidget *parent)
         }
     };
 
+#ifdef BTS_TEST_NETWORK
+    m_webView = new QGraphicsWebView;
+#else
     m_webView = new NoContextMenuWebView;
+#endif
     m_webView->setAcceptTouchEvents(true);
     m_webView->setAcceptHoverEvents(false);
     setAttribute(Qt::WA_AcceptTouchEvents, true);

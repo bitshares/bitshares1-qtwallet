@@ -20,6 +20,17 @@ IF(WIN32)
    ENDIF()
 ENDIF(WIN32)
 
+SET (BITSHARES_ROOT $ENV{BITSHARES_ROOT})
+IF("${BITSHARES_ROOT}" STREQUAL "")
+  SET(BITSHARES_ROOT "./")
+ENDIF("${BITSHARES_ROOT}" STREQUAL "")
+
+# Let's configure binaries output directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BITSHARES_ROOT}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BITSHARES_ROOT}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${BITSHARES_ROOT}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BITSHARES_ROOT}/bin)
+
 #This variable will be filled just for Win32 platform
 SET (CrashRpt_LIBRARIES "")
 
@@ -126,11 +137,16 @@ IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be i
   ENDIF()
 ENDIF()
 
+# Looks like multiple post build commands doesn't work correctly (last one overwrites previous defs)
+SET(POST_BUILD_STEP_COMMANDS )
+
+SET(POST_BUILD_STEP_COMMANDS ${POST_BUILD_STEP_COMMANDS}
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/htdocs" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/htdocs")
 
 IF(WIN32)
   foreach(binary ${CRASHRPT_BINARIES_TO_INSTALL})
     set(POST_BUILD_STEP_COMMANDS ${POST_BUILD_STEP_COMMANDS}
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${binary}" "${CMAKE_CURRENT_BINARY_DIR}")
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${binary}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
   endforeach()
 ENDIF()
 
@@ -154,6 +170,10 @@ install( TARGETS ${APP_NAME} DESTINATION "." )
 IF(WIN32)
   INSTALL(FILES ${CRASHRPT_BINARIES_TO_INSTALL} DESTINATION . CONFIGURATIONS Release COMPONENT Runtime)
 ENDIF()
+
+ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} POST_BUILD ${POST_BUILD_STEP_COMMANDS} 
+  COMMENT "Copying binaries and other files into target directory."
+)
 
 IF( APPLE )
   set( CPACK_GENERATOR "DragNDrop" )
