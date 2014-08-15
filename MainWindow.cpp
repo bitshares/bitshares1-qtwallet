@@ -296,6 +296,21 @@ void MainWindow::setupTrayIcon()
     _trayIcon->deleteLater();
     _trayIcon = nullptr;
   });
+  
+  bts::wallet::wallet_ptr wallet = clientWrapper()->get_client()->get_wallet();
+  wallet->wallet_claimed_transaction.connect([=](const bts::wallet::ledger_entry& entry) {
+      QString receiver = tr("You");
+      QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
+      QString sender = tr("Someone");
+      
+      if (entry.to_account)
+          receiver = wallet->get_key_label(*entry.to_account).c_str();
+      if (entry.from_account)
+          sender = wallet->get_key_label(*entry.from_account).c_str();
+      
+      _trayIcon->showMessage(tr("%1 sent you %2").arg(sender).arg(amount),
+                             tr("%1 just received %2 from %3!").arg(receiver).arg(amount).arg(sender));
+  });
 }
 
 void MainWindow::goToBlock(uint32_t blockNumber)
