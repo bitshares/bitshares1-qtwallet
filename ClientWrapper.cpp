@@ -1,6 +1,7 @@
 #include "ClientWrapper.hpp"
 
 #include <bts/net/upnp.hpp>
+#include <bts/net/config.hpp>
 #include <bts/db/exception.hpp>
 
 #include <QApplication>
@@ -58,7 +59,7 @@ void ClientWrapper::initialize()
 {
   QSettings settings("BitShares", BTS_BLOCKCHAIN_NAME);
   bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
-  uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
+  uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NET_DEFAULT_P2P_PORT ).toInt();
   std::string default_wallet_name = settings.value("client/default_wallet_name", "default").toString().toStdString();
   settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
   Q_UNUSED(p2pport);
