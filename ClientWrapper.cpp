@@ -58,11 +58,14 @@ ClientWrapper::~ClientWrapper()
 void ClientWrapper::initialize()
 {
   QSettings settings("BitShares", BTS_BLOCKCHAIN_NAME);
-  bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
-  uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NET_DEFAULT_P2P_PORT ).toInt();
+  bool upnp = settings.value( "network/p2p/use_upnp", true ).toBool();
+
+  uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
+  if( BTS_TEST_NETWORK ) default_port += BTS_TEST_NETWORK_VERSION;
+  uint32_t p2pport = settings.value( "network/p2p/port", default_port ).toInt();
+
   std::string default_wallet_name = settings.value("client/default_wallet_name", "default").toString().toStdString();
   settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
-  Q_UNUSED(p2pport);
 
 #ifdef _WIN32
   _cfg.rpc.rpc_user = "";
