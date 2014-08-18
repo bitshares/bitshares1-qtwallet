@@ -127,7 +127,7 @@ add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} )
 
 IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be invoked from XCode, so let's skip this in XCode
   IF( IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")
-    IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Linux" )
+    IF( UNIX )
       add_custom_target(Lineman ./node_modules/lineman/cli.js build WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")
     ELSE()
       add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")
