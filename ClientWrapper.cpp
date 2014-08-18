@@ -93,7 +93,9 @@ void ClientWrapper::initialize()
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1 client").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>();
-      _client->open( data_dir );
+      _client->open( data_dir, fc::optional<fc::path>(), [=](uint32_t blocks_processed) {
+          main_thread->async( [&]{ Q_EMIT status_update(tr("Reindexing database; please wait... %1 blocks processed.").arg(blocks_processed)); } );
+      } );
 
       // setup  RPC / HTTP services
       main_thread->async( [&]{ Q_EMIT status_update(tr("Loading interface")); });
