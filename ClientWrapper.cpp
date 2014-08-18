@@ -76,6 +76,8 @@ void ClientWrapper::initialize()
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
   auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
+  if (settings.contains("data_dir"))
+      data_dir = settings.value("data_dir").toString().toStdString();
   int data_dir_index = qApp->arguments().indexOf("--data-dir");
   if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
       data_dir = qApp->arguments()[data_dir_index+1].toStdString();
@@ -175,6 +177,11 @@ QString ClientWrapper::get_http_auth_token()
   result += ":";
   result += _cfg.rpc.rpc_password.c_str();
   return result.toBase64( QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals );
+}
+
+void ClientWrapper::set_data_dir(QString data_dir)
+{
+  QSettings ("BitShares", BTS_BLOCKCHAIN_NAME).setValue("data_dir", data_dir);
 }
 
 void ClientWrapper::confirm_and_set_approval(QString delegate_name, bool approve)

@@ -24,6 +24,7 @@ class ClientWrapper : public QObject
     std::shared_ptr<bts::client::client> get_client() { return _client; }
 
   public Q_SLOTS:
+    void set_data_dir(QString data_dir);
     void confirm_and_set_approval(QString delegate_name, bool approve);
     void close();
 
