@@ -1,6 +1,7 @@
 #include "ClientWrapper.hpp"
 
 #include <bts/net/upnp.hpp>
+#include <bts/net/config.hpp>
 #include <bts/db/exception.hpp>
 
 #include <QApplication>
@@ -57,11 +58,14 @@ ClientWrapper::~ClientWrapper()
 void ClientWrapper::initialize()
 {
   QSettings settings("BitShares", BTS_BLOCKCHAIN_NAME);
-  bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
-  uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
+  bool upnp = settings.value( "network/p2p/use_upnp", true ).toBool();
+
+  uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
+  if( BTS_TEST_NETWORK ) default_port += BTS_TEST_NETWORK_VERSION;
+  uint32_t p2pport = settings.value( "network/p2p/port", default_port ).toInt();
+
   std::string default_wallet_name = settings.value("client/default_wallet_name", "default").toString().toStdString();
   settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
-  Q_UNUSED(p2pport);
 
 #ifdef _WIN32
   _cfg.rpc.rpc_user = "";
@@ -75,6 +79,8 @@ void ClientWrapper::initialize()
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
   auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
+  if (settings.contains("data_dir"))
+      data_dir = settings.value("data_dir").toString().toStdString();
   int data_dir_index = qApp->arguments().indexOf("--data-dir");
   if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
       data_dir = qApp->arguments()[data_dir_index+1].toStdString();
@@ -87,7 +93,9 @@ void ClientWrapper::initialize()
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1 client").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>();
-      _client->open( data_dir );
+      _client->open( data_dir, fc::optional<fc::path>(), [=](uint32_t blocks_processed) {
+          main_thread->async( [&]{ Q_EMIT status_update(tr("Reindexing database; please wait... %1 blocks processed.").arg(blocks_processed)); } );
+      } );
 
       // setup  RPC / HTTP services
       main_thread->async( [&]{ Q_EMIT status_update(tr("Loading interface")); });
@@ -174,6 +182,11 @@ QString ClientWrapper::get_http_auth_token()
   result += ":";
   result += _cfg.rpc.rpc_password.c_str();
   return result.toBase64( QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals );
+}
+
+void ClientWrapper::set_data_dir(QString data_dir)
+{
+  QSettings ("BitShares", BTS_BLOCKCHAIN_NAME).setValue("data_dir", data_dir);
 }
 
 void ClientWrapper::confirm_and_set_approval(QString delegate_name, bool approve)
