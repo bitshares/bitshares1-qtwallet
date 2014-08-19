@@ -20,6 +20,7 @@
 #include <QFileDialog>
 #include <QClipboard>
 #include <QGraphicsWebView>
+#include <QWebFrame>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -217,36 +218,30 @@ void MainWindow::setClientWrapper(ClientWrapper *clientWrapper)
   _clientWrapper = clientWrapper;
 }
 
+void MainWindow::navigateTo(const QString& path) 
+{
+    if( walletIsUnlocked() )
+        getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QString("navigate_to('%1')").arg(path));
+}
+
 void MainWindow::goToMyAccounts()
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/accounts");
+    navigateTo("/accounts");
 }
 
 void MainWindow::goToAccount(QString accountName)
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/accounts/" + accountName);
+    navigateTo("/accounts/" + accountName);
 }
 
 void MainWindow::goToCreateAccount()
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
+    navigateTo("/create/account");
 }
 
 void MainWindow::goToAddContact()
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact");
+    navigateTo("/newcontact");
 }
 
 void MainWindow::takeFocus()
@@ -295,6 +290,21 @@ void MainWindow::setupTrayIcon()
   connect(qApp, &QApplication::aboutToQuit, [this]{
     _trayIcon->deleteLater();
     _trayIcon = nullptr;
+  });
+  
+  bts::wallet::wallet_ptr wallet = clientWrapper()->get_client()->get_wallet();
+  wallet->wallet_claimed_transaction.connect([=](const bts::wallet::ledger_entry& entry) {
+      QString receiver = tr("You");
+      QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
+      QString sender = tr("Someone");
+      
+      if (entry.to_account)
+          receiver = wallet->get_key_label(*entry.to_account).c_str();
+      if (entry.from_account)
+          sender = wallet->get_key_label(*entry.from_account).c_str();
+      
+      _trayIcon->showMessage(tr("%1 sent you %2").arg(sender).arg(amount),
+                             tr("%1 just received %2 from %3!").arg(receiver).arg(amount).arg(sender));
   });
 }
 
@@ -562,7 +572,7 @@ void MainWindow::closeEvent( QCloseEvent* event )
 
 void MainWindow::importWallet()
 {
-  QString walletPath = QFileDialog::getOpenFileName(this, tr("Import Wallet"), QString(), tr("Wallet Backups (*.json)"));
+  QString walletPath = QFileDialog::getOpenFileName(this, tr("Import Wallet"), QDir::homePath(), tr("Wallet Backups (*.json)"));
   if( walletPath.isNull() || !QFileInfo(walletPath).exists() )
     return;
 
@@ -618,7 +628,10 @@ void MainWindow::initMenu()
 
   connect(_fileMenu->addAction("Import Wallet"), &QAction::triggered, this, &MainWindow::importWallet);
   connect(_fileMenu->addAction("Export Wallet"), &QAction::triggered, [this](){
-    QString savePath = QFileDialog::getSaveFileName(this, tr("Export Wallet"), QString(), tr("Wallet Backups (*.json)"));
+    QString savePath = QFileDialog::getSaveFileName(this,
+                                                    tr("Export Wallet"),
+                                                    QDir::homePath().append(QStringLiteral("/%1 Wallet Backup.json").arg(qApp->applicationName())),
+                                                    tr("Wallet Backups (*.json)"));
     if( !savePath.isNull() )
       _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
   });

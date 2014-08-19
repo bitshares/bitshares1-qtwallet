@@ -26,6 +26,7 @@ class MainWindow : public QMainWindow
     
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper* clientWrapper);
+    void navigateTo(const QString& path);
 
     public Q_SLOTS:
     void goToMyAccounts();
