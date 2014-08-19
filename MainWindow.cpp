@@ -20,6 +20,7 @@
 #include <QFileDialog>
 #include <QClipboard>
 #include <QGraphicsWebView>
+#include <QWebFrame>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -217,36 +218,30 @@ void MainWindow::setClientWrapper(ClientWrapper *clientWrapper)
   _clientWrapper = clientWrapper;
 }
 
+void MainWindow::navigateTo(const QString& path) 
+{
+    if( walletIsUnlocked() )
+        getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QString("navigate_to('%1')").arg(path));
+}
+
 void MainWindow::goToMyAccounts()
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/accounts");
+    navigateTo("/accounts");
 }
 
 void MainWindow::goToAccount(QString accountName)
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/accounts/" + accountName);
+    navigateTo("/accounts/" + accountName);
 }
 
 void MainWindow::goToCreateAccount()
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/create/account");
+    navigateTo("/create/account");
 }
 
 void MainWindow::goToAddContact()
 {
-  if( !walletIsUnlocked() )
-    return;
-
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact");
+    navigateTo("/newcontact");
 }
 
 void MainWindow::takeFocus()
