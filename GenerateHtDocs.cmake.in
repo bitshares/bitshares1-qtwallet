@@ -1,0 +1,23 @@
+IF(EXISTS "@CMAKE_CURRENT_SOURCE_DIR@/htdocs" AND IS_DIRECTORY "@CMAKE_CURRENT_SOURCE_DIR@/htdocs")
+  MESSAGE (STATUS "Target htdocs directory already exists, exiting...")
+ELSE()
+  MESSAGE (STATUS "Spawning lineman build...")
+
+  IF(UNIX)
+    EXECUTE_PROCESS(COMMAND ./node_modules/lineman/cli.js build WORKING_DIRECTORY "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet"
+      RESULT_VARIABLE execStatus OUTPUT_VARIABLE _output ERROR_VARIABLE _output)
+  ELSEIF(WIN32)
+    EXECUTE_PROCESS(COMMAND cmd.exe /C lineman build WORKING_DIRECTORY "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet"
+      RESULT_VARIABLE execStatus OUTPUT_VARIABLE _output ERROR_VARIABLE _output)
+  ENDIF()
+
+  IF(NOT "${execStatus}" STREQUAL "0")
+    # do something here about the failed "process" call...
+    message(FATAL_ERROR "lineman build spawn failed: '${execStatus}'")
+  ENDIF()
+
+  MESSAGE(STATUS "Process output: ${_output}")
+
+  EXECUTE_PROCESS(COMMAND @CMAKE_COMMAND@ -E copy_directory "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet/dist"
+    "@CMAKE_CURRENT_SOURCE_DIR@/htdocs")
+ENDIF()
