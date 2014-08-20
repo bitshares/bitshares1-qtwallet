@@ -16,7 +16,9 @@ Use CMake to configure bitshares_toolkit, set INCLUDE_QT_WALLET to TRUE or to ON
 ```
 
 The wallet needs access to the built web application in order to build. This can be built automatically by invoking the 'buildweb' rule via 'make buildweb'.
-Note that the web wallet is expected to be in .../bitshares_toolkit/programs/web_wallet.
+Note that the web wallet is expected to be in .../bitshares_toolkit/programs/web_wallet. The web wallet will be built and copied to
+.../bitshares_toolkit/programs/qt_wallet/htdocs. If this folder already exists, the 'buildweb' rule will not rebuild the web wallet. This can be overridden
+by using the 'forcebuildweb' rule, which will delete the htdocs folder and then rebuild.
 
 If there were no compilation errors, the executable will be located in programs/qt_wallet
 Now you need to run it in a way similar to bitshares_client - it accepts the same command line parameters as bitshares_client or reads them from config.json.
