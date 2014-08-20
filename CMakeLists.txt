@@ -31,9 +31,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BITSHARES_ROOT}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${BITSHARES_ROOT}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BITSHARES_ROOT}/bin)
 
-#This variable will be filled just for Win32 platform
-SET (CrashRpt_LIBRARIES "")
-
 # Find the QtWidgets library
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Gui REQUIRED)
@@ -109,17 +106,6 @@ IF( WIN32 )
     list( APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/resource.rc )
     set(OPENSSL_ROOT_DIR $ENV{OPENSSL_ROOT_DIR} )
     configure_file( windows/setup.iss.in setup.iss )
-
-    SET (CrashRpt_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../CrashRpt")
-
-    # Warning this lib doesn't have an associated .cmake
-    find_library(CrashRpt_LIBRARIES_RELEASE CrashRpt1402 HINTS "${CrashRpt_DIR}/lib")
-    LIST(APPEND CrashRpt_LIBRARIES optimized ${CrashRpt_LIBRARIES_RELEASE})
-    MESSAGE(STATUS "Found CrashRpt libraries: ${CrashRpt_LIBRARIES}")
-    set(CRASHRPT_BINARIES_TO_INSTALL "${CrashRpt_DIR}/bin/crashrpt_lang.ini"
-                                     "${CrashRpt_DIR}/bin/CrashRpt1402.dll"
-                                     "${CrashRpt_DIR}/bin/CrashSender1402.exe"
-                                     "${CrashRpt_DIR}/bin/dbghelp.dll")
 ENDIF(WIN32)
 
 # Tell CMake to create the qt_wallet executable
@@ -139,13 +125,6 @@ IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be i
   ENDIF()
 ENDIF()
 
-IF(WIN32)
-  foreach(binary ${CRASHRPT_BINARIES_TO_INSTALL})
-    set(POST_BUILD_STEP_COMMANDS ${POST_BUILD_STEP_COMMANDS}
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${binary}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-  endforeach()
-ENDIF()
-
 IF( APPLE )
     find_library(APP_SERVICES_LIBRARY ApplicationServices)
     target_link_libraries(${APP_NAME} ${APP_SERVICES_LIBRARY})
@@ -157,15 +136,11 @@ QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 # Use the Widgets module from Qt 5.
 target_link_libraries( ${APP_NAME} Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
   bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc  
-  ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${CrashRpt_LIBRARIES} ${ZLIB_LIBRARY} upnpc-static )
+  ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static )
 
 include( DeployQt4 )
 include( InstallRequiredSystemLibraries )
 install( TARGETS ${APP_NAME} DESTINATION "." )
-
-IF(WIN32)
-  INSTALL(FILES ${CRASHRPT_BINARIES_TO_INSTALL} DESTINATION . CONFIGURATIONS Release COMPONENT Runtime)
-ENDIF()
 
 ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} POST_BUILD ${POST_BUILD_STEP_COMMANDS} 
   COMMENT "Copying binaries and other files into target directory."
