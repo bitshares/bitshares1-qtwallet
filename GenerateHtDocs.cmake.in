@@ -18,6 +18,6 @@ ELSE()
 
   MESSAGE(STATUS "Process output: ${_output}")
 
-  EXECUTE_PROCESS(COMMAND @CMAKE_COMMAND@ -E copy_directory "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet/dist"
+  EXECUTE_PROCESS(COMMAND "@CMAKE_COMMAND@" -E copy_directory "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet/dist"
     "@CMAKE_CURRENT_SOURCE_DIR@/htdocs")
 ENDIF()
