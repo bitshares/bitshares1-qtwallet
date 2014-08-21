@@ -22,6 +22,8 @@ IF( WIN32 )
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
       ENDIF()
     endif()
+ELSE()
+  set(INCLUDE_CRASHRPT FALSE CACHE BOOL "Include CrashRpt")
 ENDIF( WIN32 ) 
 
 #This variable will be filled just for Win32 platform
