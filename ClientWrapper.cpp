@@ -91,7 +91,7 @@ void ClientWrapper::initialize()
   _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport,default_wallet_name](){
     try
     {
-      main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1 client").arg(qApp->applicationName())); });
+      main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>();
       _client->open( data_dir, fc::optional<fc::path>(), [=](uint32_t blocks_processed) {
           if( blocks_processed % 1000 == 0 )
@@ -99,7 +99,7 @@ void ClientWrapper::initialize()
       } );
 
       // setup  RPC / HTTP services
-      main_thread->async( [&]{ Q_EMIT status_update(tr("Loading interface")); });
+      main_thread->async( [&]{ Q_EMIT status_update(tr("Loading...")); });
       _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
       _client->get_rpc_server()->configure_http( _cfg.rpc );
       _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
@@ -124,7 +124,6 @@ void ClientWrapper::initialize()
           _client->connect_to_peer(default_peer);
       });
 
-      main_thread->async( [&]{ Q_EMIT status_update(tr("Forwarding port")); });
       if( upnp )
       {
         auto upnp_service = new bts::net::upnp_service();
