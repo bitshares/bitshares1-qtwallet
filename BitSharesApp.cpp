@@ -61,17 +61,17 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef WIN32
+#if defined(WIN32) && defined(USE_CRASHRPT)
 
   #define APP_TRY /*try*/
   #define APP_CATCH /*Nothing*/
 
-  #ifdef NDEBUG // enable crashrpt win32 release only
+#ifdef NDEBUG // enable crashrpt win32 release only
   #include "../../CrashRpt/include/CrashRpt.h"
 
   /* forwards SEH caught by fc's async tasks to CrashRpt */
   int unhandled_exception_filter(unsigned code, _EXCEPTION_POINTERS* info)
-  {
+  { 
     return crExceptionFilter(code, info);
   }
 
@@ -128,32 +128,29 @@
   }
 
 #endif // NDEBUG
-#else // WIN32
+#else // defined(WIN32) && defined(USE_CRASHRPT)
 
-  #define APP_TRY try
-  #define APP_CATCH \
-    catch(const fc::exception& e) \
-    {\
-    onExceptionCaught(e);\
-    }\
-    catch(...)\
-    {\
-    onUnknownExceptionCaught();\
-    }
+#define APP_TRY try
+#define APP_CATCH \
+	catch(const fc::exception& e) \
+	{\
+	onExceptionCaught(e);\
+	}\
+	catch(...)\
+	{\
+	onUnknownExceptionCaught();\
+	}
+
+void installCrashRptHandler(const char* appName, const char* appVersion, const QFile& logFilePath)
+{
+	/// Nothing to do here since no crash report support available
+}
+
+void uninstallCrashRptHandler()
+{
+	/// Nothing to do here since no crash report support available
+}
 #endif
-
-#if !defined(WIN32) || !defined(NDEBUG)
-  void installCrashRptHandler(const char* appName, const char* appVersion, const QFile& logFilePath)
-  {
-    /// Nothing to do here since no crash report support available
-  }
-
-  void uninstallCrashRptHandler()
-  {
-    /// Nothing to do here since no crash report support available
-  }
-#endif
-
 
 BitSharesApp* BitSharesApp::_instance = nullptr;
 
