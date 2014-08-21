@@ -1,6 +1,8 @@
 #include "ClientWrapper.hpp"
 
 #include <bts/net/upnp.hpp>
+#include <bts/net/config.hpp>
+#include <bts/db/exception.hpp>
 
 #include <QApplication>
 #include <QResource>
@@ -56,11 +58,14 @@ ClientWrapper::~ClientWrapper()
 void ClientWrapper::initialize()
 {
   QSettings settings("BitShares", BTS_BLOCKCHAIN_NAME);
-  bool      upnp    = settings.value( "network/p2p/use_upnp", true ).toBool();
-  uint32_t  p2pport = settings.value( "network/p2p/port", BTS_NETWORK_DEFAULT_P2P_PORT ).toInt();
+  bool upnp = settings.value( "network/p2p/use_upnp", true ).toBool();
+
+  uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
+  if( BTS_TEST_NETWORK ) default_port += BTS_TEST_NETWORK_VERSION;
+  uint32_t p2pport = settings.value( "network/p2p/port", default_port ).toInt();
+
   std::string default_wallet_name = settings.value("client/default_wallet_name", "default").toString().toStdString();
   settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
-  Q_UNUSED(p2pport);
 
 #ifdef _WIN32
   _cfg.rpc.rpc_user = "";
@@ -74,18 +79,27 @@ void ClientWrapper::initialize()
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
   auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
+  if (settings.contains("data_dir"))
+      data_dir = settings.value("data_dir").toString().toStdString();
+  int data_dir_index = qApp->arguments().indexOf("--data-dir");
+  if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
+      data_dir = qApp->arguments()[data_dir_index+1].toStdString();
+  wlog("Starting client with data-dir: ${ddir}", ("ddir", data_dir));
 
   fc::thread* main_thread = &fc::thread::current();
 
   _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport,default_wallet_name](){
     try
     {
-      main_thread->async( [&](){ Q_EMIT status_update(tr("Starting %1 client").arg(qApp->applicationName())); });
+      main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1 client").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>();
-      _client->open( data_dir );
+      _client->open( data_dir, fc::optional<fc::path>(), [=](uint32_t blocks_processed) {
+          if( blocks_processed % 1000 == 0 )
+             main_thread->async( [&]{ Q_EMIT status_update(tr("Reindexing database; please wait... This may take several minutes.").arg(blocks_processed)); } );
+      } );
 
       // setup  RPC / HTTP services
-      main_thread->async( [&](){ Q_EMIT status_update(tr("Loading interface")); });
+      main_thread->async( [&]{ Q_EMIT status_update(tr("Loading interface")); });
       _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
       _client->get_rpc_server()->configure_http( _cfg.rpc );
       _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
@@ -94,23 +108,23 @@ void ClientWrapper::initialize()
       _client->configure( data_dir );
       _client->init_cli();
 
-      main_thread->async( [&](){ Q_EMIT status_update(tr("Connecting to %1 network").arg(qApp->applicationName())); });
+      main_thread->async( [&]{ Q_EMIT status_update(tr("Connecting to %1 network").arg(qApp->applicationName())); });
       _client->listen_on_port(0, false /*don't wait if not available*/);
       fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
-
-      _client->connect_to_p2p_network();
-
-      for (std::string default_peer : _cfg.default_peers)
-        _client->connect_to_peer(default_peer);
 
       _client->set_daemon_mode(true);
       _client->start();
       if( !_actual_httpd_endpoint )
       {
-        main_thread->async( [&](){ Q_EMIT error( tr("Unable to start HTTP server...")); });
+        main_thread->async( [&]{ Q_EMIT error( tr("Unable to start HTTP server...")); });
       }
 
-      main_thread->async( [&](){ Q_EMIT status_update(tr("Forwarding port")); });
+      _client->start_networking([=]{
+        for (std::string default_peer : _cfg.default_peers)
+          _client->connect_to_peer(default_peer);
+      });
+
+      main_thread->async( [&]{ Q_EMIT status_update(tr("Forwarding port")); });
       if( upnp )
       {
         auto upnp_service = new bts::net::upnp_service();
@@ -124,16 +138,16 @@ void ClientWrapper::initialize()
       catch(...)
       {}
 
-      main_thread->async( [&](){ Q_EMIT initialized(); });
+      main_thread->async( [&]{ Q_EMIT initialized(); });
     }
     catch (const bts::db::db_in_use_exception&)
     {
-      main_thread->async( [&](){ Q_EMIT error( tr("An instance of %1 is already running! Please close it and try again.").arg(qApp->applicationName())); });
+      main_thread->async( [&]{ Q_EMIT error( tr("An instance of %1 is already running! Please close it and try again.").arg(qApp->applicationName())); });
     }
     catch (const fc::exception &e)
     {
       ilog("Failure when attempting to initialize client");
-      main_thread->async( [&](){ Q_EMIT error( tr("An error occurred while trying to start")); });
+      main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start")); });
     }
   });
 }
@@ -169,6 +183,11 @@ QString ClientWrapper::get_http_auth_token()
   result += ":";
   result += _cfg.rpc.rpc_password.c_str();
   return result.toBase64( QByteArray::Base64Encoding | QByteArray::KeepTrailingEquals );
+}
+
+void ClientWrapper::set_data_dir(QString data_dir)
+{
+  QSettings ("BitShares", BTS_BLOCKCHAIN_NAME).setValue("data_dir", data_dir);
 }
 
 void ClientWrapper::confirm_and_set_approval(QString delegate_name, bool approve)

@@ -11,6 +11,35 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
 
+IF( WIN32 )
+  set(INCLUDE_CRASHRPT TRUE CACHE BOOL "Include CrashRpt")
+  if(${INCLUDE_CRASHRPT})
+      ADD_DEFINITIONS(-DUSE_CRASHRPT)
+      # Build all windows projects with /EHsc, which will prevent the compiler from 
+      # translating structured exceptions into C++ exceptions (which would make
+      # our crash reporter less useful)
+      IF (NOT CMAKE_CXX_FLAGS MATCHES "/EHsc")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+      ENDIF()
+    endif()
+ELSE()
+  set(INCLUDE_CRASHRPT FALSE CACHE BOOL "Include CrashRpt")
+ENDIF( WIN32 ) 
+
+#This variable will be filled just for Win32 platform
+SET (CrashRpt_LIBRARIES "")
+
+SET (BITSHARES_ROOT $ENV{BITSHARES_ROOT})
+IF("${BITSHARES_ROOT}" STREQUAL "")
+  SET(BITSHARES_ROOT "./")
+ENDIF("${BITSHARES_ROOT}" STREQUAL "")
+
+# Let's configure binaries output directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BITSHARES_ROOT}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${BITSHARES_ROOT}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${BITSHARES_ROOT}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${BITSHARES_ROOT}/bin)
+
 # Find the QtWidgets library
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Gui REQUIRED)
@@ -41,6 +70,7 @@ set( SOURCES
   ClientWrapper.cpp 
   Utilities.cpp 
   MainWindow.cpp
+  BitSharesApp.cpp
   html5viewer/html5viewer.cpp
   images/bitshares.icns
 )
@@ -83,22 +113,43 @@ IF( WIN32 )
     configure_file( windows/resource.h resource.h COPYONLY )
     configure_file( images/qtapp.ico qtapp.ico COPYONLY )
     list( APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/resource.rc )
-    set(OPENSSL_ROOT_DIR $ENV{OPENSSL_ROOT_DIR} )
+    set( OPENSSL_ROOT_DIR $ENV{OPENSSL_ROOT_DIR} )
+    if(${INCLUDE_CRASHRPT})
+      set( CrashRpt_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../CrashRpt" )
+      # Warning this lib doesn't have an associated .cmake
+      find_library(CrashRpt_LIBRARIES_RELEASE CrashRpt1402 HINTS "${CrashRpt_DIR}/lib")
+      LIST(APPEND CrashRpt_LIBRARIES optimized ${CrashRpt_LIBRARIES_RELEASE})
+      MESSAGE(STATUS "Found CrashRpt libraries: ${CrashRpt_LIBRARIES}")
+      set(CRASHRPT_BINARIES_TO_INSTALL "${CrashRpt_DIR}/bin/crashrpt_lang.ini"
+                                       "${CrashRpt_DIR}/bin/CrashRpt1402.dll"
+                                       "${CrashRpt_DIR}/bin/CrashSender1402.exe"
+                                       "${CrashRpt_DIR}/bin/dbghelp.dll")
+    endif()
     configure_file( windows/setup.iss.in setup.iss )
-ENDIF()
+ENDIF( WIN32 )
 
 # Tell CMake to create the qt_wallet executable
 add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} )
 
 IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be invoked from XCode, so let's skip this in XCode
   IF( IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")
-      add_custom_target(Lineman lineman build WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")
-      add_custom_target(NukeHtdocs rm -rf "${CMAKE_CURRENT_SOURCE_DIR}/htdocs")
-      add_custom_target(buildweb cp -r "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet/dist" "${CMAKE_CURRENT_SOURCE_DIR}/htdocs" DEPENDS Lineman NukeHtdocs)
-      add_dependencies(${APP_NAME} buildweb)
+    # Script spawned during build process checks htdocs existance and spawns lineman only if needed
+    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/GenerateHtDocs.cmake.in"
+      "${CMAKE_CURRENT_BINARY_DIR}/GenerateHtDocs.cmake" @ONLY)
+    add_custom_target(buildweb ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/GenerateHtDocs.cmake")
+    add_dependencies(${APP_NAME} buildweb)
+    add_custom_target(forcebuildweb rm -rf "${CMAKE_CURRENT_SOURCE_DIR}/htdocs"
+        COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/GenerateHtDocs.cmake")
   ELSE()
       message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
   ENDIF()
+ENDIF()
+
+IF( WIN32 AND ${INCLUDE_CRASHRPT} )
+  foreach(binary ${CRASHRPT_BINARIES_TO_INSTALL})
+    set(POST_BUILD_STEP_COMMANDS ${POST_BUILD_STEP_COMMANDS}
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${binary}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
+  endforeach()
 ENDIF()
 
 IF( APPLE )
@@ -111,12 +162,20 @@ QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 
 # Use the Widgets module from Qt 5.
 target_link_libraries( ${APP_NAME} Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
-  bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
-  ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${ZLIB_LIBRARY} upnpc-static )
+  bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc  
+  ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${CrashRpt_LIBRARIES} ${ZLIB_LIBRARY} upnpc-static )
 
 include( DeployQt4 )
 include( InstallRequiredSystemLibraries )
 install( TARGETS ${APP_NAME} DESTINATION "." )
+
+IF( WIN32 AND ${INCLUDE_CRASHRPT} )
+  INSTALL(FILES ${CRASHRPT_BINARIES_TO_INSTALL} DESTINATION . CONFIGURATIONS Release COMPONENT Runtime)
+ENDIF()
+
+ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} POST_BUILD ${POST_BUILD_STEP_COMMANDS} 
+  COMMENT "Copying binaries and other files into target directory."
+)
 
 IF( APPLE )
   set( CPACK_GENERATOR "DragNDrop" )

@@ -26,12 +26,16 @@ class MainWindow : public QMainWindow
     
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper* clientWrapper);
+    void navigateTo(const QString& path);
 
     public Q_SLOTS:
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
     void goToAddContact();
+
+    //Causes this window to attempt to become the front window on the desktop
+    void takeFocus();
 
     void setupTrayIcon();
 

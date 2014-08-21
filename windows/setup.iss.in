@@ -1,7 +1,11 @@
 ;#define WIN64
 #define APPNAME "@APP_NAME@"
+#define BITSHARES_ROOT "@BITSHARES_ROOT@"
 #define QT_PATH "@QT_PATH@"
 #define OPENSSL_ROOT_DIR "@OPENSSL_ROOT_DIR@"
+#cmakedefine USE_CRASHRPT
+#define CRASHRPT_DIR "@CrashRpt_DIR@"
+#define CUSTOM_URL_SCHEME "@CUSTOM_URL_SCHEME@"
 
 #ifdef WIN64
 #define PLATFORM  "x64"
@@ -68,7 +72,7 @@ LanguageCodePage=0
 
 [Files]
 ;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
-Source: Release\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#BITSHARES_ROOT}\bin\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
 Source: ..\client\Release\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: c:\windows\system32\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
@@ -107,6 +111,13 @@ Source: {#QT_PATH}\plugins\accessible\qtaccessiblewidgets.dll; DestDir: {app}\bi
 Source: {#QT_PATH}\plugins\audio\qtaudio_windows.dll; DestDir: {app}\bin\audio; Flags: ignoreversion
 Source: {#QT_PATH}\plugins\printsupport\windowsprintersupport.dll; DestDir: {app}\bin\printsupport; Flags: ignoreversion
 
+#ifdef USE_CRASHRPT
+Source: {#CRASHRPT_DIR}\bin\crashrpt_lang.ini; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#CRASHRPT_DIR}\bin\CrashRpt1402.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#CRASHRPT_DIR}\bin\CrashSender1402.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#CRASHRPT_DIR}\bin\dbghelp.dll; DestDir: {app}\bin; Flags: ignoreversion
+#endif
+
 [Icons]
 Name: {group}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 Name: "{group}\Uninstall {#APPNAME}"; Filename: "{uninstallexe}"
@@ -116,5 +127,10 @@ Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: 
 Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run 
 
 [Registry]
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none; 
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; ValueType: string; ValueName: "URL Protocol"; ValueData: "";
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell"; Flags: uninsdeletekey; ValueType: none
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open"; Flags: uninsdeletekey; ValueType: none
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open\command"; Flags: uninsdeletekey; ValueType: string; ValueName: ""; ValueData: "{app}\bin\{#APPNAME}.exe %1";
 
 [Code]
