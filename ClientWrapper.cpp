@@ -78,7 +78,7 @@ void ClientWrapper::initialize()
   _cfg.rpc.httpd_endpoint.set_port(0);
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
-  auto data_dir = fc::app_path() / BTS_BLOCKCHAIN_NAME;
+  auto data_dir = _client->get_data_dir().to_native_ansi_path();
   if (settings.contains("data_dir"))
       data_dir = settings.value("data_dir").toString().toStdString();
   int data_dir_index = qApp->arguments().indexOf("--data-dir");
