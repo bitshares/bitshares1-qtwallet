@@ -12,11 +12,21 @@ class ClientWrapper : public QObject
     Q_OBJECT
 
   public:
+    /// Helper interface to send back notifications about startup progressing.
+    class INotifier
+    {
+    public:
+      virtual void on_config_loaded(const bts::client::config& config) = 0;
+
+    protected:
+      virtual ~INotifier() {}
+    };
+
     ClientWrapper(QObject *parent = nullptr);
-    ~ClientWrapper();
+    virtual ~ClientWrapper();
 
     ///Not done in constructor to allow caller to connect to error()
-    void initialize();
+    void initialize(INotifier* notifier);
 
     QUrl http_url() const;
     std::string get_data_dir();

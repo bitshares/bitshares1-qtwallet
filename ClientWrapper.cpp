@@ -87,7 +87,7 @@ std::string ClientWrapper::get_data_dir()
   return data_dir;
 }
 
-void ClientWrapper::initialize()
+void ClientWrapper::initialize(INotifier* notifier)
 {
   bool upnp = _settings.value( "network/p2p/use_upnp", true ).toBool();
 
@@ -114,7 +114,7 @@ void ClientWrapper::initialize()
 
   fc::thread* main_thread = &fc::thread::current();
 
-  _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport,default_wallet_name](){
+  _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport,default_wallet_name, notifier](){
     try
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
@@ -131,7 +131,11 @@ void ClientWrapper::initialize()
       _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
 
       // load config for p2p node.. creates cli
-      _client->configure( data_dir );
+      const bts::client::config& loadedCfg = _client->configure( data_dir );
+
+      if(notifier != nullptr)
+        notifier->on_config_loaded(loadedCfg);
+
       _client->init_cli();
 
       main_thread->async( [&]{ Q_EMIT status_update(tr("Connecting to %1 network").arg(qApp->applicationName())); });
