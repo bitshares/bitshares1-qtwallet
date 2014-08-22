@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QUrl>
 #include <QMessageBox>
+#include <QDir>
 
 #include <iostream>
 
@@ -41,9 +42,11 @@ void get_htdocs_file( const fc::path& filename, const fc::http::server::response
 
 ClientWrapper::ClientWrapper(QObject *parent)
   : QObject(parent),
-    _bitshares_thread("bitshares")
+    _bitshares_thread("bitshares"),
+    _settings("BitShares", BTS_BLOCKCHAIN_NAME)
 {
 }
+
 ClientWrapper::~ClientWrapper()
 {
   try {
@@ -55,17 +58,45 @@ ClientWrapper::~ClientWrapper()
   }
 }
 
+void ClientWrapper::handle_crash()
+{
+  auto response = QMessageBox::question(nullptr,
+                                        tr("Crash Detected"),
+                                        tr("It appears that %1 crashed last time it was running. "
+                                           "If this is happening frequently, it could be caused by a "
+                                           "corrupted database. Would you like "
+                                           "to reset the database (this will take several minutes) or "
+                                           "to continue normally? Resetting the database will "
+                                           "NOT lose any of your information or funds.").arg(qApp->applicationName()),
+                                        tr("Reset Database"),
+                                        tr("Continue Normally"),
+                                        QString(), 1);
+  if (response == 0)
+    QDir((get_data_dir() + "/chain").c_str()).removeRecursively();
+}
+
+std::string ClientWrapper::get_data_dir()
+{
+  auto data_dir = bts::client::get_data_dir(boost::program_options::variables_map()).to_native_ansi_path();
+  if (_settings.contains("data_dir"))
+      data_dir = _settings.value("data_dir").toString().toStdString();
+  int data_dir_index = qApp->arguments().indexOf("--data-dir");
+  if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
+      data_dir = qApp->arguments()[data_dir_index+1].toStdString();
+
+  return data_dir;
+}
+
 void ClientWrapper::initialize()
 {
-  QSettings settings("BitShares", BTS_BLOCKCHAIN_NAME);
-  bool upnp = settings.value( "network/p2p/use_upnp", true ).toBool();
+  bool upnp = _settings.value( "network/p2p/use_upnp", true ).toBool();
 
   uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
   if( BTS_TEST_NETWORK ) default_port += BTS_TEST_NETWORK_VERSION;
-  uint32_t p2pport = settings.value( "network/p2p/port", default_port ).toInt();
+  uint32_t p2pport = _settings.value( "network/p2p/port", default_port ).toInt();
 
-  std::string default_wallet_name = settings.value("client/default_wallet_name", "default").toString().toStdString();
-  settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
+  std::string default_wallet_name = _settings.value("client/default_wallet_name", "default").toString().toStdString();
+  _settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
 
 #ifdef _WIN32
   _cfg.rpc.rpc_user = "";
@@ -78,12 +109,7 @@ void ClientWrapper::initialize()
   _cfg.rpc.httpd_endpoint.set_port(0);
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
-  auto data_dir = _client->get_data_dir().to_native_ansi_path();
-  if (settings.contains("data_dir"))
-      data_dir = settings.value("data_dir").toString().toStdString();
-  int data_dir_index = qApp->arguments().indexOf("--data-dir");
-  if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
-      data_dir = qApp->arguments()[data_dir_index+1].toStdString();
+  auto data_dir = get_data_dir();
   wlog("Starting client with data-dir: ${ddir}", ("ddir", data_dir));
 
   fc::thread* main_thread = &fc::thread::current();
@@ -154,7 +180,7 @@ void ClientWrapper::initialize()
 void ClientWrapper::close()
 {
   _bitshares_thread.async([this]{
-    _client->get_wallet()->close();
+    _client->wallet_close();
     _client->get_chain()->close();
     _client->get_rpc_server()->shutdown_rpc_server();
     _client->get_rpc_server()->wait_till_rpc_server_shutdown();

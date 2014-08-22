@@ -232,6 +232,7 @@ int BitSharesApp::run()
   setStyle(new CrashWorkaroundStyle);
 
   MainWindow mainWindow;
+  bool crashedPreviously = mainWindow.detectCrash();
   installEventFilter(&mainWindow);
 
   //We'll go ahead and leave Win/Lin URL handling available in OSX too
@@ -271,6 +272,9 @@ int BitSharesApp::run()
   auto viewer = new Html5Viewer;
   ClientWrapper* client = new ClientWrapper;
   connect(this, &QApplication::aboutToQuit, client, &ClientWrapper::close);
+
+  if (crashedPreviously)
+      client->handle_crash();
 
   mainWindow.setCentralWidget(viewer);
   mainWindow.setClientWrapper(client);
