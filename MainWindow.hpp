@@ -28,6 +28,8 @@ class MainWindow : public QMainWindow
     void setClientWrapper(ClientWrapper* clientWrapper);
     void navigateTo(const QString& path);
 
+    bool detectCrash();
+
     public Q_SLOTS:
     void goToMyAccounts();
     void goToAccount(QString accountName);

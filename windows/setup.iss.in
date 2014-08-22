@@ -3,7 +3,8 @@
 #define BITSHARES_ROOT "@BITSHARES_ROOT@"
 #define QT_PATH "@QT_PATH@"
 #define OPENSSL_ROOT_DIR "@OPENSSL_ROOT_DIR@"
-#cmakedefine USE_CRASHRPT
+; Comment following out if you do not want to include crash report dlls
+#define USE_CRASHRPT "@INCLUDE_CRASHRPT@"
 #define CRASHRPT_DIR "@CrashRpt_DIR@"
 #define CUSTOM_URL_SCHEME "@CUSTOM_URL_SCHEME@"
 
