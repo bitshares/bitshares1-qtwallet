@@ -138,8 +138,8 @@ IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be i
       "${CMAKE_CURRENT_BINARY_DIR}/GenerateHtDocs.cmake" @ONLY)
     add_custom_target(buildweb ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/GenerateHtDocs.cmake")
     add_dependencies(${APP_NAME} buildweb)
-    add_custom_target(forcebuildweb rm -rf "${CMAKE_CURRENT_SOURCE_DIR}/htdocs"
-        COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_BINARY_DIR}/GenerateHtDocs.cmake")
+    add_custom_target(forcebuildweb "${CMAKE_COMMAND}" -E remove_directory "${CMAKE_CURRENT_SOURCE_DIR}/htdocs"
+        COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_BINARY_DIR}/GenerateHtDocs.cmake")
   ELSE()
       message( FATAL_ERROR "Cannot find web wallet. Unable to continue." )
   ENDIF()

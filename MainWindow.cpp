@@ -21,6 +21,7 @@
 #include <QClipboard>
 #include <QGraphicsWebView>
 #include <QWebFrame>
+#include <QDir>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -222,6 +223,19 @@ void MainWindow::navigateTo(const QString& path)
 {
     if( walletIsUnlocked() )
         getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QString("navigate_to('%1')").arg(path));
+}
+
+bool MainWindow::detectCrash()
+{
+  QString crashState = _settings.value("crash_state", "no_crash").toString();
+
+  //Set to crashed for the duration of execution, but schedule it to be changed back on a clean exit
+  _settings.setValue("crash_state", "crashed");
+  connect(new QObject(this), &QObject::destroyed, [] {
+    QSettings("BitShares", BTS_BLOCKCHAIN_NAME).setValue("crash_state", "no_crash");
+  });
+
+  return crashState == "crashed";
 }
 
 void MainWindow::goToMyAccounts()
