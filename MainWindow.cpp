@@ -22,6 +22,10 @@
 #include <QGraphicsWebView>
 #include <QWebFrame>
 #include <QDir>
+#include <QTimer>
+#include <QIODevice>
+#include <QByteArray>
+#include <QFile>
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
@@ -675,4 +679,46 @@ void MainWindow::initMenu()
 
   _accountMenu = menuBar->addMenu("Accounts");
   setMenuBar(menuBar);
+}
+
+void MainWindow::checkWebUpdates()
+{
+  QUrl signatureUrl = QStringLiteral("http://localhost:8888/web.sig");
+  QUrl packageUrl = QStringLiteral("http://localhost:8888/web.dat");
+  QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
+
+  QNetworkAccessManager* downer = new QNetworkAccessManager;
+  downer->get(QNetworkRequest(signatureUrl));
+  connect(downer, &QNetworkAccessManager::finished, [=](QNetworkReply* reply){
+    if (reply->url() == signatureUrl) {
+      _webPackageSignature = reply->readAll();
+      QByteArray oldSignature;
+      QFile signatureFile(dataDir.absoluteFilePath("web.sig"));
+      signatureFile.open(QIODevice::ReadOnly);
+      if (dataDir.exists("web.sig"))
+        oldSignature = signatureFile.readAll();
+
+      wlog("Signature of latest web package ${nsig}; current is ${osig}", ("nsig", _webPackageSignature.data())("osig", oldSignature.data()));
+
+      if (_webPackageSignature != oldSignature)
+        downer->get(QNetworkRequest(packageUrl));
+    } else if (reply->url() == packageUrl) {
+      QFile webPackage(dataDir.absoluteFilePath("web.dat"));
+      webPackage.open(QIODevice::WriteOnly);
+      webPackage.write(reply->readAll());
+      QFile webSignature(dataDir.absoluteFilePath("web.sig"));
+      webSignature.open(QIODevice::WriteOnly);
+      webSignature.write(_webPackageSignature);
+      wlog("Downloaded new web package.");
+    } else {
+      elog("Loaded a page I don't know about: ${url}", ("url", reply->url().toString().toStdString()));
+    }
+
+    reply->deleteLater();
+  });
+}
+
+void MainWindow::loadWebUpdates()
+{
+
 }
