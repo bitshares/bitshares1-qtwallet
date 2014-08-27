@@ -311,6 +311,24 @@ int BitSharesApp::run(int& argc, char** argv)
   installCrashRptHandler(APP_NAME, CreateBitSharesVersionNumberString().c_str(), gLogFile);
 
   BitSharesApp app(argc, argv);
+
+#ifdef __APPLE__
+  QDir systemPlugins("/Library/Internet Plug-Ins");
+  QDir userPlugins = QDir::home();
+  userPlugins.cd("Library/Internet Plug-Ins");
+
+  if (systemPlugins.exists("AdobeAAMDetect.plugin") || userPlugins.exists("AdobeAAMDetect.plugin")) {
+    QString path = systemPlugins.exists("AdobeAAMDetect.plugin")?
+                systemPlugins.absoluteFilePath("AdobeAAMDetect.plugin") : userPlugins.absoluteFilePath("AdobeAAMDetect.plugin");
+
+    QMessageBox::warning(nullptr, tr("Adobe Application Manager Detected"),
+                         tr("Warning: %1 has detected the Adobe Application Manager plug-in is installed on this "
+                            "computer at %2. This plug-in crashes when loaded into %1. "
+                            "Please remove this plug-in and restart %1.").arg(qApp->applicationName()).arg(path));
+    return 0;
+  }
+#endif
+
   int ec = app.run();
 
   uninstallCrashRptHandler();
