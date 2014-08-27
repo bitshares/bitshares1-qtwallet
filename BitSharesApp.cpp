@@ -465,7 +465,6 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
     splash->finish(mainWindow);
     mainWindow->setupTrayIcon();
     mainWindow->processDeferredUrl();
-    mainWindow->checkWebUpdates();
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
     splash->hide();

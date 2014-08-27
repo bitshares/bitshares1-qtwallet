@@ -29,11 +29,6 @@ class ClientWrapper : public QObject
     void initialize(INotifier* notifier);
 
     QUrl http_url() const;
-    void set_web_package(std::unordered_map<std::string, std::vector<char>>&& web_package);
-    bool has_web_package() {
-      return !_web_package.empty();
-    }
-
     std::string get_data_dir();
 
     Q_INVOKABLE QVariant get_info();
@@ -59,8 +54,4 @@ public Q_SLOTS:
     fc::future<void>                     _init_complete;
     fc::optional<fc::ip::endpoint>       _actual_httpd_endpoint;
     QSettings                            _settings;
-
-    std::unordered_map<std::string, std::vector<char>> _web_package;
-
-    void get_htdocs_file(const fc::path& filename, const fc::http::server::response& r);
 };

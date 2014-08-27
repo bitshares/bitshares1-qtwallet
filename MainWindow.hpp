@@ -16,8 +16,6 @@ class MainWindow : public QMainWindow
     QMenu* _accountMenu;
     QString _deferredUrl;
     QSystemTrayIcon* _trayIcon;
-
-    QByteArray _webPackageSignature;
     
   public:
     MainWindow();
@@ -37,8 +35,6 @@ class MainWindow : public QMainWindow
     void goToAccount(QString accountName);
     void goToCreateAccount();
     void goToAddContact();
-    void checkWebUpdates();
-    void loadWebUpdates();
 
     //Causes this window to attempt to become the front window on the desktop
     void takeFocus();
@@ -56,11 +52,7 @@ class MainWindow : public QMainWindow
     void goToTransaction(QString transactionId);
 
     void importWallet();
-
-private Q_SLOTS:
-    void removeWebUpdates();
-
-private:
+  private:
     ClientWrapper* _clientWrapper;
 
     Html5Viewer* getViewer();
@@ -71,5 +63,4 @@ private:
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
-    bool verifyUpdateSignature(QByteArray updatePackage, QByteArray signature);
 };
