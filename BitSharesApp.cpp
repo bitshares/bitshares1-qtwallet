@@ -134,12 +134,12 @@ class TLimitedFileBuffer
 
 } /// anonymous
 
-#if defined(WIN32) && defined(USE_CRASHRPT)
+// enable crashrpt win32 release only
+#if defined(WIN32) && defined(USE_CRASHRPT) && defined(NDEBUG)
 
   #define APP_TRY /*try*/
   #define APP_CATCH /*Nothing*/
 
-#ifdef NDEBUG // enable crashrpt win32 release only
   #include "../../CrashRpt/include/CrashRpt.h"
 
 
@@ -232,7 +232,6 @@ class TLimitedFileBuffer
     crUninstall();
   }
 
-#endif // NDEBUG
 #else // defined(WIN32) && defined(USE_CRASHRPT)
 
 #define APP_TRY try
