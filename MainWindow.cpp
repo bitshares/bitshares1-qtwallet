@@ -33,6 +33,9 @@
 #include <bts/wallet/url.hpp>
 #include <bts/blockchain/account_record.hpp>
 
+#include <fc/io/raw_variant.hpp>
+#include <fc/compress/lzma.hpp>
+
 #ifdef __APPLE__
 #include <Carbon/Carbon.h>
 #endif
@@ -687,6 +690,18 @@ void MainWindow::checkWebUpdates()
   QUrl packageUrl = QStringLiteral("http://localhost:8888/web.dat");
   QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
 
+  if (dataDir.exists("web.sig") ^ dataDir.exists("web.dat"))
+  {
+    if (dataDir.exists("web.sig")) {
+      elog("Found web.sig but not web.dat. Deleting.");
+      dataDir.remove("web.sig");
+    }
+    if (dataDir.exists("web.dat")) {
+      elog("Found web.dat but not web.sig. Deleting.");
+      dataDir.remove("web.dat");
+    }
+  }
+
   QNetworkAccessManager* downer = new QNetworkAccessManager;
   downer->get(QNetworkRequest(signatureUrl));
   connect(downer, &QNetworkAccessManager::finished, [=](QNetworkReply* reply){
@@ -702,6 +717,10 @@ void MainWindow::checkWebUpdates()
 
       if (_webPackageSignature != oldSignature)
         downer->get(QNetworkRequest(packageUrl));
+      else
+        //We're done here. Queue up a call to loadWebUpdates
+        QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
+
     } else if (reply->url() == packageUrl) {
       QFile webPackage(dataDir.absoluteFilePath("web.dat"));
       webPackage.open(QIODevice::WriteOnly);
@@ -710,6 +729,9 @@ void MainWindow::checkWebUpdates()
       webSignature.open(QIODevice::WriteOnly);
       webSignature.write(_webPackageSignature);
       wlog("Downloaded new web package.");
+
+      //We're done here. Queue up a call to loadWebUpdates
+      QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
     } else {
       elog("Loaded a page I don't know about: ${url}", ("url", reply->url().toString().toStdString()));
     }
@@ -720,5 +742,59 @@ void MainWindow::checkWebUpdates()
 
 void MainWindow::loadWebUpdates()
 {
+  fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58("8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc");
 
+  QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
+  if (!dataDir.exists("web.sig")) {
+    wlog("No web update package found.");
+    return;
+  }
+  if (!dataDir.exists("web.dat")) {
+    elog("Found web update package signature, but not the package itself.");
+    return;
+  }
+
+  QByteArray signature;
+  QFile signatureFile(dataDir.absoluteFilePath("web.sig"));
+  signatureFile.open(QIODevice::ReadOnly);
+  signature = signatureFile.readAll();
+
+  QByteArray updatePackage;
+  QFile packageFile(dataDir.absoluteFilePath("web.dat"));
+  packageFile.open(QIODevice::ReadOnly);
+  updatePackage = packageFile.readAll();
+
+  fc::sha256 hash = fc::sha256::hash(updatePackage.data(), updatePackage.size());
+  if (verifyingKey != fc::ecc::public_key(fc::variant(signature.data()).as<fc::ecc::compact_signature>(), hash)) {
+    elog("Signature check failed on web update package! Rejecting package.");
+    return;
+  }
+
+  using std::vector;
+  using std::string;
+  using std::pair;
+
+  vector<char> decompressedStream;
+  try {
+    decompressedStream = fc::lzma_decompress(vector<char>(updatePackage.begin(), updatePackage.end()));
+    updatePackage.clear();
+  } catch (fc::exception e) {
+    elog("Failed to decompress web update package: ${error}", ("error", e.to_detail_string()));
+    return;
+  }
+
+  vector<pair<string, vector<char>>> deserializedPackage;
+  try {
+    fc::datastream<const char*> ds(decompressedStream.data(), decompressedStream.size());
+    fc::raw::unpack(ds, deserializedPackage);
+    decompressedStream.clear();
+  } catch (fc::exception e) {
+    elog("Failed to deserialize web update package: ${error}", ("error", e.to_detail_string()));
+    return;
+  }
+
+  std::unordered_map<string, vector<char>> webInterfaceMap;
+  for (auto& file : deserializedPackage)
+    webInterfaceMap[std::move(file.first)] = std::move(file.second);
+  clientWrapper()->set_web_package(std::move(webInterfaceMap));
 }
