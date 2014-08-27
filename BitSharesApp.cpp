@@ -449,7 +449,6 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
   });
   client->connect(client, &ClientWrapper::initialized, [viewer, client, mainWindow]() {
     ilog("Client initialized; loading web interface from ${url}", ("url", client->http_url().toString().toStdString()));
-    mainWindow->checkWebUpdates();
     client->status_update(tr("Finished connecting. Launching %1").arg(qApp->applicationName()));
     viewer->webView()->load(client->http_url());
     //Now we know the URL of the app, so we can create the items in the Accounts menu
@@ -466,6 +465,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
     splash->finish(mainWindow);
     mainWindow->setupTrayIcon();
     mainWindow->processDeferredUrl();
+    mainWindow->checkWebUpdates();
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
     splash->hide();

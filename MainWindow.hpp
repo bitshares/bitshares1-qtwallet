@@ -56,7 +56,11 @@ class MainWindow : public QMainWindow
     void goToTransaction(QString transactionId);
 
     void importWallet();
-  private:
+
+private Q_SLOTS:
+    void removeWebUpdates();
+
+private:
     ClientWrapper* _clientWrapper;
 
     Html5Viewer* getViewer();
@@ -67,4 +71,5 @@ class MainWindow : public QMainWindow
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
+    bool verifyUpdateSignature(QByteArray updatePackage, QByteArray signature);
 };

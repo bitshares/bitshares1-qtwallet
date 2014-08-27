@@ -677,11 +677,25 @@ void MainWindow::initMenu()
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
 
-  _fileMenu->addAction("Change Password")->setEnabled(false);
-  _fileMenu->addAction("Quit", qApp, SLOT(quit()), QKeySequence(tr("Ctrl+Q")));
+  _fileMenu->addAction(tr("Change Password"))->setEnabled(false);
+  _fileMenu->addAction(tr("Check for Updates"), this, SLOT(checkWebUpdates()));
+  _fileMenu->addAction(tr("Remove Updates"), this, SLOT(removeWebUpdates()));
+  _fileMenu->addAction(tr("Quit"), qApp, SLOT(quit()), QKeySequence(tr("Ctrl+Q")));
 
   _accountMenu = menuBar->addMenu("Accounts");
   setMenuBar(menuBar);
+}
+
+bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray signature)
+{
+  fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58("8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc");
+
+  fc::sha256 hash = fc::sha256::hash(updatePackage.data(), updatePackage.size());
+  if (verifyingKey != fc::ecc::public_key(fc::variant(signature.data()).as<fc::ecc::compact_signature>(), hash)) {
+    elog("Signature check failed on web update package! Rejecting package.");
+    return false;
+  }
+  return true;
 }
 
 void MainWindow::checkWebUpdates()
@@ -705,6 +719,8 @@ void MainWindow::checkWebUpdates()
   QNetworkAccessManager* downer = new QNetworkAccessManager;
   downer->get(QNetworkRequest(signatureUrl));
   connect(downer, &QNetworkAccessManager::finished, [=](QNetworkReply* reply){
+    reply->deleteLater();
+
     if (reply->url() == signatureUrl) {
       _webPackageSignature = reply->readAll();
       QByteArray oldSignature;
@@ -717,14 +733,43 @@ void MainWindow::checkWebUpdates()
 
       if (_webPackageSignature != oldSignature)
         downer->get(QNetworkRequest(packageUrl));
-      else
-        //We're done here. Queue up a call to loadWebUpdates
+      else if (!clientWrapper()->has_web_package())
+        //No updates. Load old package if we have one.
         QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
-
+      else {
+        QMessageBox noUpdateDialog(this);
+        noUpdateDialog.setIcon(QMessageBox::Information);
+        noUpdateDialog.addButton(QMessageBox::Ok);
+        noUpdateDialog.setDefaultButton(QMessageBox::Ok);
+        noUpdateDialog.setWindowModality(Qt::WindowModal);
+        noUpdateDialog.setText(tr("No new updates are available."));
+        noUpdateDialog.setWindowTitle(tr("%1 Update").arg(qApp->applicationName()));
+        noUpdateDialog.exec();
+      }
     } else if (reply->url() == packageUrl) {
+      auto package = reply->readAll();
+      if (!verifyUpdateSignature(package, _webPackageSignature))
+        return;
+
+      QMessageBox updateDialog(this);
+      updateDialog.setIcon(QMessageBox::Question);
+      updateDialog.addButton(QMessageBox::Yes);
+      updateDialog.addButton(QMessageBox::No);
+      updateDialog.setDefaultButton(QMessageBox::Yes);
+      updateDialog.setWindowModality(Qt::WindowModal);
+      updateDialog.setText(tr("An update is available for %1. You will not need to restart %1 to install it. "
+                              "You may install it later by selecting Check for Updates from the File menu. "
+                              "Would you like to install it now?").arg(qApp->applicationName()));
+      updateDialog.setWindowTitle(tr("%1 Update").arg(qApp->applicationName()));
+      if (updateDialog.exec() != QMessageBox::Yes)
+      {
+        wlog("User rejected web update package.");
+        return;
+      }
+
       QFile webPackage(dataDir.absoluteFilePath("web.dat"));
       webPackage.open(QIODevice::WriteOnly);
-      webPackage.write(reply->readAll());
+      webPackage.write(package);
       QFile webSignature(dataDir.absoluteFilePath("web.sig"));
       webSignature.open(QIODevice::WriteOnly);
       webSignature.write(_webPackageSignature);
@@ -735,15 +780,33 @@ void MainWindow::checkWebUpdates()
     } else {
       elog("Loaded a page I don't know about: ${url}", ("url", reply->url().toString().toStdString()));
     }
-
-    reply->deleteLater();
   });
+}
+
+void MainWindow::removeWebUpdates()
+{
+  QMessageBox removeUpdateDialog(this);
+  removeUpdateDialog.setIcon(QMessageBox::Question);
+  removeUpdateDialog.addButton(QMessageBox::Yes);
+  removeUpdateDialog.addButton(QMessageBox::No);
+  removeUpdateDialog.setDefaultButton(QMessageBox::No);
+  removeUpdateDialog.setWindowModality(Qt::WindowModal);
+  removeUpdateDialog.setText(tr("Are you sure you want to remove all installed updates?"));
+  removeUpdateDialog.setWindowTitle(tr("%1 Update").arg(qApp->applicationName()));
+  if (removeUpdateDialog.exec() == QMessageBox::Yes)
+  {
+    wlog("User uninstalls web update package.");
+    QDir dataDir(clientWrapper()->get_data_dir().c_str());
+    dataDir.remove("web.sig");
+    dataDir.remove("web.dat");
+    clientWrapper()->set_web_package(std::move(std::unordered_map<std::string, std::vector<char>>()));
+    clientWrapper()->get_client()->get_wallet()->lock();
+    getViewer()->webView()->reload();
+  }
 }
 
 void MainWindow::loadWebUpdates()
 {
-  fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58("8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc");
-
   QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
   if (!dataDir.exists("web.sig")) {
     wlog("No web update package found.");
@@ -764,11 +827,8 @@ void MainWindow::loadWebUpdates()
   packageFile.open(QIODevice::ReadOnly);
   updatePackage = packageFile.readAll();
 
-  fc::sha256 hash = fc::sha256::hash(updatePackage.data(), updatePackage.size());
-  if (verifyingKey != fc::ecc::public_key(fc::variant(signature.data()).as<fc::ecc::compact_signature>(), hash)) {
-    elog("Signature check failed on web update package! Rejecting package.");
+  if (!verifyUpdateSignature(updatePackage, signature))
     return;
-  }
 
   using std::vector;
   using std::string;
@@ -796,5 +856,7 @@ void MainWindow::loadWebUpdates()
   std::unordered_map<string, vector<char>> webInterfaceMap;
   for (auto& file : deserializedPackage)
     webInterfaceMap[std::move(file.first)] = std::move(file.second);
+  clientWrapper()->get_client()->get_wallet()->lock();
   clientWrapper()->set_web_package(std::move(webInterfaceMap));
+  getViewer()->webView()->reload();
 }

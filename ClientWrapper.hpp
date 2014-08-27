@@ -30,6 +30,9 @@ class ClientWrapper : public QObject
 
     QUrl http_url() const;
     void set_web_package(std::unordered_map<std::string, std::vector<char>>&& web_package);
+    bool has_web_package() {
+      return !_web_package.empty();
+    }
 
     std::string get_data_dir();
 
