@@ -690,8 +690,12 @@ bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray sig
 {
   fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58("8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc");
 
+  auto signature_pair = fc::variant(signature.data()).as<std::pair<fc::ecc::compact_signature, fc::time_point_sec>>();
+  for (char c : signature_pair.second.to_iso_string())
+      updatePackage.push_back(c);
   fc::sha256 hash = fc::sha256::hash(updatePackage.data(), updatePackage.size());
-  if (verifyingKey != fc::ecc::public_key(fc::variant(signature.data()).as<fc::ecc::compact_signature>(), hash)) {
+
+  if (verifyingKey != fc::ecc::public_key(signature_pair.first, hash)) {
     elog("Signature check failed on web update package! Rejecting package.");
     return false;
   }
