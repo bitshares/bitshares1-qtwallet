@@ -18,6 +18,7 @@
 #include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsLinearLayout>
 #include <QGraphicsWebView>
+#include <QWebSettings>
 #include <QWebFrame>
 
 #include <bts/blockchain/config.hpp>
@@ -1083,17 +1084,7 @@ Html5ViewerPrivate::Html5ViewerPrivate(QWidget *parent)
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    class NoContextMenuWebView : public QGraphicsWebView {
-        virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
-          event->ignore();
-        }
-    };
-
-#ifdef BTS_TEST_NETWORK
     m_webView = new QGraphicsWebView;
-#else
-    m_webView = new NoContextMenuWebView;
-#endif
     m_webView->setAcceptTouchEvents(true);
     m_webView->setAcceptHoverEvents(false);
     setAttribute(Qt::WA_AcceptTouchEvents, true);

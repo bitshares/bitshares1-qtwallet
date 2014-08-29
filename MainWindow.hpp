@@ -8,6 +8,9 @@
 #include <QMenu>
 #include <QSystemTrayIcon>
 
+#define UPDATE_SIGNING_KEY "8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc"
+#define WEB_UPDATES_REPOSITORY "http://localhost:8888/"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -16,6 +19,8 @@ class MainWindow : public QMainWindow
     QMenu* _accountMenu;
     QString _deferredUrl;
     QSystemTrayIcon* _trayIcon;
+
+    QByteArray _webPackageSignature;
     
   public:
     MainWindow();
@@ -35,6 +40,8 @@ class MainWindow : public QMainWindow
     void goToAccount(QString accountName);
     void goToCreateAccount();
     void goToAddContact();
+    void checkWebUpdates(bool showNoUpdatesAlert = true);
+    void loadWebUpdates();
 
     //Causes this window to attempt to become the front window on the desktop
     void takeFocus();
@@ -52,7 +59,11 @@ class MainWindow : public QMainWindow
     void goToTransaction(QString transactionId);
 
     void importWallet();
-  private:
+
+private Q_SLOTS:
+    void removeWebUpdates();
+
+private:
     ClientWrapper* _clientWrapper;
 
     Html5Viewer* getViewer();
@@ -63,4 +74,4 @@ class MainWindow : public QMainWindow
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
-};
+    bool verifyUpdateSignature(QByteArray updatePackage, QByteArray signature); };

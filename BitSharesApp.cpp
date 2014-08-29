@@ -134,12 +134,12 @@ class TLimitedFileBuffer
 
 } /// anonymous
 
-#if defined(WIN32) && defined(USE_CRASHRPT)
+// enable crashrpt win32 release only
+#if defined(WIN32) && defined(USE_CRASHRPT) && defined(NDEBUG)
 
   #define APP_TRY /*try*/
   #define APP_CATCH /*Nothing*/
 
-#ifdef NDEBUG // enable crashrpt win32 release only
   #include "../../CrashRpt/include/CrashRpt.h"
 
 
@@ -232,7 +232,6 @@ class TLimitedFileBuffer
     crUninstall();
   }
 
-#endif // NDEBUG
 #else // defined(WIN32) && defined(USE_CRASHRPT)
 
 #define APP_TRY try
@@ -312,6 +311,24 @@ int BitSharesApp::run(int& argc, char** argv)
   installCrashRptHandler(APP_NAME, CreateBitSharesVersionNumberString().c_str(), gLogFile);
 
   BitSharesApp app(argc, argv);
+
+#ifdef __APPLE__
+  QDir systemPlugins("/Library/Internet Plug-Ins");
+  QDir userPlugins = QDir::home();
+  userPlugins.cd("Library/Internet Plug-Ins");
+
+  if (systemPlugins.exists("AdobeAAMDetect.plugin") || userPlugins.exists("AdobeAAMDetect.plugin")) {
+    QString path = systemPlugins.exists("AdobeAAMDetect.plugin")?
+                systemPlugins.absoluteFilePath("AdobeAAMDetect.plugin") : userPlugins.absoluteFilePath("AdobeAAMDetect.plugin");
+
+    QMessageBox::warning(nullptr, tr("Adobe Application Manager Detected"),
+                         tr("Warning: %1 has detected the Adobe Application Manager plug-in is installed on this "
+                            "computer at %2. This plug-in crashes when loaded into %1. "
+                            "Please remove this plug-in and restart %1.").arg(qApp->applicationName()).arg(path));
+    return 0;
+  }
+#endif
+
   int ec = app.run();
 
   uninstallCrashRptHandler();
@@ -383,6 +400,7 @@ int BitSharesApp::run()
 
   mainWindow.setCentralWidget(viewer);
   mainWindow.setClientWrapper(client);
+  mainWindow.loadWebUpdates();
 
   QTimer fc_tasks;
   fc_tasks.connect(&fc_tasks, &QTimer::timeout, [](){ fc::usleep(fc::microseconds(1000)); });
@@ -444,10 +462,12 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
 
     ilog("Webview loaded: ${status}", ("status", ok));
     viewer->disconnect(*loadFinishedConnection);
-    mainWindow->show();
+    //The web GUI takes a moment to settle; let's give it some time.
+    QTimer::singleShot(100, mainWindow, SLOT(show()));
     splash->finish(mainWindow);
     mainWindow->setupTrayIcon();
     mainWindow->processDeferredUrl();
+    mainWindow->checkWebUpdates(false);
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
     splash->hide();

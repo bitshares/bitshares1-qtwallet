@@ -14,30 +14,44 @@
 
 #include <iostream>
 
-void get_htdocs_file( const fc::path& filename, const fc::http::server::response& r )
+void ClientWrapper::get_htdocs_file( const fc::path& filename, const fc::http::server::response& r )
 {
   std::cout << filename.generic_string() << "\n";
-  QResource  file_to_send( ("/htdocs/htdocs/" + filename.generic_string()).c_str() );
-  if( !file_to_send.data() )
-  {
+
+  auto give_404 = [&] {
+    elog("404 on file ${name}", ("name", filename));
     std::string not_found = "this is not the file you are looking for: " + filename.generic_string();
-    r.set_status( fc::http::reply::NotFound );
-    r.set_length( not_found.size() );
-    r.write( not_found.c_str(), not_found.size() );
-    return;
+    r.set_status(fc::http::reply::NotFound);
+    r.set_length(not_found.size());
+    r.write(not_found.c_str(), not_found.size());
+  };
+
+  auto give_200 = [&] (const char* data, uint64_t size) {
+    r.set_status(fc::http::reply::OK);
+    r.set_length(size);
+    r.write(data, size);
+  };
+
+  //Check the update package first, then fall back to QRC.
+  if (!_web_package.empty()) {
+    auto file = _web_package.find(filename.to_native_ansi_path());
+    if (file == _web_package.end())
+      return give_404();
+    return give_200(file->second.data(), file->second.size());
   }
-  r.set_status( fc::http::reply::OK );
-  if( file_to_send.isCompressed() )
+
+  //No update package. Use QRC.
+  QResource  file_to_send(("/htdocs/htdocs/" + filename.generic_string()).c_str());
+  if(!file_to_send.data())
+    return give_404();
+
+  r.set_status(fc::http::reply::OK);
+  if(file_to_send.isCompressed())
   {
-    auto data = qUncompress( file_to_send.data(), file_to_send.size() );
-    r.set_length( data.size() );
-    r.write( (const char*)data.data(), data.size() );
+    auto data = qUncompress(file_to_send.data(), file_to_send.size());
+    return give_200(data.data(), data.size());
   }
-  else
-  {
-    r.set_length( file_to_send.size() );
-    r.write( (const char*)file_to_send.data(), file_to_send.size() );
-  }
+  return give_200((const char*)file_to_send.data(), file_to_send.size());
 }
 
 ClientWrapper::ClientWrapper(QObject *parent)
@@ -75,6 +89,12 @@ void ClientWrapper::handle_crash()
     QDir((get_data_dir() + "/chain").c_str()).removeRecursively();
 }
 
+void ClientWrapper::set_web_package(std::unordered_map<std::string, std::vector<char>>&& web_package)
+{
+  wlog("Using update package to serve web GUI");
+  _web_package = std::move(web_package);
+}
+
 std::string ClientWrapper::get_data_dir()
 {
   auto data_dir = bts::client::get_data_dir(boost::program_options::variables_map()).to_native_ansi_path();
@@ -91,8 +111,12 @@ void ClientWrapper::initialize(INotifier* notifier)
 {
   bool upnp = _settings.value( "network/p2p/use_upnp", true ).toBool();
 
+#ifdef BTS_TEST_NETWORK
+  uint32_t default_port = BTS_NET_TEST_P2P_PORT + BTS_TEST_NETWORK_VERSION;
+#else
   uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
-  if( BTS_TEST_NETWORK ) default_port += BTS_TEST_NETWORK_VERSION;
+#endif
+
   uint32_t p2pport = _settings.value( "network/p2p/port", default_port ).toInt();
 
   std::string default_wallet_name = _settings.value("client/default_wallet_name", "default").toString().toStdString();
@@ -120,13 +144,14 @@ void ClientWrapper::initialize(INotifier* notifier)
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>();
       _client->open( data_dir, fc::optional<fc::path>(), [=](uint32_t blocks_processed) {
-          if( blocks_processed % 1000 == 0 )
-             main_thread->async( [&]{ Q_EMIT status_update(tr("Reindexing database; please wait... This may take several minutes.").arg(blocks_processed)); } );
+         main_thread->async( [&]{ Q_EMIT status_update(tr("Reindexing database; please wait... This may take several minutes.")); } );
       } );
 
       // setup  RPC / HTTP services
       main_thread->async( [&]{ Q_EMIT status_update(tr("Loading...")); });
-      _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
+      _client->get_rpc_server()->set_http_file_callback([this](const fc::path& filename, const fc::http::server::response& r) {
+          get_htdocs_file(filename, r);
+      });
       _client->get_rpc_server()->configure_http( _cfg.rpc );
       _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
 
