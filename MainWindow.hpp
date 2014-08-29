@@ -8,8 +8,8 @@
 #include <QMenu>
 #include <QSystemTrayIcon>
 
-#define UPDATE_SIGNING_KEY "8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc"
-#define WEB_UPDATES_REPOSITORY "http://localhost:8888/"
+#define UPDATE_SIGNING_KEY "6rZhpwfi8nyesY3bDuQbZSKWncMZrYfHp2zkTZjkiemcMMtmEq"
+#define WEB_UPDATES_REPOSITORY "http://bitshares-x.info/"
 
 class MainWindow : public QMainWindow
 {
