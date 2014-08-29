@@ -35,7 +35,7 @@ class MainWindow : public QMainWindow
 
     bool detectCrash();
 
-    public Q_SLOTS:
+public Q_SLOTS:
     void goToMyAccounts();
     void goToAccount(QString accountName);
     void goToCreateAccount();
@@ -74,4 +74,5 @@ private:
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
+    void showNoUpdateAlert();
     bool verifyUpdateSignature(QByteArray updatePackage, QByteArray signature); };

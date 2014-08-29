@@ -720,6 +720,18 @@ bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray sig
   return true;
 }
 
+void MainWindow::showNoUpdateAlert()
+{
+    QMessageBox noUpdateDialog(this);
+    noUpdateDialog.setIcon(QMessageBox::Information);
+    noUpdateDialog.addButton(QMessageBox::Ok);
+    noUpdateDialog.setDefaultButton(QMessageBox::Ok);
+    noUpdateDialog.setWindowModality(Qt::WindowModal);
+    noUpdateDialog.setText(tr("No new updates are available."));
+    noUpdateDialog.setWindowTitle(tr("%1 Update").arg(qApp->applicationName()));
+    noUpdateDialog.exec();
+}
+
 void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
 {
   QUrl signatureUrl = QStringLiteral(WEB_UPDATES_REPOSITORY "web.sig");
@@ -756,20 +768,15 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
       else if (!clientWrapper()->has_web_package())
         //No updates. Load old package if we have one.
         QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
-      else if (showNoUpdatesAlert){
-        QMessageBox noUpdateDialog(this);
-        noUpdateDialog.setIcon(QMessageBox::Information);
-        noUpdateDialog.addButton(QMessageBox::Ok);
-        noUpdateDialog.setDefaultButton(QMessageBox::Ok);
-        noUpdateDialog.setWindowModality(Qt::WindowModal);
-        noUpdateDialog.setText(tr("No new updates are available."));
-        noUpdateDialog.setWindowTitle(tr("%1 Update").arg(qApp->applicationName()));
-        noUpdateDialog.exec();
-      }
+      else if (showNoUpdatesAlert)
+        showNoUpdateAlert();
     } else if (reply->url() == packageUrl) {
       auto package = reply->readAll();
-      if (!verifyUpdateSignature(package, _webPackageSignature))
+      if (!verifyUpdateSignature(package, _webPackageSignature)) {
+        if (showNoUpdatesAlert)
+          showNoUpdateAlert();
         return;
+      }
 
       QMessageBox updateDialog(this);
       updateDialog.setIcon(QMessageBox::Question);
