@@ -4,7 +4,7 @@ ELSE()
   MESSAGE (STATUS "Spawning lineman build...")
 
   IF(UNIX)
-    EXECUTE_PROCESS(COMMAND ./node_modules/lineman/cli.js build WORKING_DIRECTORY "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet"
+    EXECUTE_PROCESS(COMMAND "@BITSHARES_ROOT@/node_modules/lineman/cli.js" build WORKING_DIRECTORY "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet"
       RESULT_VARIABLE execStatus OUTPUT_VARIABLE _output ERROR_VARIABLE _output)
   ELSEIF(WIN32)
     EXECUTE_PROCESS(COMMAND cmd.exe /C lineman build WORKING_DIRECTORY "@CMAKE_CURRENT_SOURCE_DIR@/../web_wallet"

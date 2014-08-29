@@ -688,17 +688,22 @@ void MainWindow::initMenu()
 
 bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray signature)
 {
-  fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58("8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc");
+  try {
+    fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58("8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc");
 
-  auto signature_pair = fc::variant(signature.data()).as<std::pair<fc::ecc::compact_signature, fc::time_point_sec>>();
-  for (char c : signature_pair.second.to_iso_string())
-      updatePackage.push_back(c);
-  fc::sha256 hash = fc::sha256::hash(updatePackage.data(), updatePackage.size());
+    std::pair<fc::ecc::compact_signature, fc::time_point_sec> signature_pair;
+    fc::datastream<decltype(signature.data())> ds(signature.data(), signature.size());
+    fc::raw::unpack(ds, signature_pair);
 
-  if (verifyingKey != fc::ecc::public_key(signature_pair.first, hash)) {
-    elog("Signature check failed on web update package! Rejecting package.");
-    return false;
-  }
+    for (char c : signature_pair.second.to_iso_string())
+        updatePackage.push_back(c);
+    fc::sha256 hash = fc::sha256::hash(updatePackage.data(), updatePackage.size());
+
+    if (verifyingKey != fc::ecc::public_key(signature_pair.first, hash)) {
+      elog("Signature check failed on web update package! Rejecting package.");
+      return false;
+    }
+  } catch (...) { return false; }
   return true;
 }
 
@@ -732,8 +737,6 @@ void MainWindow::checkWebUpdates()
       signatureFile.open(QIODevice::ReadOnly);
       if (dataDir.exists("web.sig"))
         oldSignature = signatureFile.readAll();
-
-      wlog("Signature of latest web package ${nsig}; current is ${osig}", ("nsig", _webPackageSignature.data())("osig", oldSignature.data()));
 
       if (_webPackageSignature != oldSignature)
         downer->get(QNetworkRequest(packageUrl));
