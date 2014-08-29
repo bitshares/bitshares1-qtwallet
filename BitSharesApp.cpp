@@ -401,6 +401,7 @@ int BitSharesApp::run()
 
   mainWindow.setCentralWidget(viewer);
   mainWindow.setClientWrapper(client);
+  mainWindow.loadWebUpdates();
 
   QTimer fc_tasks;
   fc_tasks.connect(&fc_tasks, &QTimer::timeout, [](){ fc::usleep(fc::microseconds(1000)); });
@@ -462,10 +463,12 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
 
     ilog("Webview loaded: ${status}", ("status", ok));
     viewer->disconnect(*loadFinishedConnection);
-    mainWindow->show();
+    //The web GUI takes a moment to settle; let's give it some time.
+    QTimer::singleShot(100, mainWindow, SLOT(show()));
     splash->finish(mainWindow);
     mainWindow->setupTrayIcon();
     mainWindow->processDeferredUrl();
+    mainWindow->checkWebUpdates(false);
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
     splash->hide();

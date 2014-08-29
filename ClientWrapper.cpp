@@ -14,30 +14,44 @@
 
 #include <iostream>
 
-void get_htdocs_file( const fc::path& filename, const fc::http::server::response& r )
+void ClientWrapper::get_htdocs_file( const fc::path& filename, const fc::http::server::response& r )
 {
   std::cout << filename.generic_string() << "\n";
-  QResource  file_to_send( ("/htdocs/htdocs/" + filename.generic_string()).c_str() );
-  if( !file_to_send.data() )
-  {
+
+  auto give_404 = [&] {
+    elog("404 on file ${name}", ("name", filename));
     std::string not_found = "this is not the file you are looking for: " + filename.generic_string();
-    r.set_status( fc::http::reply::NotFound );
-    r.set_length( not_found.size() );
-    r.write( not_found.c_str(), not_found.size() );
-    return;
+    r.set_status(fc::http::reply::NotFound);
+    r.set_length(not_found.size());
+    r.write(not_found.c_str(), not_found.size());
+  };
+
+  auto give_200 = [&] (const char* data, uint64_t size) {
+    r.set_status(fc::http::reply::OK);
+    r.set_length(size);
+    r.write(data, size);
+  };
+
+  //Check the update package first, then fall back to QRC.
+  if (!_web_package.empty()) {
+    auto file = _web_package.find(filename.to_native_ansi_path());
+    if (file == _web_package.end())
+      return give_404();
+    return give_200(file->second.data(), file->second.size());
   }
-  r.set_status( fc::http::reply::OK );
-  if( file_to_send.isCompressed() )
+
+  //No update package. Use QRC.
+  QResource  file_to_send(("/htdocs/htdocs/" + filename.generic_string()).c_str());
+  if(!file_to_send.data())
+    return give_404();
+
+  r.set_status(fc::http::reply::OK);
+  if(file_to_send.isCompressed())
   {
-    auto data = qUncompress( file_to_send.data(), file_to_send.size() );
-    r.set_length( data.size() );
-    r.write( (const char*)data.data(), data.size() );
+    auto data = qUncompress(file_to_send.data(), file_to_send.size());
+    return give_200(data.data(), data.size());
   }
-  else
-  {
-    r.set_length( file_to_send.size() );
-    r.write( (const char*)file_to_send.data(), file_to_send.size() );
-  }
+  return give_200((const char*)file_to_send.data(), file_to_send.size());
 }
 
 ClientWrapper::ClientWrapper(QObject *parent)
@@ -73,6 +87,12 @@ void ClientWrapper::handle_crash()
                                         QString(), 1);
   if (response == 0)
     QDir((get_data_dir() + "/chain").c_str()).removeRecursively();
+}
+
+void ClientWrapper::set_web_package(std::unordered_map<std::string, std::vector<char>>&& web_package)
+{
+  wlog("Using update package to serve web GUI");
+  _web_package = std::move(web_package);
 }
 
 std::string ClientWrapper::get_data_dir()
@@ -129,7 +149,9 @@ void ClientWrapper::initialize(INotifier* notifier)
 
       // setup  RPC / HTTP services
       main_thread->async( [&]{ Q_EMIT status_update(tr("Loading...")); });
-      _client->get_rpc_server()->set_http_file_callback( get_htdocs_file );
+      _client->get_rpc_server()->set_http_file_callback([this](const fc::path& filename, const fc::http::server::response& r) {
+          get_htdocs_file(filename, r);
+      });
       _client->get_rpc_server()->configure_http( _cfg.rpc );
       _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
 
