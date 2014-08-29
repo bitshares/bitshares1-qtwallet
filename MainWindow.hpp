@@ -9,6 +9,7 @@
 #include <QSystemTrayIcon>
 
 #define UPDATE_SIGNING_KEY "8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc"
+#define WEB_UPDATES_REPOSITORY "http://localhost:8888/"
 
 class MainWindow : public QMainWindow
 {
@@ -73,5 +74,4 @@ private:
     void readSettings();
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
-    bool verifyUpdateSignature(QByteArray updatePackage, QByteArray signature);
-};
+    bool verifyUpdateSignature(QByteArray updatePackage, QByteArray signature); };

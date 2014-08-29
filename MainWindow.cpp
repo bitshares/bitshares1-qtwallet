@@ -722,8 +722,8 @@ bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray sig
 
 void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
 {
-  QUrl signatureUrl = QStringLiteral("http://localhost:8888/web.sig");
-  QUrl packageUrl = QStringLiteral("http://localhost:8888/web.dat");
+  QUrl signatureUrl = QStringLiteral(WEB_UPDATES_REPOSITORY "web.sig");
+  QUrl packageUrl = QStringLiteral(WEB_UPDATES_REPOSITORY "web.dat");
   QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
 
   if (dataDir.exists("web.sig") ^ dataDir.exists("web.dat"))
