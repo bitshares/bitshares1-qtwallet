@@ -32,8 +32,10 @@
 #include <bts/wallet/config.hpp>
 #include <bts/wallet/url.hpp>
 #include <bts/blockchain/account_record.hpp>
+#include <bts/utilities/git_revision.hpp>
 
 #include <fc/io/raw_variant.hpp>
+#include <fc/io/fstream.hpp>
 #include <fc/compress/lzma.hpp>
 
 #ifdef __APPLE__
@@ -689,11 +691,22 @@ void MainWindow::initMenu()
 bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray signature)
 {
   try {
-    fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58("8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc");
+    const static fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58(UPDATE_SIGNING_KEY);
 
     std::pair<fc::ecc::compact_signature, fc::time_point_sec> signature_pair;
     fc::datastream<decltype(signature.data())> ds(signature.data(), signature.size());
     fc::raw::unpack(ds, signature_pair);
+
+    QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
+    if (dataDir.exists("web.sig")) {
+      fc::ifstream infile(dataDir.absoluteFilePath("web.sig").toStdString());
+      std::pair<fc::ecc::compact_signature, fc::time_point_sec> old_signature_pair;
+      fc::raw::unpack(infile, old_signature_pair);
+      if (signature_pair.second < fc::time_point_sec(bts::utilities::git_revision_unix_timestamp))
+        return false;
+      if (old_signature_pair.second >= signature_pair.second && old_signature_pair.first != signature_pair.first)
+        return false;
+    }
 
     for (char c : signature_pair.second.to_iso_string())
         updatePackage.push_back(c);
@@ -707,7 +720,7 @@ bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray sig
   return true;
 }
 
-void MainWindow::checkWebUpdates()
+void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
 {
   QUrl signatureUrl = QStringLiteral("http://localhost:8888/web.sig");
   QUrl packageUrl = QStringLiteral("http://localhost:8888/web.dat");
@@ -743,7 +756,7 @@ void MainWindow::checkWebUpdates()
       else if (!clientWrapper()->has_web_package())
         //No updates. Load old package if we have one.
         QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
-      else {
+      else if (showNoUpdatesAlert){
         QMessageBox noUpdateDialog(this);
         noUpdateDialog.setIcon(QMessageBox::Information);
         noUpdateDialog.addButton(QMessageBox::Ok);
@@ -834,8 +847,12 @@ void MainWindow::loadWebUpdates()
   packageFile.open(QIODevice::ReadOnly);
   updatePackage = packageFile.readAll();
 
-  if (!verifyUpdateSignature(updatePackage, signature))
+  if (!verifyUpdateSignature(updatePackage, signature)) {
+    elog("Found web update package on disk, but it's signature doesn't check out. Removing it.");
+    dataDir.remove("web.sig");
+    dataDir.remove("web.dat");
     return;
+  }
 
   using std::vector;
   using std::string;
@@ -863,7 +880,10 @@ void MainWindow::loadWebUpdates()
   std::unordered_map<string, vector<char>> webInterfaceMap;
   for (auto& file : deserializedPackage)
     webInterfaceMap[std::move(file.first)] = std::move(file.second);
-  clientWrapper()->get_client()->get_wallet()->lock();
+  //We load the web updates early in the startup; the client might not be ready yet.
+  //That's OK, we don't really need it, but if it's up and running, we want to lock.
+  if (clientWrapper()->get_client() && clientWrapper()->get_client()->get_wallet())
+    clientWrapper()->get_client()->get_wallet()->lock();
   clientWrapper()->set_web_package(std::move(webInterfaceMap));
   getViewer()->webView()->reload();
 }

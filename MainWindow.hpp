@@ -8,6 +8,8 @@
 #include <QMenu>
 #include <QSystemTrayIcon>
 
+#define UPDATE_SIGNING_KEY "8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -37,7 +39,7 @@ class MainWindow : public QMainWindow
     void goToAccount(QString accountName);
     void goToCreateAccount();
     void goToAddContact();
-    void checkWebUpdates();
+    void checkWebUpdates(bool showNoUpdatesAlert = true);
     void loadWebUpdates();
 
     //Causes this window to attempt to become the front window on the desktop
