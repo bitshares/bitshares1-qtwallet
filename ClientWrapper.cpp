@@ -147,6 +147,9 @@ void ClientWrapper::initialize(INotifier* notifier)
          main_thread->async( [&]{ Q_EMIT status_update(tr("Reindexing database; please wait... This may take several minutes.")); } );
       } );
 
+      if(!_client->get_wallet()->is_enabled())
+          main_thread->async([&]{ Q_EMIT error(tr("Wallet is disabled in your configuration file. Please enable the wallet and relaunch the application.")); });
+
       // setup  RPC / HTTP services
       main_thread->async( [&]{ Q_EMIT status_update(tr("Loading...")); });
       _client->get_rpc_server()->set_http_file_callback([this](const fc::path& filename, const fc::http::server::response& r) {

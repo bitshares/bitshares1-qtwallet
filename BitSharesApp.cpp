@@ -425,6 +425,7 @@ int BitSharesApp::run()
     return exec();
   }
   APP_CATCH
+  return 0;
 }
 
 void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
