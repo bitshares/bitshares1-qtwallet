@@ -8,7 +8,7 @@
 #include <QMenu>
 #include <QSystemTrayIcon>
 
-#define UPDATE_SIGNING_KEY "6rZhpwfi8nyesY3bDuQbZSKWncMZrYfHp2zkTZjkiemcMMtmEq"
+#define UPDATE_SIGNING_KEY "5gc28hpz1U2BvuCaAtDEUZMFxouH9nwsR9bNaTzqTb1G3vXsQ6"
 #define WEB_UPDATES_REPOSITORY "http://bitshares-x.info/"
 
 class MainWindow : public QMainWindow
