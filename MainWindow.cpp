@@ -734,8 +734,8 @@ void MainWindow::showNoUpdateAlert()
 
 void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
 {
-  QUrl signatureUrl = QStringLiteral(WEB_UPDATES_REPOSITORY "web.sig");
-  QUrl packageUrl = QStringLiteral(WEB_UPDATES_REPOSITORY "web.dat");
+  QUrl signatureUrl = QStringLiteral(WEB_UPDATES_REPOSITORY) + "web.sig";
+  QUrl packageUrl = QStringLiteral(WEB_UPDATES_REPOSITORY) + "web.dat";
   QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
 
   if (dataDir.exists("web.sig") ^ dataDir.exists("web.dat"))
