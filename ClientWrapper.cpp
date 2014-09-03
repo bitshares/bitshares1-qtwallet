@@ -143,7 +143,7 @@ void ClientWrapper::initialize(INotifier* notifier)
   if (dataDir.exists("chain/index/block_num_to_id_db"))
     dataDir.rename("chain/index/block_num_to_id_db", "chain/raw_chain/block_num_to_id_db");
 
-  _init_complete = _bitshares_thread.async( [this,main_thread,data_dir,upnp,p2pport,default_wallet_name, notifier](){
+  _init_complete = _bitshares_thread.async( [=](){
     try
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
@@ -206,10 +206,14 @@ void ClientWrapper::initialize(INotifier* notifier)
     {
       main_thread->async( [&]{ Q_EMIT error( tr("An instance of %1 is already running! Please close it and try again.").arg(qApp->applicationName())); });
     }
-    catch (const fc::exception &e)
+    catch (...)
     {
       ilog("Failure when attempting to initialize client");
-      main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start")); });
+      if (fc::exists(data_dir + "/chain")) {
+        fc::remove_all(data_dir + "/chain");
+        main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start. Please try restarting the application.")); });
+      } else
+        main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start.")); });
     }
   });
 }

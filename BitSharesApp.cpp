@@ -472,7 +472,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
     splash->hide();
-    QMessageBox::critical(nullptr, QObject::tr("Error"), errorString);
+    QMessageBox::critical(nullptr, QObject::tr("Critical Error"), errorString);
     exit(1);
   });
   client->connect(client, &ClientWrapper::status_update, [=](QString messageString) {
