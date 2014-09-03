@@ -143,8 +143,8 @@ void ClientWrapper::initialize(INotifier* notifier)
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>();
-      _client->open( data_dir, fc::optional<fc::path>(), [=](uint32_t blocks_processed) {
-         main_thread->async( [&]{ Q_EMIT status_update(tr("Reindexing database; please wait... This may take several minutes.")); } );
+      _client->open( data_dir, fc::optional<fc::path>(), [=](float progress) {
+         main_thread->async( [=]{ Q_EMIT status_update(tr("Reindexing database... Approximately %1% complete.").arg(progress, 0, 'f', 0)); } );
       } );
 
       if(!_client->get_wallet()->is_enabled())
