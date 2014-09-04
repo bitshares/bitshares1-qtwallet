@@ -661,8 +661,16 @@ void MainWindow::initMenu()
                                                     tr("Export Wallet"),
                                                     QDir::homePath().append(QStringLiteral("/%1 Wallet Backup.json").arg(qApp->applicationName())),
                                                     tr("Wallet Backups (*.json)"));
-    if( !savePath.isNull() )
-      _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
+    if( !savePath.isNull() ) {
+        if( QFileInfo(savePath).exists())
+            if (!QFile::remove(savePath)) {
+                QMessageBox::warning(this,
+                                     tr("Export Failed"),
+                                     tr("Could not export wallet because the selected file already exists and cannot be removed."));
+                return;
+            }
+        _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
+    }
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
   connect(_fileMenu->addAction("Open URL"), &QAction::triggered, [this]{
