@@ -39,7 +39,10 @@ Create/update bitshares_toolkit\programs\qt_wallet\htdocs on Windows.
 Download and install nodejs from http://nodejs.org/download/
 
 Run console
+
+```
 cd .\bitshares_toolkit\programs\web_wallet\
+```
 ```
     $ npm install grunt
     $ npm install -g lineman
