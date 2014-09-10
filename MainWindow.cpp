@@ -45,10 +45,15 @@
 MainWindow::MainWindow()
   : _settings("BitShares", BTS_BLOCKCHAIN_NAME),
     _trayIcon(nullptr),
+    _updateChecker(new QTimer(this)),
     _clientWrapper(nullptr)
 {
   readSettings();
   initMenu();
+
+  _updateChecker->setInterval(fc::minutes(20).to_seconds() * 1000);
+  connect(_updateChecker, &QTimer::timeout, [this]{checkWebUpdates(false);});
+  _updateChecker->start();
 }
 
 bool MainWindow::eventFilter(QObject* object, QEvent* event)
