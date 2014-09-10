@@ -368,6 +368,7 @@ void MainWindow::goToTransaction(QString transactionId)
   if( !walletIsUnlocked() )
     return;
 
+  clientWrapper()->get_client()->wallet_scan_transaction(transactionId.toStdString());
   getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/tx/" + transactionId);
 }
 
