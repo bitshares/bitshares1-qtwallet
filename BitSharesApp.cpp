@@ -262,11 +262,7 @@ BitSharesApp* BitSharesApp::_instance = nullptr;
 
 static std::string CreateBitSharesVersionNumberString()
 {
-  std::ostringstream versionNumberStream;
-  /// TODO auto incrementing version
-  versionNumberStream << 0 << "." << 4 << "." << 1;
-  //versionNumberStream << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH;
-  return versionNumberStream.str();
+  return BTS_CLIENT_VERSION;
 }
 
 QTemporaryFile gLogFile;
