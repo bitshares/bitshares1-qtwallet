@@ -148,7 +148,7 @@ void MainWindow::processCustomUrl(QString url)
     if(!walletIsUnlocked())
       return;
 
-    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact?name=" + username + "&key=" + key);
+    navigateTo("/newcontact?name=" + username + "&key=" + key);
   }
   else if( components[0].toLower() == components[0] )
   {
@@ -235,8 +235,10 @@ void MainWindow::setClientWrapper(ClientWrapper *clientWrapper)
 
 void MainWindow::navigateTo(const QString& path) 
 {
-    if( walletIsUnlocked() )
-        getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QString("navigate_to('%1')").arg(path));
+    if( walletIsUnlocked() ) {
+        wlog("Loading ${path} in web UI", ("path", path.toStdString()));
+        getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QStringLiteral("navigate_to('%1')").arg(path));
+    }
 }
 
 bool MainWindow::detectCrash()
@@ -347,7 +349,7 @@ void MainWindow::goToBlock(uint32_t blockNumber)
   if( !walletIsUnlocked() )
     return;
 
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/blocks/" + QString("%1").arg(blockNumber));
+  navigateTo(QStringLiteral("/blocks/%1").arg(blockNumber));
 }
 
 void MainWindow::goToBlock(QString blockId)
@@ -369,7 +371,7 @@ void MainWindow::goToTransaction(QString transactionId)
     return;
 
   clientWrapper()->get_client()->wallet_scan_transaction(transactionId.toStdString());
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/tx/" + transactionId);
+  navigateTo("/tx/" + transactionId);
 }
 
 Html5Viewer* MainWindow::getViewer()
@@ -575,13 +577,13 @@ void MainWindow::goToTransfer(QStringList components)
       parameters.pop_front();
   }
 
-  QString url = clientWrapper()->http_url().toString() + QStringLiteral("/#/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
+  QString url = QStringLiteral("/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
       .arg(sender)
       .arg(components[0])
       .arg(amount)
       .arg(asset)
       .arg(memo);
-  getViewer()->loadUrl(url);
+  navigateTo(url);
 }
 
 void MainWindow::readSettings()
