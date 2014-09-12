@@ -262,11 +262,7 @@ BitSharesApp* BitSharesApp::_instance = nullptr;
 
 static std::string CreateBitSharesVersionNumberString()
 {
-  std::ostringstream versionNumberStream;
-  /// TODO auto incrementing version
-  versionNumberStream << 0 << "." << 4 << "." << 1;
-  //versionNumberStream << VERSION_MAJOR << "." << VERSION_MINOR << "." << VERSION_PATCH;
-  return versionNumberStream.str();
+  return bts::client::version_info()["client_version"].as_string();
 }
 
 QTemporaryFile gLogFile;
@@ -472,7 +468,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
     splash->hide();
-    QMessageBox::critical(nullptr, QObject::tr("Error"), errorString);
+    QMessageBox::critical(nullptr, QObject::tr("Critical Error"), errorString);
     exit(1);
   });
   client->connect(client, &ClientWrapper::status_update, [=](QString messageString) {

@@ -45,10 +45,15 @@
 MainWindow::MainWindow()
   : _settings("BitShares", BTS_BLOCKCHAIN_NAME),
     _trayIcon(nullptr),
+    _updateChecker(new QTimer(this)),
     _clientWrapper(nullptr)
 {
   readSettings();
   initMenu();
+
+  _updateChecker->setInterval(fc::minutes(20).to_seconds() * 1000);
+  connect(_updateChecker, &QTimer::timeout, [this]{checkWebUpdates(false);});
+  _updateChecker->start();
 }
 
 bool MainWindow::eventFilter(QObject* object, QEvent* event)
@@ -143,7 +148,7 @@ void MainWindow::processCustomUrl(QString url)
     if(!walletIsUnlocked())
       return;
 
-    getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/newcontact?name=" + username + "&key=" + key);
+    navigateTo("/newcontact?name=" + username + "&key=" + key);
   }
   else if( components[0].toLower() == components[0] )
   {
@@ -230,8 +235,10 @@ void MainWindow::setClientWrapper(ClientWrapper *clientWrapper)
 
 void MainWindow::navigateTo(const QString& path) 
 {
-    if( walletIsUnlocked() )
-        getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QString("navigate_to('%1')").arg(path));
+    if( walletIsUnlocked() ) {
+        wlog("Loading ${path} in web UI", ("path", path.toStdString()));
+        getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QStringLiteral("navigate_to('%1')").arg(path));
+    }
 }
 
 bool MainWindow::detectCrash()
@@ -342,7 +349,7 @@ void MainWindow::goToBlock(uint32_t blockNumber)
   if( !walletIsUnlocked() )
     return;
 
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/blocks/" + QString("%1").arg(blockNumber));
+  navigateTo(QStringLiteral("/blocks/%1").arg(blockNumber));
 }
 
 void MainWindow::goToBlock(QString blockId)
@@ -363,7 +370,8 @@ void MainWindow::goToTransaction(QString transactionId)
   if( !walletIsUnlocked() )
     return;
 
-  getViewer()->loadUrl(_clientWrapper->http_url().toString() + "/#/tx/" + transactionId);
+  clientWrapper()->get_client()->wallet_scan_transaction(transactionId.toStdString());
+  navigateTo("/tx/" + transactionId);
 }
 
 Html5Viewer* MainWindow::getViewer()
@@ -569,13 +577,13 @@ void MainWindow::goToTransfer(QStringList components)
       parameters.pop_front();
   }
 
-  QString url = clientWrapper()->http_url().toString() + QStringLiteral("/#/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
+  QString url = QStringLiteral("/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
       .arg(sender)
       .arg(components[0])
       .arg(amount)
       .arg(asset)
       .arg(memo);
-  getViewer()->loadUrl(url);
+  navigateTo(url);
 }
 
 void MainWindow::readSettings()
@@ -661,8 +669,16 @@ void MainWindow::initMenu()
                                                     tr("Export Wallet"),
                                                     QDir::homePath().append(QStringLiteral("/%1 Wallet Backup.json").arg(qApp->applicationName())),
                                                     tr("Wallet Backups (*.json)"));
-    if( !savePath.isNull() )
-      _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
+    if( !savePath.isNull() ) {
+        if( QFileInfo(savePath).exists())
+            if (!QFile::remove(savePath)) {
+                QMessageBox::warning(this,
+                                     tr("Export Failed"),
+                                     tr("Could not export wallet because the selected file already exists and cannot be removed."));
+                return;
+            }
+        _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
+    }
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
   connect(_fileMenu->addAction("Open URL"), &QAction::triggered, [this]{
