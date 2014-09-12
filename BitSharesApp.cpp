@@ -262,7 +262,7 @@ BitSharesApp* BitSharesApp::_instance = nullptr;
 
 static std::string CreateBitSharesVersionNumberString()
 {
-  return BTS_CLIENT_VERSION;
+  return bts::client::version_info()["client_version"].as_string();
 }
 
 QTemporaryFile gLogFile;
