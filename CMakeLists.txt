@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 
+find_package(Git QUIET)
+
 project(qt_wallet)
 set( APP_NAME "BitSharesX" )
 
@@ -115,16 +117,61 @@ IF( WIN32 )
     list( APPEND SOURCES ${CMAKE_CURRENT_BINARY_DIR}/resource.rc )
     set( OPENSSL_ROOT_DIR $ENV{OPENSSL_ROOT_DIR} )
     if(${INCLUDE_CRASHRPT})
-      set( CrashRpt_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../CrashRpt" )
+	  set(INCLUDE_CRASHRPT_DEFINE define)
+      set( CrashRpt_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../CrashRpt" CACHE PATH "Directory to CrashRpt" )
       # Warning this lib doesn't have an associated .cmake
-      find_library(CrashRpt_LIBRARIES_RELEASE CrashRpt1402 HINTS "${CrashRpt_DIR}/lib")
+	  
+      if("${TARGET_ARCHITECTURE}" STREQUAL "x86")
+	    set(CrashRpt_PLATFORM_DIR "")
+      elseif("${TARGET_ARCHITECTURE}" STREQUAL "x64")
+	    set(CrashRpt_PLATFORM_DIR "/x64")
+      endif()	  
+	  
+      find_library(CrashRpt_LIBRARIES_RELEASE CrashRpt1402 HINTS "${CrashRpt_DIR}/lib${CrashRpt_PLATFORM_DIR}")
       LIST(APPEND CrashRpt_LIBRARIES optimized ${CrashRpt_LIBRARIES_RELEASE})
       MESSAGE(STATUS "Found CrashRpt libraries: ${CrashRpt_LIBRARIES}")
-      set(CRASHRPT_BINARIES_TO_INSTALL "${CrashRpt_DIR}/bin/crashrpt_lang.ini"
-                                       "${CrashRpt_DIR}/bin/CrashRpt1402.dll"
-                                       "${CrashRpt_DIR}/bin/CrashSender1402.exe"
-                                       "${CrashRpt_DIR}/bin/dbghelp.dll")
+      set(CRASHRPT_BINARIES_TO_INSTALL "${CrashRpt_DIR}/bin${CrashRpt_PLATFORM_DIR}/crashrpt_lang.ini"
+                                       "${CrashRpt_DIR}/bin${CrashRpt_PLATFORM_DIR}/CrashRpt1402.dll"
+                                       "${CrashRpt_DIR}/bin${CrashRpt_PLATFORM_DIR}/CrashSender1402.exe"
+                                       "${CrashRpt_DIR}/bin${CrashRpt_PLATFORM_DIR}/dbghelp.dll")
+	else()
+	  # no crashrpt
+	  set(INCLUDE_CRASHRPT_DEFINE undef)
     endif()
+    if(NOT "${TARGET_ARCHITECTURE}" STREQUAL "" AND
+	   NOT "${MSVC_RUNTIME_DIR}" STREQUAL "")
+      if("${TARGET_ARCHITECTURE}" STREQUAL "x86")
+	    set(WIN64_DEFINE undef)
+      elseif("${TARGET_ARCHITECTURE}" STREQUAL "x64")
+	    set(WIN64_DEFINE define)
+      else()
+	    message(FATAL_ERROR "Expected TARGET_ARCHITECTURE to be either x86 or x64")
+      endif()
+	  set(VC_RUNTIME "${MSVC_RUNTIME_DIR}/${TARGET_ARCHITECTURE}/msvcr120.dll")
+	  set(VCPP_RUNTIME "${MSVC_RUNTIME_DIR}/${TARGET_ARCHITECTURE}/msvcp120.dll")
+	else()
+	  # ${TARGET_ARCHITECTURE}" AND "${MSVC_RUNTIME_DIR}" not set, use defaults that should be ok for 32-bit 
+      set(WIN64_DEFINE undef)
+	  set(VC_RUNTIME "C:/Windows/system32/msvcr120.dll")
+	  set(VCPP_RUNTIME "C:/Windows/system32/msvcp120.dll")	  
+    endif()
+	
+	set(VERSION_STRING "0.0.1")
+	if (GET_VERSION_STRING_FROM_GIT_TAGS)
+	  execute_process(COMMAND "${GIT_EXECUTABLE}" describe --tags
+		              WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+					  RESULT_VARIABLE GIT_DESCRIBE_RESULT
+		              OUTPUT_VARIABLE GIT_DESCRIBE_OUTPUT
+  		              ERROR_QUIET
+		              OUTPUT_STRIP_TRAILING_WHITESPACE)
+	  if(GIT_DESCRIBE_RESULT EQUAL 0)
+		set(VERSION_STRING ${GIT_DESCRIBE_OUTPUT})
+		string(REGEX REPLACE "-RC([0-9]+)$" ".\\1" VERSION_STRING_WITHOUT_RC "${VERSION_STRING}")
+		string(REGEX REPLACE "^v" "" NUMERIC_ONLY_VERSION_STRING "${VERSION_STRING_WITHOUT_RC}")
+ 	    message(STATUS "Using GIT_DESCRIPTION => ${GIT_DESCRIBE_OUTPUT}")
+	  endif()
+	endif(GET_VERSION_STRING_FROM_GIT_TAGS)
+	
     configure_file( windows/setup.iss.in setup.iss )
 ENDIF( WIN32 )
 
