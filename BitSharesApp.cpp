@@ -176,6 +176,15 @@ class TLimitedFileBuffer
 
     tFile.release();
 
+    fc::variant_object version_info(bts::client::version_info());
+    for (fc::variant_object::iterator version_info_iter = version_info.begin();
+         version_info_iter != version_info.end(); ++version_info_iter)
+    {
+      std::string cr_property_name = "version_info.";
+      cr_property_name += version_info_iter->key();
+      crAddPropertyA(cr_property_name.c_str(), version_info_iter->value().as_string().c_str());
+    }
+
     return TRUE;
     }
 
