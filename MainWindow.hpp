@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WebUpdates.hpp"
 #include "ClientWrapper.hpp"
 #include "html5viewer/html5viewer.h"
 
@@ -8,9 +9,6 @@
 #include <QMenu>
 #include <QSystemTrayIcon>
 #include <QTimer>
-
-#define UPDATE_SIGNING_KEY "8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc"
-#define WEB_UPDATES_REPOSITORY "http://localhost:8888/"
 
 class MainWindow : public QMainWindow
 {
