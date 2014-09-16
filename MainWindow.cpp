@@ -918,4 +918,5 @@ void MainWindow::loadWebUpdates()
     clientWrapper()->get_client()->get_wallet()->lock();
   clientWrapper()->set_web_package(std::move(webInterfaceMap));
   getViewer()->webView()->reload();
+  _patchVersion = _webUpdateDescription.patchVersion;
 }
