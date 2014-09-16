@@ -712,14 +712,14 @@ bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray sig
     std::pair<fc::ecc::compact_signature, fc::time_point_sec> signature_pair;
     fc::datastream<decltype(signature.data())> ds(signature.data(), signature.size());
     fc::raw::unpack(ds, signature_pair);
-
+    if (signature_pair.second < fc::time_point_sec(bts::utilities::git_revision_unix_timestamp))
+      return false;
     QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
     if (dataDir.exists("web.sig")) {
       fc::ifstream infile(dataDir.absoluteFilePath("web.sig").toStdString());
       std::pair<fc::ecc::compact_signature, fc::time_point_sec> old_signature_pair;
       fc::raw::unpack(infile, old_signature_pair);
-      if (signature_pair.second < fc::time_point_sec(bts::utilities::git_revision_unix_timestamp))
-        return false;
+    
       if (old_signature_pair.second >= signature_pair.second && old_signature_pair.first != signature_pair.first)
         return false;
     }
