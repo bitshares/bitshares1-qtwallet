@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fc/reflect/reflect.hpp>
+#include <fc/io/json.hpp>
 #include <fc/time.hpp>
 
 #include <bts/blockchain/types.hpp>
@@ -12,6 +13,7 @@ const static char*                                          WEB_UPDATES_MANIFEST
 const static uint8_t                                        WEB_UPDATES_SIGNATURE_REQUIREMENT = 2;
 const static std::unordered_set<bts::blockchain::address>   WEB_UPDATES_SIGNING_KEYS ({
     //Add update keys here
+    //Format: bts::blockchain::address(std::string("XTSadDrESSg0esh3ReBLAH"))
 });
 
 struct WebUpdateManifest
@@ -56,6 +58,12 @@ struct WebUpdateManifest
             if (forkVersion != other.forkVersion) return forkVersion < other.forkVersion;
             if (minorVersion != other.minorVersion) return minorVersion < other.minorVersion;
             return patchVersion < other.patchVersion;
+        }
+
+        std::string signable_string() {
+            UpdateDetails ud = *this;
+            ud.signatures.clear();
+            return fc::json::to_string(ud);
         }
     };
 

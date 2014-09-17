@@ -19,7 +19,11 @@ class MainWindow : public QMainWindow
     QString _deferredUrl;
     QSystemTrayIcon* _trayIcon;
 
+    //Temporary storage for a web update description being considered for application.
+    //Do not trust this as the in-use web update.
     WebUpdateManifest::UpdateDetails _webUpdateDescription;
+    //Version information for the running client and GUI. These values may be trusted
+    //as accurate regarding the web update currently being shown to the user.
     uint8_t _majorVersion = 0;
     uint8_t _forkVersion = 0;
     uint8_t _minorVersion = 0;

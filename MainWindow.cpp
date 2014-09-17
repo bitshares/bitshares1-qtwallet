@@ -63,7 +63,8 @@ MainWindow::MainWindow()
   if (versionMatcher.pos(5) != -1)
     _patchVersion = versionMatcher.cap(5).toStdString()[0];
 
-  _updateChecker->setInterval(fc::minutes(20).to_seconds() * 1000);
+  //Check every 20 minutes
+  _updateChecker->setInterval(1200000);
   connect(_updateChecker, &QTimer::timeout, [this]{checkWebUpdates(false);});
   _updateChecker->start();
 }
@@ -719,19 +720,28 @@ void MainWindow::initMenu()
 bool MainWindow::verifyUpdateSignature (QByteArray updatePackage)
 {
   if (_webUpdateDescription.signatures.size() < WEB_UPDATES_SIGNATURE_REQUIREMENT
-          || WEB_UPDATES_SIGNING_KEYS.size() < WEB_UPDATES_SIGNATURE_REQUIREMENT)
-    return false;
+          || WEB_UPDATES_SIGNING_KEYS.size() < WEB_UPDATES_SIGNATURE_REQUIREMENT) {
+      elog("Rejecting update signature: insufficient signatures in manifest.");
+      return false;
+  }
+  if (_webUpdateDescription.timestamp < fc::time_point_sec(bts::utilities::git_revision_unix_timestamp)) {
+      elog("Rejecting update signature: timestamp older than build.");
+      return false;
+  }
 
   fc::sha256::encoder enc;
   enc.write(updatePackage.data(), updatePackage.size());
-  for (char c : _webUpdateDescription.timestamp.to_iso_string())
-    enc.put(c);
+  std::string desc = _webUpdateDescription.signable_string();
+  enc.write(desc.c_str(), desc.size());
   auto hash = enc.result();
 
   auto authorized_signers = WEB_UPDATES_SIGNING_KEYS;
   for (auto signature : _webUpdateDescription.signatures)
     authorized_signers.erase(bts::blockchain::address(fc::ecc::public_key(signature, hash)));
-  return (WEB_UPDATES_SIGNING_KEYS.size() - authorized_signers.size()) >= WEB_UPDATES_SIGNATURE_REQUIREMENT;
+  if ((WEB_UPDATES_SIGNING_KEYS.size() - authorized_signers.size()) >= WEB_UPDATES_SIGNATURE_REQUIREMENT)
+    return true;
+  elog("Rejecting update signature: signature requirement failed (got ${match}/${req} matches)", ("match", WEB_UPDATES_SIGNING_KEYS.size() - authorized_signers.size())("req", WEB_UPDATES_SIGNATURE_REQUIREMENT));
+  return false;
 }
 
 void MainWindow::showNoUpdateAlert()
@@ -816,9 +826,14 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
       updateDialog.addButton(QMessageBox::No);
       updateDialog.setDefaultButton(QMessageBox::Yes);
       updateDialog.setWindowModality(Qt::WindowModal);
-      updateDialog.setText(tr("An update is available for %1. You will not need to restart %1 to install it. "
+      updateDialog.setText(tr("A patch update to version %2.%3.%4-%5 is available for %1. You will not need to restart %1 to install it. "
                               "You may install it later by selecting Check for Updates from the File menu. "
-                              "Would you like to install it now?").arg(qApp->applicationName()));
+                              "Would you like to install it now?").arg(qApp->applicationName())
+                                                                  .arg(_webUpdateDescription.majorVersion)
+                                                                  .arg(_webUpdateDescription.forkVersion)
+                                                                  .arg(_webUpdateDescription.minorVersion)
+                                                                  .arg(QChar(_webUpdateDescription.patchVersion))
+                           );
       updateDialog.setWindowTitle(tr("%1 Update").arg(qApp->applicationName()));
       if (updateDialog.exec() != QMessageBox::Yes)
       {
