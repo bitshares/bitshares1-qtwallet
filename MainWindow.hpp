@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WebUpdates.hpp"
 #include "ClientWrapper.hpp"
 #include "html5viewer/html5viewer.h"
 
@@ -8,9 +9,6 @@
 #include <QMenu>
 #include <QSystemTrayIcon>
 #include <QTimer>
-
-#define UPDATE_SIGNING_KEY "8H6CdwBH2VP4XkLYr9BxpXq6TwhogZVUB5UcVfMFWJJiu4hWFc"
-#define WEB_UPDATES_REPOSITORY "http://localhost:8888/"
 
 class MainWindow : public QMainWindow
 {
@@ -21,7 +19,15 @@ class MainWindow : public QMainWindow
     QString _deferredUrl;
     QSystemTrayIcon* _trayIcon;
 
-    QByteArray _webPackageSignature;
+    //Temporary storage for a web update description being considered for application.
+    //Do not trust this as the in-use web update.
+    WebUpdateManifest::UpdateDetails _webUpdateDescription;
+    //Version information for the running client and GUI. These values may be trusted
+    //as accurate regarding the web update currently being shown to the user.
+    uint8_t _majorVersion = 0;
+    uint8_t _forkVersion = 0;
+    uint8_t _minorVersion = 0;
+    uint8_t _patchVersion = 0;
 
     QTimer* _updateChecker;
     
@@ -78,4 +84,5 @@ private:
     virtual void closeEvent( QCloseEvent* );
     void initMenu();
     void showNoUpdateAlert();
-    bool verifyUpdateSignature(QByteArray updatePackage, QByteArray signature); };
+    bool verifyUpdateSignature(QByteArray updatePackage);
+};
