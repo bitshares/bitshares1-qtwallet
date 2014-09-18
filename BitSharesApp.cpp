@@ -310,7 +310,7 @@ int BitSharesApp::run(int& argc, char** argv)
 
   BitSharesApp app(argc, argv);
   QTranslator bitsharesTranslator;
-  bitsharesTranslator.load(QLocale(QLocale::Russian).name(), QStringLiteral(":/"));
+  bitsharesTranslator.load(QLocale::system().name(), QStringLiteral(":/"));
   app.installTranslator(&bitsharesTranslator);
 
 #ifdef __APPLE__
