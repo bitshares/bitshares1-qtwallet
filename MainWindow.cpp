@@ -317,18 +317,16 @@ void MainWindow::setupTrayIcon()
   connect(_trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason){
     if( reason == QSystemTrayIcon::Trigger )
     {
-#ifdef __APPLE__
-      ProcessSerialNumber psn = { 0, kCurrentProcess };
-      bool visible = !IsProcessVisible(&psn);
-      ShowHideProcess(&psn, visible);
-
-      if( visible )
-        SetFrontProcess(&psn);
-#else
+#ifndef __APPLE__
       setVisible(!isVisible());
 #endif
     }
   });
+
+  QMenu* trayMenu = new QMenu(this);
+  trayMenu->addAction(tr("Show Window"), this, SLOT(takeFocus()));
+  trayMenu->addAction(tr("Quit"), qApp, SLOT(quit()));
+  _trayIcon->setContextMenu(trayMenu);
 
   connect(qApp, &QApplication::aboutToQuit, [this]{
     _trayIcon->deleteLater();

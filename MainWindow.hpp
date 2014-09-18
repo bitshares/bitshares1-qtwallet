@@ -44,6 +44,7 @@ class MainWindow : public QMainWindow
 
     bool detectCrash();
 
+    void toggleVisibility();
 public Q_SLOTS:
     void goToMyAccounts();
     void goToAccount(QString accountName);
