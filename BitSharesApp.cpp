@@ -34,6 +34,8 @@
 #include <QProxyStyle>
 #include <QComboBox>
 #include <QTemporaryFile>
+#include <QTranslator>
+#include <QLibraryInfo>
 
 #include <boost/program_options.hpp>
 
@@ -307,6 +309,9 @@ int BitSharesApp::run(int& argc, char** argv)
   installCrashRptHandler(APP_NAME, CreateBitSharesVersionNumberString().c_str(), gLogFile);
 
   BitSharesApp app(argc, argv);
+  QTranslator bitsharesTranslator;
+  bitsharesTranslator.load(QLocale(QLocale::Russian).name(), QStringLiteral(":/"));
+  app.installTranslator(&bitsharesTranslator);
 
 #ifdef __APPLE__
   QDir systemPlugins("/Library/Internet Plug-Ins");
@@ -404,7 +409,7 @@ int BitSharesApp::run()
 
   QPixmap pixmap(":/images/splash_screen.jpg");
   QSplashScreen splash(pixmap);
-  splash.showMessage(QObject::tr("Loading configuration..."),
+  splash.showMessage(QApplication::tr("Loading configuration..."),
     Qt::AlignCenter | Qt::AlignBottom, Qt::white);
   splash.show();
 
@@ -427,10 +432,10 @@ void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
 {
   auto accountMenu = mainWindow->accountMenu();
 
-  accountMenu->addAction("Go to My Accounts", mainWindow, SLOT(goToMyAccounts()), QKeySequence(QObject::tr("Ctrl+Shift+A")));
-  accountMenu->addAction("Create Account", mainWindow, SLOT(goToCreateAccount()), QKeySequence(QObject::tr("Ctrl+Shift+C")));
-  accountMenu->addAction("Import Account")->setEnabled(false);
-  accountMenu->addAction("New Contact", mainWindow, SLOT(goToAddContact()), QKeySequence(QObject::tr("Ctrl+Shift+N")));
+  accountMenu->addAction(QApplication::tr("Go to My Accounts"), mainWindow, SLOT(goToMyAccounts()), QKeySequence(QApplication::tr("Ctrl+Shift+A")));
+  accountMenu->addAction(QApplication::tr("Create Account"), mainWindow, SLOT(goToCreateAccount()), QKeySequence(QApplication::tr("Ctrl+Shift+C")));
+  accountMenu->addAction(QApplication::tr("Import Account"))->setEnabled(false);
+  accountMenu->addAction(QApplication::tr("New Contact"), mainWindow, SLOT(goToAddContact()), QKeySequence(QApplication::tr("Ctrl+Shift+N")));
 }
 
 void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)
@@ -468,7 +473,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
   });
   client->connect(client, &ClientWrapper::error, [=](QString errorString) {
     splash->hide();
-    QMessageBox::critical(nullptr, QObject::tr("Critical Error"), errorString);
+    QMessageBox::critical(nullptr, QApplication::tr("Critical Error"), errorString);
     exit(1);
   });
   client->connect(client, &ClientWrapper::status_update, [=](QString messageString) {

@@ -19,3 +19,4 @@ qrc_*.cpp
 .DS_STORE
 htdocs/
 qrcgen/
+*.qm
