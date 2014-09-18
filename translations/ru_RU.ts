@@ -439,7 +439,7 @@ Memo: %4</source>
     <message>
         <location filename="../BitSharesApp.cpp" line="438"/>
         <source>Go to My Accounts</source>
-        <translation type="unfinished">Перейти к Мои Аккаунты</translation>
+        <translation>Перейти к Мои Аккаунты</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="438"/>
@@ -449,7 +449,7 @@ Memo: %4</source>
     <message>
         <location filename="../BitSharesApp.cpp" line="439"/>
         <source>Create Account</source>
-        <translation type="unfinished">Создать аккаунт</translation>
+        <translation>Создать аккаунт</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="439"/>
@@ -459,12 +459,12 @@ Memo: %4</source>
     <message>
         <location filename="../BitSharesApp.cpp" line="440"/>
         <source>Import Account</source>
-        <translation type="unfinished">Импортировать аккаунт</translation>
+        <translation>Импортировать аккаунт</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="441"/>
         <source>New Contact</source>
-        <translation type="unfinished">Новый контакт</translation>
+        <translation>Новый контакт</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="441"/>
