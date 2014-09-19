@@ -48,6 +48,7 @@ find_package(Qt5Gui REQUIRED)
 find_package(Qt5Widgets REQUIRED)
 find_package(Qt5WebKit REQUIRED)
 find_package(Qt5WebKitWidgets REQUIRED)
+find_package(Qt5LinguistTools REQUIRED)
 
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR} ${Qt5WebKitWidgets_INCLUDE_DIRS} )
 include_directories( "${CMAKE_CURRENT_SOURCE_DIR}/include" )
@@ -76,6 +77,9 @@ set( SOURCES
   html5viewer/html5viewer.cpp
   images/bitshares.icns
 )
+
+file( GLOB TS_FILES translations/*.ts )
+QT5_ADD_TRANSLATION(QM_FILES ${TS_FILES})
 
 set( CPACK_BUNDLE_NAME ${APP_NAME} )
 set( CPACK_PACKAGE_NAME ${CPACK_BUNDLE_NAME} )
@@ -176,7 +180,7 @@ IF( WIN32 )
 ENDIF( WIN32 )
 
 # Tell CMake to create the qt_wallet executable
-add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} )
+add_executable( ${APP_NAME} WIN32 MACOSX_BUNDLE ${SOURCES} ${QM_FILES} )
 
 IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be invoked from XCode, so let's skip this in XCode
   IF( IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../web_wallet")

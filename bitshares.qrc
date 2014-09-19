@@ -3,5 +3,6 @@
         <file>images/splash_screen.jpg</file>
         <file>images/qtapp.ico</file>
         <file>images/tray_icon.png</file>
+        <file>ru_RU.qm</file>
     </qresource>
 </RCC>
