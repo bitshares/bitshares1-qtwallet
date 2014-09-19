@@ -51,7 +51,20 @@ MainWindow::MainWindow()
   readSettings();
   initMenu();
 
-  _updateChecker->setInterval(fc::minutes(20).to_seconds() * 1000);
+  QString version = bts::utilities::git_revision_description;
+  QRegExp versionMatcher("v(\\d+)\\.(\\d+)\\.(\\d+)(-([a-z]))?");
+  versionMatcher.indexIn(version);
+  if (versionMatcher.pos(3) != -1)
+  {
+    _majorVersion = versionMatcher.cap(1).toInt();
+    _forkVersion = versionMatcher.cap(2).toInt();
+    _minorVersion = versionMatcher.cap(3).toInt();
+  }
+  if (versionMatcher.pos(5) != -1)
+    _patchVersion = versionMatcher.cap(5).toStdString()[0];
+
+  //Check every 20 minutes
+  _updateChecker->setInterval(1200000);
   connect(_updateChecker, &QTimer::timeout, [this]{checkWebUpdates(false);});
   _updateChecker->start();
 }
@@ -235,10 +248,10 @@ void MainWindow::setClientWrapper(ClientWrapper *clientWrapper)
 
 void MainWindow::navigateTo(const QString& path) 
 {
-    if( walletIsUnlocked() ) {
-        wlog("Loading ${path} in web UI", ("path", path.toStdString()));
-        getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QStringLiteral("navigate_to('%1')").arg(path));
-    }
+  if( walletIsUnlocked() ) {
+    wlog("Loading ${path} in web UI", ("path", path.toStdString()));
+    getViewer()->webView()->page()->mainFrame()->evaluateJavaScript(QStringLiteral("navigate_to('%1')").arg(path));
+  }
 }
 
 bool MainWindow::detectCrash()
@@ -304,18 +317,16 @@ void MainWindow::setupTrayIcon()
   connect(_trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason){
     if( reason == QSystemTrayIcon::Trigger )
     {
-#ifdef __APPLE__
-      ProcessSerialNumber psn = { 0, kCurrentProcess };
-      bool visible = !IsProcessVisible(&psn);
-      ShowHideProcess(&psn, visible);
-
-      if( visible )
-        SetFrontProcess(&psn);
-#else
+#ifndef __APPLE__
       setVisible(!isVisible());
 #endif
     }
   });
+
+  QMenu* trayMenu = new QMenu(this);
+  trayMenu->addAction(tr("Show Window"), this, SLOT(takeFocus()));
+  trayMenu->addAction(tr("Quit"), qApp, SLOT(quit()));
+  _trayIcon->setContextMenu(trayMenu);
 
   connect(qApp, &QApplication::aboutToQuit, [this]{
     _trayIcon->deleteLater();
@@ -661,10 +672,10 @@ void MainWindow::initMenu()
 {
   auto menuBar = new QMenuBar(nullptr);
 
-  _fileMenu = menuBar->addMenu("File");
+  _fileMenu = menuBar->addMenu(tr("File"));
 
-  connect(_fileMenu->addAction("Import Wallet"), &QAction::triggered, this, &MainWindow::importWallet);
-  connect(_fileMenu->addAction("Export Wallet"), &QAction::triggered, [this](){
+  connect(_fileMenu->addAction(tr("Import Wallet")), &QAction::triggered, this, &MainWindow::importWallet);
+  connect(_fileMenu->addAction(tr("Export Wallet")), &QAction::triggered, [this](){
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     tr("Export Wallet"),
                                                     QDir::homePath().append(QStringLiteral("/%1 Wallet Backup.json").arg(qApp->applicationName())),
@@ -681,7 +692,7 @@ void MainWindow::initMenu()
     }
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
-  connect(_fileMenu->addAction("Open URL"), &QAction::triggered, [this]{
+  connect(_fileMenu->addAction(tr("Open URL")), &QAction::triggered, [this]{
     QInputDialog urlGetter(this);
     urlGetter.setWindowTitle(tr("Open URL"));
     urlGetter.setLabelText(tr("Please enter a URL to open"));
@@ -700,40 +711,35 @@ void MainWindow::initMenu()
   _fileMenu->addAction(tr("Remove Updates"), this, SLOT(removeWebUpdates()));
   _fileMenu->addAction(tr("Quit"), qApp, SLOT(quit()), QKeySequence(tr("Ctrl+Q")));
 
-  _accountMenu = menuBar->addMenu("Accounts");
+  _accountMenu = menuBar->addMenu(tr("Accounts"));
   setMenuBar(menuBar);
 }
 
-bool MainWindow::verifyUpdateSignature (QByteArray updatePackage, QByteArray signature)
+bool MainWindow::verifyUpdateSignature (QByteArray updatePackage)
 {
-  try {
-    const static fc::ecc::public_key verifyingKey = fc::ecc::public_key::from_base58(UPDATE_SIGNING_KEY);
-
-    std::pair<fc::ecc::compact_signature, fc::time_point_sec> signature_pair;
-    fc::datastream<decltype(signature.data())> ds(signature.data(), signature.size());
-    fc::raw::unpack(ds, signature_pair);
-
-    QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
-    if (dataDir.exists("web.sig")) {
-      fc::ifstream infile(dataDir.absoluteFilePath("web.sig").toStdString());
-      std::pair<fc::ecc::compact_signature, fc::time_point_sec> old_signature_pair;
-      fc::raw::unpack(infile, old_signature_pair);
-      if (signature_pair.second < fc::time_point_sec(bts::utilities::git_revision_unix_timestamp))
-        return false;
-      if (old_signature_pair.second >= signature_pair.second && old_signature_pair.first != signature_pair.first)
-        return false;
-    }
-
-    for (char c : signature_pair.second.to_iso_string())
-        updatePackage.push_back(c);
-    fc::sha256 hash = fc::sha256::hash(updatePackage.data(), updatePackage.size());
-
-    if (verifyingKey != fc::ecc::public_key(signature_pair.first, hash)) {
-      elog("Signature check failed on web update package! Rejecting package.");
+  if (_webUpdateDescription.signatures.size() < WEB_UPDATES_SIGNATURE_REQUIREMENT
+          || WEB_UPDATES_SIGNING_KEYS.size() < WEB_UPDATES_SIGNATURE_REQUIREMENT) {
+      elog("Rejecting update signature: insufficient signatures in manifest.");
       return false;
-    }
-  } catch (...) { return false; }
-  return true;
+  }
+  if (_webUpdateDescription.timestamp < fc::time_point_sec(bts::utilities::git_revision_unix_timestamp)) {
+      elog("Rejecting update signature: timestamp older than build.");
+      return false;
+  }
+
+  fc::sha256::encoder enc;
+  enc.write(updatePackage.data(), updatePackage.size());
+  std::string desc = _webUpdateDescription.signable_string();
+  enc.write(desc.c_str(), desc.size());
+  auto hash = enc.result();
+
+  auto authorized_signers = WEB_UPDATES_SIGNING_KEYS;
+  for (auto signature : _webUpdateDescription.signatures)
+    authorized_signers.erase(bts::blockchain::address(fc::ecc::public_key(signature, hash)));
+  if ((WEB_UPDATES_SIGNING_KEYS.size() - authorized_signers.size()) >= WEB_UPDATES_SIGNATURE_REQUIREMENT)
+    return true;
+  elog("Rejecting update signature: signature requirement failed (got ${match}/${req} matches)", ("match", WEB_UPDATES_SIGNING_KEYS.size() - authorized_signers.size())("req", WEB_UPDATES_SIGNATURE_REQUIREMENT));
+  return false;
 }
 
 void MainWindow::showNoUpdateAlert()
@@ -750,45 +756,63 @@ void MainWindow::showNoUpdateAlert()
 
 void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
 {
-  QUrl signatureUrl = QStringLiteral(WEB_UPDATES_REPOSITORY) + "web.sig";
-  QUrl packageUrl = QStringLiteral(WEB_UPDATES_REPOSITORY) + "web.dat";
+  QUrl manifestUrl(WEB_UPDATES_MANIFEST_URL);
   QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
 
-  if (dataDir.exists("web.sig") ^ dataDir.exists("web.dat"))
+  if (dataDir.exists("web.json") ^ dataDir.exists("web.dat"))
   {
-    if (dataDir.exists("web.sig")) {
-      elog("Found web.sig but not web.dat. Deleting.");
-      dataDir.remove("web.sig");
+    if (dataDir.exists("web.json")) {
+      elog("Found web.json but not web.dat. Deleting.");
+      dataDir.remove("web.json");
     }
     if (dataDir.exists("web.dat")) {
-      elog("Found web.dat but not web.sig. Deleting.");
+      elog("Found web.dat but not web.json. Deleting.");
       dataDir.remove("web.dat");
     }
   }
 
   QNetworkAccessManager* downer = new QNetworkAccessManager;
-  downer->get(QNetworkRequest(signatureUrl));
+  downer->get(QNetworkRequest(manifestUrl));
   connect(downer, &QNetworkAccessManager::finished, [=](QNetworkReply* reply){
     reply->deleteLater();
 
-    if (reply->url() == signatureUrl) {
-      _webPackageSignature = reply->readAll();
-      QByteArray oldSignature;
-      QFile signatureFile(dataDir.absoluteFilePath("web.sig"));
-      signatureFile.open(QIODevice::ReadOnly);
-      if (dataDir.exists("web.sig"))
-        oldSignature = signatureFile.readAll();
+    if (reply->url() == manifestUrl) {
+      WebUpdateManifest manifest;
+      try
+      {
+        QByteArray data = reply->readAll();
+        manifest = fc::json::from_string(std::string(data.data(), data.size())).as<WebUpdateManifest>();
 
-      if (_webPackageSignature != oldSignature)
-        downer->get(QNetworkRequest(packageUrl));
-      else if (!clientWrapper()->has_web_package())
-        //No updates. Load old package if we have one.
-        QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
-      else if (showNoUpdatesAlert)
-        showNoUpdateAlert();
-    } else if (reply->url() == packageUrl) {
+        WebUpdateManifest::UpdateDetails update;
+        update.majorVersion = _majorVersion;
+        update.forkVersion = _forkVersion;
+        update.minorVersion = _minorVersion + 1;
+
+        auto itr = manifest.updates.lower_bound(update);
+        if (itr == manifest.updates.begin())
+        {
+          if (showNoUpdatesAlert) showNoUpdateAlert();
+          return;
+        }
+        --itr;
+        update = *itr;
+        if (update.majorVersion != _majorVersion || update.forkVersion != _forkVersion
+                || update.minorVersion != _minorVersion || update.patchVersion <= _patchVersion
+                || update.signatures.size() < WEB_UPDATES_SIGNATURE_REQUIREMENT)
+        {
+          if (showNoUpdatesAlert) showNoUpdateAlert();
+          return;
+        }
+
+        _webUpdateDescription = std::move(update);
+        downer->get(QNetworkRequest(QUrl(_webUpdateDescription.updatePackageUrl.c_str())));
+      } catch (fc::exception& e) {
+        elog("Error during update checking: ${e}", ("e", e.to_detail_string()));
+        return;
+      }
+    } else {
       auto package = reply->readAll();
-      if (!verifyUpdateSignature(package, _webPackageSignature)) {
+      if (!verifyUpdateSignature(package)) {
         if (showNoUpdatesAlert)
           showNoUpdateAlert();
         return;
@@ -800,9 +824,14 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
       updateDialog.addButton(QMessageBox::No);
       updateDialog.setDefaultButton(QMessageBox::Yes);
       updateDialog.setWindowModality(Qt::WindowModal);
-      updateDialog.setText(tr("An update is available for %1. You will not need to restart %1 to install it. "
+      updateDialog.setText(tr("A patch update to version %2.%3.%4-%5 is available for %1. You will not need to restart %1 to install it. "
                               "You may install it later by selecting Check for Updates from the File menu. "
-                              "Would you like to install it now?").arg(qApp->applicationName()));
+                              "Would you like to install it now?").arg(qApp->applicationName())
+                                                                  .arg(_webUpdateDescription.majorVersion)
+                                                                  .arg(_webUpdateDescription.forkVersion)
+                                                                  .arg(_webUpdateDescription.minorVersion)
+                                                                  .arg(QChar(_webUpdateDescription.patchVersion))
+                           );
       updateDialog.setWindowTitle(tr("%1 Update").arg(qApp->applicationName()));
       if (updateDialog.exec() != QMessageBox::Yes)
       {
@@ -813,15 +842,11 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
       QFile webPackage(dataDir.absoluteFilePath("web.dat"));
       webPackage.open(QIODevice::WriteOnly);
       webPackage.write(package);
-      QFile webSignature(dataDir.absoluteFilePath("web.sig"));
-      webSignature.open(QIODevice::WriteOnly);
-      webSignature.write(_webPackageSignature);
+      fc::json::save_to_file(fc::variant(_webUpdateDescription), clientWrapper()->get_data_dir() + "/web.json");
       wlog("Downloaded new web package.");
 
       //We're done here. Queue up a call to loadWebUpdates
       QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
-    } else {
-      elog("Loaded a page I don't know about: ${url}", ("url", reply->url().toString().toStdString()));
     }
   });
 }
@@ -840,7 +865,7 @@ void MainWindow::removeWebUpdates()
   {
     wlog("User uninstalls web update package.");
     QDir dataDir(clientWrapper()->get_data_dir().c_str());
-    dataDir.remove("web.sig");
+    dataDir.remove("web.json");
     dataDir.remove("web.dat");
     clientWrapper()->set_web_package(std::move(std::unordered_map<std::string, std::vector<char>>()));
     clientWrapper()->get_client()->get_wallet()->lock();
@@ -851,28 +876,25 @@ void MainWindow::removeWebUpdates()
 void MainWindow::loadWebUpdates()
 {
   QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
-  if (!dataDir.exists("web.sig")) {
+  if (!dataDir.exists("web.json")) {
     wlog("No web update package found.");
     return;
   }
   if (!dataDir.exists("web.dat")) {
-    elog("Found web update package signature, but not the package itself.");
+    elog("Found web update package description, but not the package itself.");
     return;
   }
 
-  QByteArray signature;
-  QFile signatureFile(dataDir.absoluteFilePath("web.sig"));
-  signatureFile.open(QIODevice::ReadOnly);
-  signature = signatureFile.readAll();
+  _webUpdateDescription = fc::json::from_file(clientWrapper()->get_data_dir() + "/web.json").as<WebUpdateManifest::UpdateDetails>();
 
   QByteArray updatePackage;
   QFile packageFile(dataDir.absoluteFilePath("web.dat"));
   packageFile.open(QIODevice::ReadOnly);
   updatePackage = packageFile.readAll();
 
-  if (!verifyUpdateSignature(updatePackage, signature)) {
+  if (!verifyUpdateSignature(updatePackage)) {
     elog("Found web update package on disk, but it's signature doesn't check out. Removing it.");
-    dataDir.remove("web.sig");
+    dataDir.remove("web.json");
     dataDir.remove("web.dat");
     return;
   }
@@ -909,4 +931,5 @@ void MainWindow::loadWebUpdates()
     clientWrapper()->get_client()->get_wallet()->lock();
   clientWrapper()->set_web_package(std::move(webInterfaceMap));
   getViewer()->webView()->reload();
+  _patchVersion = _webUpdateDescription.patchVersion;
 }
