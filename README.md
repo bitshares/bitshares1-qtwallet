@@ -39,19 +39,23 @@ Create/update bitshares_toolkit\programs\qt_wallet\htdocs on Windows.
 Download and install nodejs from http://nodejs.org/download/
 
 Run console
+
+```
+cd .\bitshares_toolkit\programs\web_wallet\
+```
 ```
     $ npm install grunt
     $ npm install -g lineman
     $ npm install lineman-angular
     $ npm install lineman-less
 ```
-cd .\bitshares_toolkit\programs\web_wallet\
+
 ```
  $ lineman build
 ```
-Copy directory .\bitshares_toolkit\programs\web_wallet\generated\ to .\bitshares_toolkit\programs\qt_wallet\htdocs\
+Copy directory .\bitshares_toolkit\programs\web_wallet\generated\ to .\bitshares_toolkit\programs\qt_wallet\htdocs\ (create htdocs if it doesn't exist)
 
-Download and install Windows binary version of Qt 5.3 into the same folder as bitshares_toolkit.
+Download and install Windows binary version of Qt 5.3 into the same folder as bitshares_toolkit. - Skip this section (including setting path) if you've downloaded the prebuilt binary package(s)
 
 Edit setenv.bat and add CMAKE_PREFIX_PATH:
 
