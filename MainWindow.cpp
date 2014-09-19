@@ -793,7 +793,7 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
           showNoUpdateAlert();
         return;
       }
-      _updateChecker->stop();
+
       QMessageBox updateDialog(this);
       updateDialog.setIcon(QMessageBox::Question);
       updateDialog.addButton(QMessageBox::Yes);
@@ -809,7 +809,7 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
         wlog("User rejected web update package.");
         return;
       }
-      _updateChecker->start();
+
       QFile webPackage(dataDir.absoluteFilePath("web.dat"));
       webPackage.open(QIODevice::WriteOnly);
       webPackage.write(package);
