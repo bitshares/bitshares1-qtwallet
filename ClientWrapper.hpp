@@ -34,7 +34,7 @@ class ClientWrapper : public QObject
       return !_web_package.empty();
     }
 
-    std::string get_data_dir();
+    QString get_data_dir();
 
     Q_INVOKABLE QVariant get_info();
     Q_INVOKABLE QString get_http_auth_token();
