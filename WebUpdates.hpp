@@ -12,7 +12,7 @@
 const static char*                                          WEB_UPDATES_MANIFEST_URL = "http://localhost:8888/manifest.json";
 const static uint8_t                                        WEB_UPDATES_SIGNATURE_REQUIREMENT = 1;
 const static std::unordered_set<bts::blockchain::address>   WEB_UPDATES_SIGNING_KEYS ({
-    bts::blockchain::address( std::string( "BTSX5gc28hpz1U2BvuCaAtDEUZMFxouH9nwsR9bNaTzqTb1G3gBK4F" ) )
+    bts::blockchain::address( std::string( "BTSXAZxLBJX5DWyqrPGVnbmXAgHVAcDwwv4Ft" ) )
 });
 
 struct WebUpdateManifest
