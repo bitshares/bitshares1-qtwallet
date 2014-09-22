@@ -455,6 +455,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
     if (!newUrl.isEmpty() && newUrl.host() != "localhost" && newUrl.host() != "127.0.0.1") {
       elog("Denying request to browse to non-localhost URL ${url}", ("url", newUrl.toString().toStdString()));
       QTimer::singleShot(0, viewer->webView(), SLOT(back()));
+      Utilities::open_in_external_browser(newUrl);
       return;
     }
 
@@ -463,7 +464,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
     viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
   });
   QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
-    [client](QNetworkReply*, QAuthenticator *auth) {
+    [client](QNetworkReply*, QAuthenticator* auth) {
     auth->setUser(client->http_url().userName());
     auth->setPassword(client->http_url().password());
   });
