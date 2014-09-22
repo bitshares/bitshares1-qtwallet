@@ -223,6 +223,15 @@ class TLimitedFileBuffer
     // Add our log file to the error report
     crAddFile2(logPathString.c_str(), NULL, "Log File", CR_AF_MAKE_FILE_COPY);
 
+    fc::variant_object version_info(bts::client::version_info());
+    for (fc::variant_object::iterator version_info_iter = version_info.begin();
+      version_info_iter != version_info.end(); ++version_info_iter)
+    {
+      std::string cr_property_name = "version_info.";
+      cr_property_name += version_info_iter->key();
+      crAddPropertyA(cr_property_name.c_str(), version_info_iter->value().as_string().c_str());
+    }
+
     // We want the screenshot of the entire desktop is to be added on crash
     crAddScreenshot2(CR_AS_PROCESS_WINDOWS | CR_AS_USE_JPEG_FORMAT, 0);
 
