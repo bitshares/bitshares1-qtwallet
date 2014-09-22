@@ -353,6 +353,13 @@ void MainWindow::setupTrayIcon()
       _trayIcon->showMessage(tr("Your short order has been filled"),
                              tr("You just sold %1 from your short order.").arg(amount));
   });
+  clientWrapper()->get_client()->get_mail_client()->new_mail_notifier.connect([=](int newMessages) {
+      if (newMessages <= 0) return;
+      if (newMessages == 1)
+          _trayIcon->showMessage(tr("New Mail"), tr("You just received a new mail message."));
+      else
+          _trayIcon->showMessage(tr("New Mail"), tr("You just received %1 new mail messages.").arg(newMessages));
+  });
 }
 
 void MainWindow::goToBlock(uint32_t blockNumber)
