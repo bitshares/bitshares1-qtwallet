@@ -353,6 +353,13 @@ void MainWindow::setupTrayIcon()
       _trayIcon->showMessage(tr("Your short order has been filled"),
                              tr("You just sold %1 from your short order.").arg(amount));
   });
+  clientWrapper()->get_client()->get_mail_client()->new_mail_notifier.connect([=](int newMessages) {
+      if (newMessages <= 0) return;
+      if (newMessages == 1)
+          _trayIcon->showMessage(tr("New Mail"), tr("You just received a new mail message."));
+      else
+          _trayIcon->showMessage(tr("New Mail"), tr("You just received %1 new mail messages.").arg(newMessages));
+  });
 }
 
 void MainWindow::goToBlock(uint32_t blockNumber)
@@ -757,7 +764,7 @@ void MainWindow::showNoUpdateAlert()
 void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
 {
   QUrl manifestUrl(WEB_UPDATES_MANIFEST_URL);
-  QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
+  QDir dataDir(QString(clientWrapper()->get_data_dir()));
 
   if (dataDir.exists("web.json") ^ dataDir.exists("web.dat"))
   {
@@ -842,7 +849,7 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
       QFile webPackage(dataDir.absoluteFilePath("web.dat"));
       webPackage.open(QIODevice::WriteOnly);
       webPackage.write(package);
-      fc::json::save_to_file(fc::variant(_webUpdateDescription), clientWrapper()->get_data_dir() + "/web.json");
+      fc::json::save_to_file(fc::variant(_webUpdateDescription), fc::path(clientWrapper()->get_data_dir().toStdWString()) / "web.json");
       wlog("Downloaded new web package.");
 
       //We're done here. Queue up a call to loadWebUpdates
@@ -864,7 +871,7 @@ void MainWindow::removeWebUpdates()
   if (removeUpdateDialog.exec() == QMessageBox::Yes)
   {
     wlog("User uninstalls web update package.");
-    QDir dataDir(clientWrapper()->get_data_dir().c_str());
+    QDir dataDir(clientWrapper()->get_data_dir());
     dataDir.remove("web.json");
     dataDir.remove("web.dat");
     clientWrapper()->set_web_package(std::move(std::unordered_map<std::string, std::vector<char>>()));
@@ -875,7 +882,7 @@ void MainWindow::removeWebUpdates()
 
 void MainWindow::loadWebUpdates()
 {
-  QDir dataDir(QString(clientWrapper()->get_data_dir().c_str()));
+  QDir dataDir(QString(clientWrapper()->get_data_dir()));
   if (!dataDir.exists("web.json")) {
     wlog("No web update package found.");
     return;
@@ -885,7 +892,7 @@ void MainWindow::loadWebUpdates()
     return;
   }
 
-  _webUpdateDescription = fc::json::from_file(clientWrapper()->get_data_dir() + "/web.json").as<WebUpdateManifest::UpdateDetails>();
+  _webUpdateDescription = fc::json::from_file(fc::path(clientWrapper()->get_data_dir().toStdWString()) / "web.json").as<WebUpdateManifest::UpdateDetails>();
 
   QByteArray updatePackage;
   QFile packageFile(dataDir.absoluteFilePath("web.dat"));
