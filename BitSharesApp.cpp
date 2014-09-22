@@ -463,7 +463,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
     viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
   });
   QObject::connect(viewer->webView()->page()->networkAccessManager(), &QNetworkAccessManager::authenticationRequired,
-    [client](QNetworkReply*, QAuthenticator *auth) {
+    [client](QNetworkReply*, QAuthenticator* auth) {
     auth->setUser(client->http_url().userName());
     auth->setPassword(client->http_url().password());
   });
