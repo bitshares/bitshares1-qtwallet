@@ -202,12 +202,12 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="353"/>
         <source>Your short order has been filled</source>
-        <translation>Ваш ордер на Шорт был выполнен</translation>
+        <translation>Ваш шорт был выполнен</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="354"/>
         <source>You just sold %1 from your short order.</source>
-        <translation>Вы только что продали %1 от Вашего ордера на Шорт.</translation>
+        <translation>Вы только что продали %1 Вашего шорта.</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="375"/>
