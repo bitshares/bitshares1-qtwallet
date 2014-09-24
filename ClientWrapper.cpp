@@ -138,11 +138,6 @@ void ClientWrapper::initialize(INotifier* notifier)
 
   fc::thread* main_thread = &fc::thread::current();
 
-  //FIXME: Remove this after a few versions
-  QDir dataDir(data_dir);
-  if (dataDir.exists("chain/index/block_num_to_id_db"))
-    dataDir.rename("chain/index/block_num_to_id_db", "chain/raw_chain/block_num_to_id_db");
-
   _init_complete = _bitshares_thread.async( [=](){
     try
     {
