@@ -111,14 +111,6 @@ void ClientWrapper::initialize(INotifier* notifier)
 {
   bool upnp = _settings.value( "network/p2p/use_upnp", true ).toBool();
 
-#ifdef BTS_TEST_NETWORK
-  uint32_t default_port = BTS_NET_TEST_P2P_PORT + BTS_TEST_NETWORK_VERSION;
-#else
-  uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
-#endif
-
-  uint32_t p2pport = _settings.value( "network/p2p/port", default_port ).toInt();
-
   std::string default_wallet_name = _settings.value("client/default_wallet_name", "default").toString().toStdString();
   _settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
 
