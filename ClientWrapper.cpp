@@ -147,7 +147,7 @@ void ClientWrapper::initialize(INotifier* notifier)
     try
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
-      _client = std::make_shared<bts::client::client>();
+      _client = std::make_shared<bts::client::client>("qt_wallet");
       _client->open( data_dir.toStdWString(), fc::optional<fc::path>(), [=](float progress) {
          main_thread->async( [=]{ Q_EMIT status_update(tr("Reindexing database... Approximately %1% complete.").arg(progress, 0, 'f', 0)); } );
       } );
