@@ -86,7 +86,7 @@ void ClientWrapper::handle_crash()
                                         tr("Continue Normally"),
                                         QString(), 1);
   if (response == 0)
-    QDir((get_data_dir() + "/chain").c_str()).removeRecursively();
+    QDir((get_data_dir() + "/chain")).removeRecursively();
 }
 
 void ClientWrapper::set_web_package(std::unordered_map<std::string, std::vector<char>>&& web_package)
@@ -95,14 +95,14 @@ void ClientWrapper::set_web_package(std::unordered_map<std::string, std::vector<
   _web_package = std::move(web_package);
 }
 
-std::string ClientWrapper::get_data_dir()
+QString ClientWrapper::get_data_dir()
 {
-  auto data_dir = bts::client::get_data_dir(boost::program_options::variables_map()).to_native_ansi_path();
+  QString data_dir = QString::fromStdWString(bts::client::get_data_dir(boost::program_options::variables_map()).generic_wstring());
   if (_settings.contains("data_dir"))
-      data_dir = _settings.value("data_dir").toString().toStdString();
+      data_dir = _settings.value("data_dir").toString();
   int data_dir_index = qApp->arguments().indexOf("--data-dir");
   if (data_dir_index != -1 && qApp->arguments().size() > data_dir_index+1)
-      data_dir = qApp->arguments()[data_dir_index+1].toStdString();
+      data_dir = qApp->arguments()[data_dir_index+1];
 
   return data_dir;
 }
@@ -110,14 +110,6 @@ std::string ClientWrapper::get_data_dir()
 void ClientWrapper::initialize(INotifier* notifier)
 {
   bool upnp = _settings.value( "network/p2p/use_upnp", true ).toBool();
-
-#ifdef BTS_TEST_NETWORK
-  uint32_t default_port = BTS_NET_TEST_P2P_PORT + BTS_TEST_NETWORK_VERSION;
-#else
-  uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
-#endif
-
-  uint32_t p2pport = _settings.value( "network/p2p/port", default_port ).toInt();
 
   std::string default_wallet_name = _settings.value("client/default_wallet_name", "default").toString().toStdString();
   _settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
@@ -134,21 +126,16 @@ void ClientWrapper::initialize(INotifier* notifier)
   ilog( "config: ${d}", ("d", fc::json::to_pretty_string(_cfg) ) );
 
   auto data_dir = get_data_dir();
-  wlog("Starting client with data-dir: ${ddir}", ("ddir", data_dir));
+  wlog("Starting client with data-dir: ${ddir}", ("ddir", fc::path(data_dir.toStdWString())));
 
   fc::thread* main_thread = &fc::thread::current();
-
-  //FIXME: Remove this after a few versions
-  QDir dataDir(data_dir.c_str());
-  if (dataDir.exists("chain/index/block_num_to_id_db"))
-    dataDir.rename("chain/index/block_num_to_id_db", "chain/raw_chain/block_num_to_id_db");
 
   _init_complete = _bitshares_thread.async( [=](){
     try
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
-      _client = std::make_shared<bts::client::client>();
-      _client->open( data_dir, fc::optional<fc::path>(), [=](float progress) {
+      _client = std::make_shared<bts::client::client>("qt_wallet");
+      _client->open( data_dir.toStdWString(), fc::optional<fc::path>(), [=](float progress) {
          main_thread->async( [=]{ Q_EMIT status_update(tr("Reindexing database... Approximately %1% complete.").arg(progress, 0, 'f', 0)); } );
       } );
 
@@ -164,7 +151,7 @@ void ClientWrapper::initialize(INotifier* notifier)
       _actual_httpd_endpoint = _client->get_rpc_server()->get_httpd_endpoint();
 
       // load config for p2p node.. creates cli
-      const bts::client::config& loadedCfg = _client->configure( data_dir );
+      const bts::client::config& loadedCfg = _client->configure( data_dir.toStdWString() );
 
       if(notifier != nullptr)
         notifier->on_config_loaded(loadedCfg);
@@ -209,8 +196,8 @@ void ClientWrapper::initialize(INotifier* notifier)
     catch (...)
     {
       ilog("Failure when attempting to initialize client");
-      if (fc::exists(data_dir + "/chain")) {
-        fc::remove_all(data_dir + "/chain");
+      if (fc::exists(fc::path(data_dir.toStdWString()) / "chain")) {
+        fc::remove_all(fc::path(data_dir.toStdWString()) / "chain");
         main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start. Please try restarting the application.")); });
       } else
         main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start.")); });

@@ -161,7 +161,28 @@ IF( APPLE )
     target_link_libraries(${APP_NAME} ${APP_SERVICES_LIBRARY})
 ENDIF()
 
-QT5_ADD_RESOURCES( BitSharesQRC  bitshares.qrc )
+# QT's resource compiler requires all input files to be in the same directory as the .qrc file
+# or in a subdirectory below it.  We need to include a generated file (ru_RU.qm) in the resource file,
+# and that file is generated into the build directory, so we must copy the .qrc and any other 
+# non-generated files to the build directory to allow them to be compiled together.
+# Set up a pre-build step to do this:
+set(static_bitshares_resource_files bitshares.qrc
+                                    images/splash_screen.jpg
+                                    images/qtapp.ico
+                                    images/tray_icon.png)
+foreach(static_resource_file ${static_bitshares_resource_files})
+  get_filename_component(static_resource_file_path "${static_resource_file}" DIRECTORY)
+  set(PRE_BUILD_STEP_COMMANDS ${PRE_BUILD_STEP_COMMANDS}
+      COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${static_resource_file}" "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}")
+endforeach()  
+
+# Also copy the .qrc file over manually whenever cmake is run, otherwise CMake will errror
+# on the QT5_ADD_RESOURCES() line that references a file that doesn't yet exist
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/bitshares.qrc" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")
+
+QT5_ADD_RESOURCES( BitSharesQRC  "${CMAKE_CURRENT_BINARY_DIR}/bitshares.qrc" )
 QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 
 # Use the Widgets module from Qt 5.
@@ -179,6 +200,10 @@ ENDIF()
 
 ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} POST_BUILD ${POST_BUILD_STEP_COMMANDS} 
   COMMENT "Copying binaries and other files into target directory."
+)
+
+ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} PRE_BUILD ${PRE_BUILD_STEP_COMMANDS} 
+  COMMENT "Copying static resource files to build directory."
 )
 
 IF( APPLE )
