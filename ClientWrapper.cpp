@@ -111,14 +111,6 @@ void ClientWrapper::initialize(INotifier* notifier)
 {
   bool upnp = _settings.value( "network/p2p/use_upnp", true ).toBool();
 
-#ifdef BTS_TEST_NETWORK
-  uint32_t default_port = BTS_NET_TEST_P2P_PORT + BTS_TEST_NETWORK_VERSION;
-#else
-  uint32_t default_port = BTS_NET_DEFAULT_P2P_PORT;
-#endif
-
-  uint32_t p2pport = _settings.value( "network/p2p/port", default_port ).toInt();
-
   std::string default_wallet_name = _settings.value("client/default_wallet_name", "default").toString().toStdString();
   _settings.setValue("client/default_wallet_name", QString::fromStdString(default_wallet_name));
 
@@ -137,11 +129,6 @@ void ClientWrapper::initialize(INotifier* notifier)
   wlog("Starting client with data-dir: ${ddir}", ("ddir", fc::path(data_dir.toStdWString())));
 
   fc::thread* main_thread = &fc::thread::current();
-
-  //FIXME: Remove this after a few versions
-  QDir dataDir(data_dir);
-  if (dataDir.exists("chain/index/block_num_to_id_db"))
-    dataDir.rename("chain/index/block_num_to_id_db", "chain/raw_chain/block_num_to_id_db");
 
   _init_complete = _bitshares_thread.async( [=](){
     try

@@ -49,7 +49,7 @@
     <message>
         <location filename="../ClientWrapper.cpp" line="152"/>
         <source>Reindexing database... Approximately %1% complete.</source>
-        <translation>Переиндексация базы данных... Приблизительно выполнено %1.</translation>
+        <translation>Переиндексация базы данных... Приблизительно выполнено %1%.</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="156"/>
