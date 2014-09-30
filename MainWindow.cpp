@@ -305,6 +305,16 @@ void MainWindow::takeFocus()
   activateWindow();
 }
 
+void MainWindow::hideWindow()
+{
+#ifdef __APPLE__
+    ProcessSerialNumber psn = { 0, kCurrentProcess };
+    ShowHideProcess(&psn, false);
+#else
+    setVisible(false);
+#endif
+}
+
 void MainWindow::setupTrayIcon()
 {
   if( !QSystemTrayIcon::isSystemTrayAvailable() )
