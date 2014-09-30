@@ -449,7 +449,7 @@ void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
 
 void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* viewer, MainWindow* mainWindow, QSplashScreen* splash)
 {
-  viewer->connect(viewer->webView(), &QGraphicsWebView::urlChanged, [viewer,client] (const QUrl& newUrl) {
+  viewer->connect(viewer->webView(), &QGraphicsWebView::urlChanged, [viewer,client,mainWindow] (const QUrl& newUrl) {
     //Disallow navigating to pages not served by us
     if (!newUrl.isEmpty() && newUrl.host() != "localhost" && newUrl.host() != "127.0.0.1") {
       elog("Denying request to browse to non-localhost URL ${url}", ("url", newUrl.toString().toStdString()));
@@ -459,6 +459,7 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
     }
 
     //Rebirth of the magic unicorn: When the page is reloaded, the magic unicorn dies. Make a new one.
+    viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("application", mainWindow);
     viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("bitshares", client);
     viewer->webView()->page()->mainFrame()->addToJavaScriptWindowObject("magic_unicorn", new Utilities, QWebFrame::ScriptOwnership);
   });
