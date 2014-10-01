@@ -29,6 +29,7 @@
 
 #include <bts/blockchain/config.hpp>
 #include <bts/client/client.hpp>
+#include <bts/wallet/exceptions.hpp>
 #include <bts/wallet/config.hpp>
 #include <bts/wallet/url.hpp>
 #include <bts/blockchain/account_record.hpp>
@@ -382,6 +383,15 @@ void MainWindow::goToBlock(uint32_t blockNumber)
 
 void MainWindow::goToBlock(QString blockId)
 {
+  bool error = false;
+  QMessageBox errorDialog(this);
+  errorDialog.setIcon(QMessageBox::Warning);
+  errorDialog.addButton(QMessageBox::Ok);
+  errorDialog.setDefaultButton(QMessageBox::Ok);
+  errorDialog.setWindowModality(Qt::WindowModal);
+  errorDialog.setWindowTitle(tr("Cannot Open Transaction"));
+  errorDialog.setText(tr("The specified block ID does not exist."));
+
   try
   {
     auto block = _clientWrapper->get_client()->get_chain()->get_block_digest(bts::blockchain::block_id_type(blockId.toStdString()));
@@ -389,8 +399,11 @@ void MainWindow::goToBlock(QString blockId)
   }
   catch(...)
   {
-    QMessageBox::warning(this, tr("Invalid Block"), tr("The specified block ID does not exist."));
+    error = true;
   }
+
+  if (error)
+    errorDialog.exec();
 }
 
 void MainWindow::goToTransaction(QString transactionId)
@@ -398,8 +411,31 @@ void MainWindow::goToTransaction(QString transactionId)
   if( !walletIsUnlocked() )
     return;
 
-  clientWrapper()->get_client()->wallet_scan_transaction(transactionId.toStdString());
-  navigateTo("/tx/" + transactionId);
+  bool error = false;
+  QMessageBox errorDialog(this);
+  errorDialog.setIcon(QMessageBox::Warning);
+  errorDialog.addButton(QMessageBox::Ok);
+  errorDialog.setDefaultButton(QMessageBox::Ok);
+  errorDialog.setWindowModality(Qt::WindowModal);
+  errorDialog.setWindowTitle(tr("Cannot Open Transaction"));
+
+  try {
+    clientWrapper()->get_client()->wallet_scan_transaction(transactionId.toStdString());
+    navigateTo("/tx/" + transactionId);
+  } catch (const fc::exception& e) {
+    //If we enter an event loop in a catch block, fc wigs out and crashes. Let's not do that.
+    error = true;
+    if (e.code() == bts::wallet::invalid_transaction_id().code())
+      errorDialog.setText(tr("The provided ID is not a valid transaction ID."));
+    else if (e.code() == bts::wallet::transaction_not_found().code())
+      errorDialog.setText(tr("Could not find the specified transaction."));
+    else
+      errorDialog.setText(tr("An error occurred while trying to find that transaction: %1").arg(e.name()));
+    elog("Error while trying to open transaction: ${e}", ("e", e.to_detail_string()));
+  }
+
+  if (error)
+    errorDialog.exec();
 }
 
 Html5Viewer* MainWindow::getViewer()
