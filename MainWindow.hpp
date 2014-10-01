@@ -44,7 +44,6 @@ class MainWindow : public QMainWindow
 
     bool detectCrash();
 
-    void toggleVisibility();
 public Q_SLOTS:
     void goToMyAccounts();
     void goToAccount(QString accountName);
@@ -55,6 +54,7 @@ public Q_SLOTS:
 
     //Causes this window to attempt to become the front window on the desktop
     void takeFocus();
+    void hideWindow();
 
     void setupTrayIcon();
 
