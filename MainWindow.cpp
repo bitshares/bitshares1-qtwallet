@@ -679,7 +679,7 @@ void MainWindow::importWallet()
 
   clientWrapper()->get_client()->wallet_close();
 
-  QDir default_wallet_directory = QString::fromStdString(clientWrapper()->get_client()->get_wallet()->get_data_directory().generic_string());
+  QDir default_wallet_directory = QString::fromStdWString(clientWrapper()->get_client()->get_wallet()->get_data_directory().generic_wstring());
   QString default_wallet_name = _settings.value("client/default_wallet_name").toString();
 
   if( QMessageBox::warning(this,
@@ -704,7 +704,7 @@ void MainWindow::importWallet()
     if( default_wallet_directory.exists(default_wallet_name) )
       default_wallet_directory.rename(default_wallet_name, backup_wallet_name);
     try {
-      clientWrapper()->get_client()->wallet_backup_restore(walletPath.toStdString(),
+      clientWrapper()->get_client()->wallet_backup_restore(walletPath.toStdWString(),
                                                            default_wallet_name.toStdString(),
                                                            password.toStdString());
     } catch (const fc::exception& e) {
@@ -741,7 +741,7 @@ void MainWindow::initMenu()
                                      tr("Could not export wallet because the selected file already exists and cannot be removed."));
                 return;
             }
-        _clientWrapper->get_client()->wallet_backup_create(savePath.toStdString());
+        _clientWrapper->get_client()->wallet_backup_create(savePath.toStdWString());
     }
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
