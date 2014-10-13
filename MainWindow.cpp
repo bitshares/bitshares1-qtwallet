@@ -64,8 +64,8 @@ MainWindow::MainWindow()
   if (versionMatcher.pos(5) != -1)
     _patchVersion = versionMatcher.cap(5).toStdString()[0];
 
-  //Check every 20 minutes
-  _updateChecker->setInterval(1200000);
+  //Check once every day
+  _updateChecker->setInterval(86400000);
   connect(_updateChecker, &QTimer::timeout, [this]{checkWebUpdates(false);});
   _updateChecker->start();
 }

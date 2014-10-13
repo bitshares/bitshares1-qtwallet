@@ -431,7 +431,25 @@ int BitSharesApp::run()
   APP_TRY
   {
     client->initialize(&notifier);
-    return exec();
+    int exec_result = exec();
+   /*
+    * We restore the initial logging config here in order to destroy all of the current
+    * file_appender objects.  They are problematic because they have log rotation tasks
+    * that they cancel in their destructors.  If we allow the file_appenders to continue
+    * to exist and just shut down during global destructor, they will cancel their 
+    * log rotation tasks and the canceled_exceptions will trigger log_contexts to be 
+    * created.  These use fc::path which uses boost::filesystem::path, and that 
+    * uses global objects in boost for character set conversion.  Since we're linking
+    * boost statically, we can't control the order global destructors run in, and 
+    * we have been crashing because the boost codecvt objects are already destroyed before
+    * the file_appenders get destroyed.
+    *
+    * This could probably be resolved by linking boost dynamically.  This hack works,
+    * but it prevents us from logging in global object destructors.  Probably we should
+    * switch to dynamically linking in boost libraries.
+    */
+   fc::configure_logging(fc::logging_config::default_config());
+   return exec_result;
   }
   APP_CATCH
   return 0;
