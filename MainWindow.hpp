@@ -49,7 +49,8 @@ public Q_SLOTS:
     void goToAccount(QString accountName);
     void goToCreateAccount();
     void goToAddContact();
-    void checkWebUpdates(bool showNoUpdatesAlert = true);
+    void checkWebUpdates(bool showNoUpdatesAlert = true,
+                         std::function<void()> finishedCheckCallback = std::function<void()>());
     void loadWebUpdates();
 
     //Causes this window to attempt to become the front window on the desktop
