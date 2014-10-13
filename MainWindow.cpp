@@ -66,7 +66,14 @@ MainWindow::MainWindow()
 
   //Check every 20 minutes
   _updateChecker->setInterval(1200000);
-  connect(_updateChecker, &QTimer::timeout, [this]{checkWebUpdates(false);});
+  _updateChecker->setSingleShot(true);
+  connect(_updateChecker, &QTimer::timeout, [this] {
+    checkWebUpdates(false, [this] {
+      //Restart the checking timer only after the current check has finished
+      //This avoids multiple "Update available" dialogs appearing if the user is AFK
+      _updateChecker->start();
+    });
+  });
   _updateChecker->start();
 }
 
@@ -807,7 +814,7 @@ void MainWindow::showNoUpdateAlert()
     noUpdateDialog.exec();
 }
 
-void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
+void MainWindow::checkWebUpdates(bool showNoUpdatesAlert, std::function<void()> finishedCheckCallback)
 {
   QUrl manifestUrl(WEB_UPDATES_MANIFEST_URL);
   QDir dataDir(QString(clientWrapper()->get_data_dir()));
@@ -831,6 +838,7 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
 
     if (reply->url() == manifestUrl) {
       WebUpdateManifest manifest;
+      bool error = false;
       try
       {
         QByteArray data = reply->readAll();
@@ -861,13 +869,13 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
         downer->get(QNetworkRequest(QUrl(_webUpdateDescription.updatePackageUrl.c_str())));
       } catch (fc::exception& e) {
         elog("Error during update checking: ${e}", ("e", e.to_detail_string()));
-        return;
+        error = true;
       }
+      if (error && showNoUpdatesAlert) showNoUpdateAlert();
     } else {
       auto package = reply->readAll();
       if (!verifyUpdateSignature(package)) {
-        if (showNoUpdatesAlert)
-          showNoUpdateAlert();
+        if (showNoUpdatesAlert) showNoUpdateAlert();
         return;
       }
 
@@ -901,6 +909,7 @@ void MainWindow::checkWebUpdates(bool showNoUpdatesAlert)
       //We're done here. Queue up a call to loadWebUpdates
       QTimer::singleShot(0, this, SLOT(loadWebUpdates()));
     }
+    if (finishedCheckCallback) finishedCheckCallback();
   });
 }
 

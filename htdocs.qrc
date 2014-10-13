@@ -43,18 +43,17 @@
     <file>htdocs/img/xts-logo-xl-white-shadow.png</file>
     <file>htdocs/js/app.js</file>
     <file>htdocs/webfonts/fontawesome-webfont.eot</file>
-    <file>htdocs/webfonts/fontawesome-webfont.svg</file>
     <file>htdocs/webfonts/fontawesome-webfont.ttf</file>
     <file>htdocs/webfonts/fontawesome-webfont.woff</file>
     <file>htdocs/webfonts/FontAwesome.otf</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.eot</file>
-    <file>htdocs/webfonts/glyphicons-halflings-regular.svg</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.ttf</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.woff</file>
     <file>htdocs/webfonts/opensans-light.woff</file>
     <file>htdocs/webfonts/opensans-regular.eot</file>
-    <file>htdocs/webfonts/opensans-regular.svg</file>
     <file>htdocs/webfonts/opensans-regular.ttf</file>
     <file>htdocs/webfonts/opensans-regular.woff</file>
+    <file>htdocs/webfonts/ui-grid.ttf</file>
+    <file>htdocs/webfonts/ui-grid.woff</file>
   </qresource>
 </RCC>
