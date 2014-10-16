@@ -402,14 +402,14 @@ int BitSharesApp::run()
   delete sock;
 
   auto viewer = new Html5Viewer;
-  ClientWrapper* client = new ClientWrapper;
-  connect(this, &QApplication::aboutToQuit, client, &ClientWrapper::close);
+  std::unique_ptr<ClientWrapper> clientWrapper(new ClientWrapper);
+  connect(this, &QApplication::aboutToQuit, clientWrapper.get(), &ClientWrapper::close);
 
   if (crashedPreviously)
-      client->handle_crash();
+      clientWrapper->handle_crash();
 
   mainWindow.setCentralWidget(viewer);
-  mainWindow.setClientWrapper(client);
+  mainWindow.setClientWrapper(clientWrapper.get());
   mainWindow.loadWebUpdates();
 
   QTimer fc_tasks;
@@ -422,7 +422,7 @@ int BitSharesApp::run()
     Qt::AlignCenter | Qt::AlignBottom, Qt::white);
   splash.show();
 
-  prepareStartupSequence(client, viewer, &mainWindow, &splash);
+  prepareStartupSequence(clientWrapper.get(), viewer, &mainWindow, &splash);
 
   QWebSettings::globalSettings()->setAttribute(QWebSettings::PluginsEnabled, false);
 
@@ -430,8 +430,9 @@ int BitSharesApp::run()
 
   APP_TRY
   {
-    client->initialize(&notifier);
+    clientWrapper->initialize(&notifier);
     int exec_result = exec();
+    clientWrapper.reset();
    /*
     * We restore the initial logging config here in order to destroy all of the current
     * file_appender objects.  They are problematic because they have log rotation tasks
