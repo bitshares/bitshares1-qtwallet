@@ -212,6 +212,8 @@ void ClientWrapper::close()
        _client->get_rpc_server()->shutdown_rpc_server();
        _client->get_rpc_server()->wait_till_rpc_server_shutdown();
        _client.reset();
+       //Screw it, we're out of here.
+       std::_Exit(0);
      }).wait();
 }
 
