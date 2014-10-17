@@ -266,11 +266,8 @@ bool MainWindow::detectCrash()
 {
   QString crashState = _settings.value("crash_state", "no_crash").toString();
 
-  //Set to crashed for the duration of execution, but schedule it to be changed back on a clean exit
+  //Set to crashed for the duration of execution; ClientWrapper::close sets it back before exiting
   _settings.setValue("crash_state", "crashed");
-  connect(new QObject(this), &QObject::destroyed, [] {
-    QSettings("BitShares", BTS_BLOCKCHAIN_NAME).setValue("crash_state", "no_crash");
-  });
 
   return crashState == "crashed";
 }

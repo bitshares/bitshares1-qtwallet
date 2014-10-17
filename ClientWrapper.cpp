@@ -204,6 +204,7 @@ void ClientWrapper::close()
 {
   _init_complete.wait();
   bts::blockchain::shutdown_ntp_time();
+  QSettings("BitShares", BTS_BLOCKCHAIN_NAME).setValue("crash_state", "no_crash");
   if (_client)
      _bitshares_thread.async([this]{
        _client->stop();
