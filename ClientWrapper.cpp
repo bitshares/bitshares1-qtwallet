@@ -1,5 +1,6 @@
 #include "ClientWrapper.hpp"
 
+#include <bts/blockchain/time.hpp>
 #include <bts/net/upnp.hpp>
 #include <bts/net/config.hpp>
 #include <bts/db/exception.hpp>
@@ -63,13 +64,7 @@ ClientWrapper::ClientWrapper(QObject *parent)
 
 ClientWrapper::~ClientWrapper()
 {
-  try {
-    _init_complete.wait();
-    _bitshares_thread.async( [this](){ _client->stop(); _client.reset(); } ).wait();
-  } catch ( ... )
-  {
-    elog( "uncaught exception" );
-  }
+  close();
 }
 
 void ClientWrapper::handle_crash()
@@ -176,8 +171,8 @@ void ClientWrapper::initialize(INotifier* notifier)
 
       if( upnp )
       {
-        auto upnp_service = new bts::net::upnp_service();
-        upnp_service->map_port( actual_p2p_endpoint.port() );
+        _upnp_service = std::make_shared<bts::net::upnp_service>();
+        _upnp_service->map_port( actual_p2p_endpoint.port() );
       }
 
       try
@@ -207,12 +202,17 @@ void ClientWrapper::initialize(INotifier* notifier)
 
 void ClientWrapper::close()
 {
-  _bitshares_thread.async([this]{
-    _client->wallet_close();
-    _client->get_chain()->close();
-    _client->get_rpc_server()->shutdown_rpc_server();
-    _client->get_rpc_server()->wait_till_rpc_server_shutdown();
-  }).wait();
+  _init_complete.wait();
+  bts::blockchain::shutdown_ntp_time();
+  if (_client)
+     _bitshares_thread.async([this]{
+       _client->stop();
+       _client->wallet_close();
+       _client->get_chain()->close();
+       _client->get_rpc_server()->shutdown_rpc_server();
+       _client->get_rpc_server()->wait_till_rpc_server_shutdown();
+       _client.reset();
+     }).wait();
 }
 
 QUrl ClientWrapper::http_url() const

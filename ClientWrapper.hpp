@@ -6,6 +6,7 @@
 
 #include <bts/rpc/rpc_server.hpp>
 #include <bts/client/client.hpp>
+#include <bts/net/upnp.hpp>
 
 class ClientWrapper : public QObject 
 {
@@ -45,7 +46,6 @@ class ClientWrapper : public QObject
 public Q_SLOTS:
     void set_data_dir(QString data_dir);
     void confirm_and_set_approval(QString delegate_name, bool approve);
-    void close();
 
   Q_SIGNALS:
     void initialized();
@@ -60,7 +60,10 @@ public Q_SLOTS:
     fc::optional<fc::ip::endpoint>       _actual_httpd_endpoint;
     QSettings                            _settings;
 
+    std::shared_ptr<bts::net::upnp_service> _upnp_service;
+
     std::unordered_map<std::string, std::vector<char>> _web_package;
 
     void get_htdocs_file(const fc::path& filename, const fc::http::server::response& r);
+    void close();
 };

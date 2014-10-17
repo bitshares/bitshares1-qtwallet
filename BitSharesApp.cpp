@@ -403,7 +403,6 @@ int BitSharesApp::run()
 
   auto viewer = new Html5Viewer;
   std::unique_ptr<ClientWrapper> clientWrapper(new ClientWrapper);
-  connect(this, &QApplication::aboutToQuit, clientWrapper.get(), &ClientWrapper::close);
 
   if (crashedPreviously)
       clientWrapper->handle_crash();
