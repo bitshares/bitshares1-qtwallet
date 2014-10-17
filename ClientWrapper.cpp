@@ -64,7 +64,20 @@ ClientWrapper::ClientWrapper(QObject *parent)
 
 ClientWrapper::~ClientWrapper()
 {
-  close();
+  _init_complete.wait();
+  QSettings("BitShares", BTS_BLOCKCHAIN_NAME).setValue("crash_state", "no_crash");
+  if (_client)
+     _bitshares_thread.async([this]{
+       _client->stop();
+       /*
+       _client->wallet_close();
+       _client->get_chain()->close();
+       _client->get_rpc_server()->shutdown_rpc_server();
+       _client->get_rpc_server()->wait_till_rpc_server_shutdown();
+       */
+       _client_done.wait(); //wait for client to shut down
+       _client.reset();
+     }).wait();
 }
 
 void ClientWrapper::handle_crash()
@@ -158,7 +171,7 @@ void ClientWrapper::initialize(INotifier* notifier)
       fc::ip::endpoint actual_p2p_endpoint = _client->get_p2p_listening_endpoint();
 
       _client->set_daemon_mode(true);
-      _client->start();
+      _client_done = _client->start();
       if( !_actual_httpd_endpoint )
       {
         main_thread->async( [&]{ Q_EMIT error( tr("Unable to start HTTP server...")); });
@@ -198,24 +211,6 @@ void ClientWrapper::initialize(INotifier* notifier)
         main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start.")); });
     }
   });
-}
-
-void ClientWrapper::close()
-{
-  _init_complete.wait();
-  bts::blockchain::shutdown_ntp_time();
-  QSettings("BitShares", BTS_BLOCKCHAIN_NAME).setValue("crash_state", "no_crash");
-  if (_client)
-     _bitshares_thread.async([this]{
-       _client->stop();
-       _client->wallet_close();
-       _client->get_chain()->close();
-       _client->get_rpc_server()->shutdown_rpc_server();
-       _client->get_rpc_server()->wait_till_rpc_server_shutdown();
-       _client.reset();
-       //Screw it, we're out of here.
-       std::_Exit(0);
-     }).wait();
 }
 
 QUrl ClientWrapper::http_url() const

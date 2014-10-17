@@ -7,6 +7,7 @@
 
 #include <boost/thread.hpp>
 #include <bts/blockchain/config.hpp>
+#include <bts/blockchain/time.hpp>
 #include <bts/wallet/url.hpp>
 #include <signal.h>
 
@@ -432,7 +433,7 @@ int BitSharesApp::run()
     clientWrapper->initialize(&notifier);
     int exec_result = exec();
     clientWrapper.reset();
-   /*
+    /*
     * We restore the initial logging config here in order to destroy all of the current
     * file_appender objects.  They are problematic because they have log rotation tasks
     * that they cancel in their destructors.  If we allow the file_appenders to continue
@@ -448,8 +449,9 @@ int BitSharesApp::run()
     * but it prevents us from logging in global object destructors.  Probably we should
     * switch to dynamically linking in boost libraries.
     */
-   fc::configure_logging(fc::logging_config::default_config());
-   return exec_result;
+    bts::blockchain::shutdown_ntp_time();
+    fc::configure_logging(fc::logging_config::default_config());
+    return exec_result;
   }
   APP_CATCH
   return 0;

@@ -55,6 +55,7 @@ public Q_SLOTS:
   private:
     bts::client::config                  _cfg;
     std::shared_ptr<bts::client::client> _client;
+    fc::future<void>                     _client_done;
     fc::thread                           _bitshares_thread;
     fc::future<void>                     _init_complete;
     fc::optional<fc::ip::endpoint>       _actual_httpd_endpoint;
@@ -65,5 +66,4 @@ public Q_SLOTS:
     std::unordered_map<std::string, std::vector<char>> _web_package;
 
     void get_htdocs_file(const fc::path& filename, const fc::http::server::response& r);
-    void close();
 };
