@@ -182,7 +182,7 @@ class TLimitedFileBuffer
     return TRUE;
     }
 
-  void installCrashRptHandler(const char* appName, const char* appVersion, const QFile& logFilePath)
+  void installCrashRptHandler(const char* appName, const char* appVersion)
   {
     // Define CrashRpt configuration parameters
     CR_INSTALL_INFO info = { 0 };
@@ -219,11 +219,6 @@ class TLimitedFileBuffer
       wlog("CrashRpt handler installed successfully");
     }
 
-    auto logPathString = logFilePath.fileName().toStdString();
-
-    // Add our log file to the error report
-    crAddFile2(logPathString.c_str(), NULL, "Log File", CR_AF_MAKE_FILE_COPY);
-
     fc::variant_object version_info(bts::client::version_info());
     for (fc::variant_object::iterator version_info_iter = version_info.begin();
       version_info_iter != version_info.end(); ++version_info_iter)
@@ -257,7 +252,7 @@ class TLimitedFileBuffer
 	onUnknownExceptionCaught();\
 	}
 
-void installCrashRptHandler(const char* appName, const char* appVersion, const QFile& logFilePath)
+void installCrashRptHandler(const char* appName, const char* appVersion)
 {
 	/// Nothing to do here since no crash report support available
 }
@@ -277,26 +272,6 @@ static std::string CreateBitSharesVersionNumberString()
   return bts::client::version_info()["client_version"].as_string();
 }
 
-QTemporaryFile gLogFile;
-
-void ConfigureLoggingToTemporaryFile()
-{
-  //create log file in temporary dir that lasts after application exits
-  gLogFile.setAutoRemove(false);
-  gLogFile.open();
-  gLogFile.close();
-
-  //configure logger to also write to log file
-  fc::file_appender::config ac;
-  /** \warning Use wstring to construct log file name since %TEMP% can point to path containing
-  native chars.
-  */
-  ac.filename = gLogFile.fileName().toStdWString();
-  ac.truncate = false;
-  ac.flush = true;
-  fc::logger::get().add_appender(fc::shared_ptr<fc::file_appender>(new fc::file_appender(fc::variant(ac))));
-}
-
 BitSharesApp::BitSharesApp(int& argc, char** argv)
   :QApplication(argc, argv)
 {
@@ -314,9 +289,7 @@ BitSharesApp::~BitSharesApp()
 
 int BitSharesApp::run(int& argc, char** argv)
 {
-  ConfigureLoggingToTemporaryFile();
-
-  installCrashRptHandler(APP_NAME, CreateBitSharesVersionNumberString().c_str(), gLogFile);
+  installCrashRptHandler(APP_NAME, CreateBitSharesVersionNumberString().c_str());
 
   BitSharesApp app(argc, argv);
   QTranslator bitsharesTranslator;
