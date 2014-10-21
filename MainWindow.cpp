@@ -266,11 +266,8 @@ bool MainWindow::detectCrash()
 {
   QString crashState = _settings.value("crash_state", "no_crash").toString();
 
-  //Set to crashed for the duration of execution, but schedule it to be changed back on a clean exit
+  //Set to crashed for the duration of execution; ClientWrapper::close sets it back before exiting
   _settings.setValue("crash_state", "crashed");
-  connect(new QObject(this), &QObject::destroyed, [] {
-    QSettings("BitShares", BTS_BLOCKCHAIN_NAME).setValue("crash_state", "no_crash");
-  });
 
   return crashState == "crashed";
 }
@@ -352,19 +349,24 @@ void MainWindow::setupTrayIcon()
   });
   
   bts::wallet::wallet_ptr wallet = clientWrapper()->get_client()->get_wallet();
-  wallet->wallet_claimed_transaction.connect([=](const bts::wallet::ledger_entry& entry) {
-      QString receiver = tr("You");
-      QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
-      QString sender = tr("Someone");
-      QString memo = entry.memo.c_str();
+  bts::wallet::wallet_weak_ptr weak_wallet(wallet);
+  wallet->wallet_claimed_transaction.connect([weak_wallet, this](const bts::wallet::ledger_entry& entry) {
+    bts::wallet::wallet_ptr wallet(weak_wallet.lock());
+    if (!wallet)
+      return;
+
+    QString receiver = tr("You");
+    QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
+    QString sender = tr("Someone");
+    QString memo = entry.memo.c_str();
       
-      if (entry.to_account)
-          receiver = wallet->get_key_label(*entry.to_account).c_str();
-      if (entry.from_account)
-          sender = wallet->get_key_label(*entry.from_account).c_str();
+    if (entry.to_account)
+      receiver = wallet->get_key_label(*entry.to_account).c_str();
+    if (entry.from_account)
+      sender = wallet->get_key_label(*entry.from_account).c_str();
       
-      _trayIcon->showMessage(tr("%1 sent you %2").arg(sender).arg(amount),
-                             tr("%1 just received %2 from %3!\n\nMemo: %4").arg(receiver).arg(amount).arg(sender).arg(memo));
+    _trayIcon->showMessage(tr("%1 sent you %2").arg(sender).arg(amount),
+                           tr("%1 just received %2 from %3!\n\nMemo: %4").arg(receiver).arg(amount).arg(sender).arg(memo));
   });
   wallet->update_margin_position.connect([=](const bts::wallet::ledger_entry& entry) {
       QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
@@ -372,11 +374,12 @@ void MainWindow::setupTrayIcon()
                              tr("You just sold %1 from your short order.").arg(amount));
   });
   clientWrapper()->get_client()->get_mail_client()->new_mail_notifier.connect([=](int newMessages) {
-      if (newMessages <= 0) return;
-      if (newMessages == 1)
-          _trayIcon->showMessage(tr("New Mail"), tr("You just received a new mail message."));
-      else
-          _trayIcon->showMessage(tr("New Mail"), tr("You just received %1 new mail messages.").arg(newMessages));
+    if (newMessages <= 0) 
+      return;
+    if (newMessages == 1)
+      _trayIcon->showMessage(tr("New Mail"), tr("You just received a new mail message."));
+    else
+      _trayIcon->showMessage(tr("New Mail"), tr("You just received %1 new mail messages.").arg(newMessages));
   });
 }
 
