@@ -161,6 +161,10 @@ IF( APPLE )
     target_link_libraries(${APP_NAME} ${APP_SERVICES_LIBRARY})
 ENDIF()
 
+IF(WIN32 AND "${TARGET_ARCHITECTURE}" STREQUAL "x86")
+  SET_TARGET_PROPERTIES(${APP_NAME} PROPERTIES LINK_FLAGS "/LARGEADDRESSAWARE")
+ENDIF()
+
 # QT's resource compiler requires all input files to be in the same directory as the .qrc file
 # or in a subdirectory below it.  We need to include a generated file (ru_RU.qm) in the resource file,
 # and that file is generated into the build directory, so we must copy the .qrc and any other 
