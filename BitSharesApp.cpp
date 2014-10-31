@@ -423,6 +423,7 @@ int BitSharesApp::run()
     * switch to dynamically linking in boost libraries.
     */
     bts::blockchain::shutdown_ntp_time();
+    ilog("stop logging (shutting down)");
     fc::configure_logging(fc::logging_config::default_config());
     return exec_result;
   }
