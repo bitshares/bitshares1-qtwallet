@@ -428,12 +428,13 @@ int BitSharesApp::run()
     * but it prevents us from logging in global object destructors.  Probably we should
     * switch to dynamically linking in boost libraries.
     */
-      bts::blockchain::shutdown_ntp_time();
-      fc::configure_logging(fc::logging_config::default_config());
-      return exec_result;
-   }
-   APP_CATCH
-   return 0;
+    bts::blockchain::shutdown_ntp_time();
+    ilog("stop logging (shutting down)");
+    fc::configure_logging(fc::logging_config::default_config());
+    return exec_result;
+  }
+  APP_CATCH
+  return 0;
 }
 
 void setupMenus(ClientWrapper* client, MainWindow* mainWindow)
