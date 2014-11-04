@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.11)
 find_package(Git QUIET)
 
 project(qt_wallet)
-set( APP_NAME "BitSharesX" )
+set( APP_NAME "BitShares" )
 
 # Tell CMake where to find our custom Info.plist template
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
