@@ -17,7 +17,7 @@ IF( WIN32 )
   set(INCLUDE_CRASHRPT TRUE CACHE BOOL "Include CrashRpt")
   if(${INCLUDE_CRASHRPT})
       ADD_DEFINITIONS(-DUSE_CRASHRPT)
-      # Build all windows projects with /EHsc, which will prevent the compiler from 
+      # Build all windows projects with /EHsc, which will prevent the compiler from
       # translating structured exceptions into C++ exceptions (which would make
       # our crash reporter less useful)
       IF (NOT CMAKE_CXX_FLAGS MATCHES "/EHsc")
@@ -26,7 +26,7 @@ IF( WIN32 )
     endif()
 ELSE()
   set(INCLUDE_CRASHRPT FALSE CACHE BOOL "Include CrashRpt")
-ENDIF( WIN32 ) 
+ENDIF( WIN32 )
 
 #This variable will be filled just for Win32 platform
 SET (CrashRpt_LIBRARIES "")
@@ -70,8 +70,8 @@ set( SOURCES
   qrc_bitshares.cpp
   qrc_htdocs.cpp
   main.cpp
-  ClientWrapper.cpp 
-  Utilities.cpp 
+  ClientWrapper.cpp
+  Utilities.cpp
   MainWindow.cpp
   BitSharesApp.cpp
   html5viewer/html5viewer.cpp
@@ -98,20 +98,20 @@ IF( APPLE )
     SET_SOURCE_FILES_PROPERTIES( "${OSX_ICON_FILE}" PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
     SET( MACOSX_BUNDLE_BUNDLE_NAME ${CPACK_BUNDLE_NAME} )
     SET( MACOSX_BUNDLE_EXECUTABLE_NAME ${CPACK_BUNDLE_NAME} )
-    SET( MACOSX_BUNDLE_GUI_IDENTIFIER "org.bitshares.btsx" ) 
+    SET( MACOSX_BUNDLE_GUI_IDENTIFIER "org.bitshares.bts" )
     SET( MACOSX_BUNDLE_ICON_FILE "bitshares.icns" )
-    SET( MACOSX_BUNDLE_INFO_STRING "BitShares BTSX - version ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
-    SET( MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
-    SET( MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
-    SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" ) 
-    SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 Dac Sun Limited" )
+    SET( MACOSX_BUNDLE_INFO_STRING "BitShares v${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" )
+    SET( MACOSX_BUNDLE_SHORT_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" )
+    SET( MACOSX_BUNDLE_LONG_VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" )
+    SET( MACOSX_BUNDLE_BUNDLE_VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}" )
+    SET( MACOSX_BUNDLE_COPYRIGHT "(C) 2014 BitShares" )
     SET( MACOSX_BUNDLE_URL_HANDLER_NAME "${MACOSX_BUNDLE_GUI_IDENTIFIER}" )
     SET( MACOSX_BUNDLE_URL_HANDLER_SCHEME "${CUSTOM_URL_SCHEME}" )
     set_source_files_properties("images/bitshares.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 ENDIF()
 
 IF( "${CMAKE_SYSTEM_NAME}" MATCHES "Linux" )
-    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/BitSharesXT.desktop.in" "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.desktop")
+    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/BitShares.desktop.in" "${CMAKE_CURRENT_BINARY_DIR}/${APP_NAME}.desktop")
 ENDIF()
 
 IF( WIN32 )
@@ -124,13 +124,13 @@ IF( WIN32 )
 	  set(INCLUDE_CRASHRPT_DEFINE define)
       set( CrashRpt_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../CrashRpt" CACHE PATH "Directory to CrashRpt" )
       # Warning this lib doesn't have an associated .cmake
-	  
+
       if("${TARGET_ARCHITECTURE}" STREQUAL "x86")
 	    set(CrashRpt_PLATFORM_DIR "")
       elseif("${TARGET_ARCHITECTURE}" STREQUAL "x64")
 	    set(CrashRpt_PLATFORM_DIR "/x64")
-      endif()	  
-	  
+      endif()
+
       find_library(CrashRpt_LIBRARIES_RELEASE CrashRpt1402 HINTS "${CrashRpt_DIR}/lib${CrashRpt_PLATFORM_DIR}")
       LIST(APPEND CrashRpt_LIBRARIES optimized ${CrashRpt_LIBRARIES_RELEASE})
       MESSAGE(STATUS "Found CrashRpt libraries: ${CrashRpt_LIBRARIES}")
@@ -154,12 +154,12 @@ IF( WIN32 )
 	  set(VC_RUNTIME "${MSVC_RUNTIME_DIR}/${TARGET_ARCHITECTURE}/msvcr120.dll")
 	  set(VCPP_RUNTIME "${MSVC_RUNTIME_DIR}/${TARGET_ARCHITECTURE}/msvcp120.dll")
 	else()
-	  # ${TARGET_ARCHITECTURE}" AND "${MSVC_RUNTIME_DIR}" not set, use defaults that should be ok for 32-bit 
+	  # ${TARGET_ARCHITECTURE}" AND "${MSVC_RUNTIME_DIR}" not set, use defaults that should be ok for 32-bit
       set(WIN64_DEFINE undef)
 	  set(VC_RUNTIME "C:/Windows/system32/msvcr120.dll")
-	  set(VCPP_RUNTIME "C:/Windows/system32/msvcp120.dll")	  
+	  set(VCPP_RUNTIME "C:/Windows/system32/msvcp120.dll")
     endif()
-	
+
 	set(VERSION_STRING "0.0.1")
 	if (GET_VERSION_STRING_FROM_GIT_TAGS)
 	  execute_process(COMMAND "${GIT_EXECUTABLE}" describe --tags
@@ -175,7 +175,7 @@ IF( WIN32 )
  	    message(STATUS "Using GIT_DESCRIPTION => ${GIT_DESCRIBE_OUTPUT}")
 	  endif()
 	endif(GET_VERSION_STRING_FROM_GIT_TAGS)
-	
+
     configure_file( windows/setup.iss.in setup.iss )
 ENDIF( WIN32 )
 
@@ -214,7 +214,7 @@ ENDIF()
 
 # QT's resource compiler requires all input files to be in the same directory as the .qrc file
 # or in a subdirectory below it.  We need to include a generated file (ru_RU.qm) in the resource file,
-# and that file is generated into the build directory, so we must copy the .qrc and any other 
+# and that file is generated into the build directory, so we must copy the .qrc and any other
 # non-generated files to the build directory to allow them to be compiled together.
 # Set up a pre-build step to do this:
 set(static_bitshares_resource_files bitshares.qrc
@@ -226,7 +226,7 @@ foreach(static_resource_file ${static_bitshares_resource_files})
   set(PRE_BUILD_STEP_COMMANDS ${PRE_BUILD_STEP_COMMANDS}
       COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${static_resource_file}" "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}")
-endforeach()  
+endforeach()
 
 # Also copy the .qrc file over manually whenever cmake is run, otherwise CMake will errror
 # on the QT5_ADD_RESOURCES() line that references a file that doesn't yet exist
@@ -238,7 +238,7 @@ QT5_ADD_RESOURCES( HTDOCS  htdocs.qrc )
 
 # Use the Widgets module from Qt 5.
 target_link_libraries( ${APP_NAME} Qt5::Widgets Qt5::WebKit Qt5::WebKitWidgets
-  bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc  
+  bts_wallet bts_rpc bts_cli bts_blockchain bts_db bts_net bts_client fc
   ${READLINE_LIBRARIES} ${CMAKE_DL_LIBS} ${PLATFORM_SPECIFIC_LIBS} ${crypto_library} ${CrashRpt_LIBRARIES} ${ZLIB_LIBRARY} upnpc-static )
 
 include( DeployQt4 )
@@ -249,11 +249,11 @@ IF( WIN32 AND ${INCLUDE_CRASHRPT} )
   INSTALL(FILES ${CRASHRPT_BINARIES_TO_INSTALL} DESTINATION . CONFIGURATIONS Release COMPONENT Runtime)
 ENDIF()
 
-ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} POST_BUILD ${POST_BUILD_STEP_COMMANDS} 
+ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} POST_BUILD ${POST_BUILD_STEP_COMMANDS}
   COMMENT "Copying binaries and other files into target directory."
 )
 
-ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} PRE_BUILD ${PRE_BUILD_STEP_COMMANDS} 
+ADD_CUSTOM_COMMAND(TARGET ${APP_NAME} PRE_BUILD ${PRE_BUILD_STEP_COMMANDS}
   COMMENT "Copying static resource files to build directory."
 )
 

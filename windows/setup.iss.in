@@ -28,8 +28,8 @@
 #define NUMERIC_VERSION "@NUMERIC_ONLY_VERSION_STRING@"
 
 [Setup]
-AppPublisher=DACSunlimited
-AppPublisherURL=http://dacsunlimited.com
+AppPublisher=BitShares
+AppPublisherURL=http://bitshares.org
 AppVersion={#VERSION}
 AppName={#APPNAME}{#PLATFORM_TITLE}
 AppVerName={#APPNAME}{#PLATFORM_TITLE} {#VERSION}
@@ -40,12 +40,12 @@ SolidCompression=true
 VersionInfoVersion={#NUMERIC_VERSION}
 VersionInfoCompany=BitShares
 VersionInfoDescription={#APPNAME}
-AppCopyright=(c) 2014 DACSunlimited
+AppCopyright=(c) 2014 BitShares
 DirExistsWarning=no
 DisableStartupPrompt=true
 WindowVisible=false
-AppSupportURL=http://bitshares-x.info
-AppUpdatesURL=http://bitshares-x.info
+AppSupportURL=http://bitshares.org
+AppUpdatesURL=http://bitshares.org
 ;AppReadmeFile={app}\README.TXT
 ShowLanguageDialog=no
 LanguageDetectionMethod=none
@@ -132,10 +132,10 @@ Name: "{group}\Uninstall {#APPNAME}"; Filename: "{uninstallexe}"
 Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 
 [Run]
-Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run 
+Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run
 
 [Registry]
-Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none; 
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none;
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; ValueType: string; ValueName: "URL Protocol"; ValueData: "";
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell"; Flags: uninsdeletekey; ValueType: none
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open"; Flags: uninsdeletekey; ValueType: none

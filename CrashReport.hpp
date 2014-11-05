@@ -1,6 +1,6 @@
 #pragma once
 
-namespace btsx { namespace rpt {
+namespace bts { namespace rpt {
 
   #ifdef WIN32
   #define APP_TRY /*try*/
@@ -30,4 +30,4 @@ namespace btsx { namespace rpt {
 
   };
 
-} }// btsx:rpt
+} }// bts:rpt

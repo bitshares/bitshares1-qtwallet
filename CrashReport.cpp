@@ -2,7 +2,7 @@
 
 #include "CrashRpt/include/CrashRpt.h"
 
-namespace btsx { namespace rpt {
+namespace bts { namespace rpt {
 
 CrashReport::CrashReport()  
 {
@@ -75,4 +75,4 @@ CrashReport::~CrashReport()
 
 #endif
 
-} } // btsx:rpt
+} } // bts:rpt
