@@ -9,6 +9,7 @@
 #include <QMenu>
 #include <QSystemTrayIcon>
 #include <QTimer>
+#include <QUuid>
 
 class MainWindow : public QMainWindow
 {
@@ -30,6 +31,8 @@ class MainWindow : public QMainWindow
     uint8_t _patchVersion = 0;
 
     QTimer* _updateChecker;
+    QUuid app_id;
+    QString version;
     
   public:
     MainWindow();
