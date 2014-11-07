@@ -1,11 +1,16 @@
-;#define WIN64
+; WIN64_DEFINE gets substituted with "define" or "undef"
+#@WIN64_DEFINE@ WIN64
 #define APPNAME "@APP_NAME@"
 #define BITSHARES_ROOT "@BITSHARES_ROOT@"
 #define QT_PATH "@QT_PATH@"
 #define OPENSSL_ROOT_DIR "@OPENSSL_ROOT_DIR@"
+#define MSVC_RUNTIME_DIR "@MSVC_RUNTIME_DIR@"
+
 ; Comment following out if you do not want to include crash report dlls
-#define USE_CRASHRPT "@INCLUDE_CRASHRPT@"
+; INCLUDE_CRASHRPT_DEFINE gets substituted with "define" or "undef"
+#@INCLUDE_CRASHRPT_DEFINE@ USE_CRASHRPT
 #define CRASHRPT_DIR "@CrashRpt_DIR@"
+#define CRASHRPT_PLATFORM_DIR "@CrashRpt_PLATFORM_DIR@"
 #define CUSTOM_URL_SCHEME "@CUSTOM_URL_SCHEME@"
 
 #ifdef WIN64
@@ -19,7 +24,9 @@
 #endif
 
 ;#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
-#define VERSION "0.0.6"
+;#define VERSION "0.0.1"
+#define VERSION "@VERSION_STRING@"
+#define NUMERIC_VERSION "@NUMERIC_ONLY_VERSION_STRING@"
 
 [Setup]
 AppPublisher=BitShares
@@ -31,10 +38,10 @@ DefaultDirName={pf}\{#APPNAME}
 DefaultGroupName={#APPNAME}
 Compression=lzma/Ultra
 SolidCompression=true
-VersionInfoVersion={#VERSION}
+VersionInfoVersion={#NUMERIC_VERSION}
 VersionInfoCompany=BitShares
 VersionInfoDescription={#APPNAME}
-AppCopyright=(c) 2014 God
+AppCopyright=(c) 2014 BitShares
 DirExistsWarning=no
 DisableStartupPrompt=true
 WindowVisible=false
@@ -49,12 +56,13 @@ DisableFinishedPage=false
 DisableProgramGroupPage=true
 DisableReadyPage=true
 OutputDir=.
-OutputBaseFilename={#APPNAME}-{#VERSION}
+OutputBaseFilename={#APPNAME}-{#VERSION}-{#PLATFORM_NAME}
 WizardImageFile=@CMAKE_CURRENT_SOURCE_DIR@/images/inno_setup_img.bmp
 #ifdef WIN64
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 #endif
+SignTool=signtool
 
 [Tasks]
 ;Name: desktopicon; Description: Create a &desktop icon; GroupDescription: Additional icons:; Flags: checkedonce
@@ -74,14 +82,14 @@ LanguageCodePage=0
 [Files]
 ;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
 Source: {#BITSHARES_ROOT}\bin\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
-Source: ..\client\Release\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion
-Source: c:\windows\system32\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
-Source: c:\windows\system32\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: ..\client\RelWithDebInfo\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#MSVC_RUNTIME_DIR}\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#MSVC_RUNTIME_DIR}\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#OPENSSL_ROOT_DIR}\ssl\openssl.cnf; DestDir: {app}\bin; Flags: ignoreversion
 
-Source: {#QT_PATH}\bin\icudt52.dll; DestDir: {app}\bin; Flags: ignoreversion
-Source: {#QT_PATH}\bin\icuin52.dll; DestDir: {app}\bin; Flags: ignoreversion
-Source: {#QT_PATH}\bin\icuuc52.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\icudt@ICU_VERSION_TO_PACKAGE@.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\icuin@ICU_VERSION_TO_PACKAGE@.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#QT_PATH}\bin\icuuc@ICU_VERSION_TO_PACKAGE@.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#QT_PATH}\bin\libEGL.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#QT_PATH}\bin\libGLESv2.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#QT_PATH}\bin\Qt5Core.dll; DestDir: {app}\bin; Flags: ignoreversion
@@ -105,18 +113,18 @@ Source: {#QT_PATH}\plugins\imageformats\qgif.dll; DestDir: {app}\bin\imageformat
 Source: {#QT_PATH}\plugins\imageformats\qico.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion
 Source: {#QT_PATH}\plugins\imageformats\qjpeg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion
 Source: {#QT_PATH}\plugins\imageformats\qsvg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion
-Source: {#QT_PATH}\plugins\imageformats\qwebp.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion
+; Source: {#QT_PATH}\plugins\imageformats\qwebp.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion
 Source: {#QT_PATH}\plugins\imageformats\qsvg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion
 Source: {#QT_PATH}\plugins\accessible\qtaccessiblequick.dll; DestDir: {app}\bin\accessible; Flags: ignoreversion
 Source: {#QT_PATH}\plugins\accessible\qtaccessiblewidgets.dll; DestDir: {app}\bin\accessible; Flags: ignoreversion
-Source: {#QT_PATH}\plugins\audio\qtaudio_windows.dll; DestDir: {app}\bin\audio; Flags: ignoreversion
+; Source: {#QT_PATH}\plugins\audio\qtaudio_windows.dll; DestDir: {app}\bin\audio; Flags: ignoreversion
 Source: {#QT_PATH}\plugins\printsupport\windowsprintersupport.dll; DestDir: {app}\bin\printsupport; Flags: ignoreversion
 
 #ifdef USE_CRASHRPT
-Source: {#CRASHRPT_DIR}\bin\crashrpt_lang.ini; DestDir: {app}\bin; Flags: ignoreversion
-Source: {#CRASHRPT_DIR}\bin\CrashRpt1402.dll; DestDir: {app}\bin; Flags: ignoreversion
-Source: {#CRASHRPT_DIR}\bin\CrashSender1402.exe; DestDir: {app}\bin; Flags: ignoreversion
-Source: {#CRASHRPT_DIR}\bin\dbghelp.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#CRASHRPT_DIR}\bin{#CRASHRPT_PLATFORM_DIR}\crashrpt_lang.ini; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#CRASHRPT_DIR}\bin{#CRASHRPT_PLATFORM_DIR}\CrashRpt1402.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#CRASHRPT_DIR}\bin{#CRASHRPT_PLATFORM_DIR}\CrashSender1402.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#CRASHRPT_DIR}\bin{#CRASHRPT_PLATFORM_DIR}\dbghelp.dll; DestDir: {app}\bin; Flags: ignoreversion
 #endif
 
 [Icons]
@@ -125,10 +133,10 @@ Name: "{group}\Uninstall {#APPNAME}"; Filename: "{uninstallexe}"
 Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 
 [Run]
-Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run 
+Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run
 
 [Registry]
-Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none; 
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none;
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; ValueType: string; ValueName: "URL Protocol"; ValueData: "";
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell"; Flags: uninsdeletekey; ValueType: none
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open"; Flags: uninsdeletekey; ValueType: none
