@@ -142,22 +142,23 @@ IF( WIN32 )
 	  # no crashrpt
 	  set(INCLUDE_CRASHRPT_DEFINE undef)
     endif()
+	
+	set (MSVC_RUNTIME_DIR_X86 $ENV{MSVC_RUNTIME_DIR_X86})
+	set (MSVC_RUNTIME_DIR_X64 $ENV{MSVC_RUNTIME_DIR_X64})
     if(NOT "${TARGET_ARCHITECTURE}" STREQUAL "" AND
 	   NOT "${MSVC_RUNTIME_DIR}" STREQUAL "")
       if("${TARGET_ARCHITECTURE}" STREQUAL "x86")
 	    set(WIN64_DEFINE undef)
+		set(MSVC_RUNTIME_DIR ${MSVC_RUNTIME_DIR_X86})
       elseif("${TARGET_ARCHITECTURE}" STREQUAL "x64")
 	    set(WIN64_DEFINE define)
+		set(MSVC_RUNTIME_DIR ${MSVC_RUNTIME_DIR_X64})
       else()
 	    message(FATAL_ERROR "Expected TARGET_ARCHITECTURE to be either x86 or x64")
       endif()
-	  set(VC_RUNTIME "${MSVC_RUNTIME_DIR}/${TARGET_ARCHITECTURE}/msvcr120.dll")
-	  set(VCPP_RUNTIME "${MSVC_RUNTIME_DIR}/${TARGET_ARCHITECTURE}/msvcp120.dll")
 	else()
 	  # ${TARGET_ARCHITECTURE}" AND "${MSVC_RUNTIME_DIR}" not set, use defaults that should be ok for 32-bit
       set(WIN64_DEFINE undef)
-	  set(VC_RUNTIME "C:/Windows/system32/msvcr120.dll")
-	  set(VCPP_RUNTIME "C:/Windows/system32/msvcp120.dll")
     endif()
 
 	set(VERSION_STRING "0.0.1")
@@ -170,13 +171,35 @@ IF( WIN32 )
 		              OUTPUT_STRIP_TRAILING_WHITESPACE)
 	  if(GIT_DESCRIBE_RESULT EQUAL 0)
 		set(VERSION_STRING ${GIT_DESCRIBE_OUTPUT})
+		# patch up the GIT version tag, which seems to be somewhat arbitrary
+		# convert 0.4.10-RC1 -> 0.4.10.1
 		string(REGEX REPLACE "-RC([0-9]+)$" ".\\1" VERSION_STRING_WITHOUT_RC "${VERSION_STRING}")
-		string(REGEX REPLACE "^v" "" NUMERIC_ONLY_VERSION_STRING "${VERSION_STRING_WITHOUT_RC}")
+		# convert 0.4.10-a to 0.4.10
+		string(REGEX REPLACE "-[a-zA-Z]+$" "" VERSION_STRING_WITHOUT_TRAILING_ALPHA "${VERSION_STRING_WITHOUT_RC}")
+		# convert v0.4.10 -> 0.4.10
+		string(REGEX REPLACE "^v" "" NUMERIC_ONLY_VERSION_STRING "${VERSION_STRING_WITHOUT_TRAILING_ALPHA}")
  	    message(STATUS "Using GIT_DESCRIPTION => ${GIT_DESCRIBE_OUTPUT}")
 	  endif()
 	endif(GET_VERSION_STRING_FROM_GIT_TAGS)
 
+	# pass through some environment variables for substitution
+	SET (JENKINS_BUILD_URL $ENV{JENKINS_BUILD_URL})
+	SET (CLAMSCAN_DB $ENV{CLAMSCAN_DB})
+	SET (CLAMSCAN_EXE $ENV{CLAMSCAN_EXE})
+	SET (CMAKE_EXE $ENV{CMAKE_EXE})
+	SET (CURL_EXE $ENV{CURL_EXE})
+	SET (ISCC_EXE $ENV{ISCC_EXE})
+	
+	set (QT_PATH_X86 $ENV{QT_PATH_X86})
+	set (QT_PATH_X64 $ENV{QT_PATH_X64})
+	set (OPENSSL_ROOT_DIR_X86 $ENV{OPENSSL_ROOT_DIR_X86})
+	set (OPENSSL_ROOT_DIR_X64 $ENV{OPENSSL_ROOT_DIR_X64})
+	set (CRASHRPT_BIN_DIR_X86 $ENV{CRASHRPT_BIN_DIR_X86})
+	set (CRASHRPT_BIN_DIR_X64 $ENV{CRASHRPT_BIN_DIR_X64})
+	
     configure_file( windows/setup.iss.in setup.iss )
+	configure_file( windows/build_combined_installer.bat.in build_combined_installer.bat )
+	configure_file( windows/setup_combined.iss.in setup_combined.iss )
 ENDIF( WIN32 )
 
 # Tell CMake to create the qt_wallet executable
@@ -196,7 +219,7 @@ IF(NOT CMAKE_GENERATOR STREQUAL "Xcode") # for some reason lineman couldn't be i
   ENDIF()
 ENDIF()
 
-IF( WIN32 AND ${INCLUDE_CRASHRPT} )
+IF( WIN32 AND INCLUDE_CRASHRPT )
   foreach(binary ${CRASHRPT_BINARIES_TO_INSTALL})
     set(POST_BUILD_STEP_COMMANDS ${POST_BUILD_STEP_COMMANDS}
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${binary}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")

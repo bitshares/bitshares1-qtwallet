@@ -4,6 +4,8 @@
 #define BITSHARES_ROOT "@BITSHARES_ROOT@"
 #define QT_PATH "@QT_PATH@"
 #define OPENSSL_ROOT_DIR "@OPENSSL_ROOT_DIR@"
+#define MSVC_RUNTIME_DIR "@MSVC_RUNTIME_DIR@"
+
 ; Comment following out if you do not want to include crash report dlls
 ; INCLUDE_CRASHRPT_DEFINE gets substituted with "define" or "undef"
 #@INCLUDE_CRASHRPT_DEFINE@ USE_CRASHRPT
@@ -24,7 +26,6 @@
 ;#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_PATCH@"
 ;#define VERSION "0.0.1"
 #define VERSION "@VERSION_STRING@"
-;#define NUMERIC_VERSION "0.0.1"
 #define NUMERIC_VERSION "@NUMERIC_ONLY_VERSION_STRING@"
 
 [Setup]
@@ -61,6 +62,7 @@ WizardImageFile=@CMAKE_CURRENT_SOURCE_DIR@/images/inno_setup_img.bmp
 ArchitecturesAllowed=x64
 ArchitecturesInstallIn64BitMode=x64
 #endif
+SignTool=signtool
 
 [Tasks]
 ;Name: desktopicon; Description: Create a &desktop icon; GroupDescription: Additional icons:; Flags: checkedonce
@@ -81,9 +83,8 @@ LanguageCodePage=0
 ;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
 Source: {#BITSHARES_ROOT}\bin\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
 Source: ..\client\RelWithDebInfo\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion
-; VC_RUNTIME and VCPP_RUNTIME get substituted with the path to msvcr120.dll and msvcp120.dll
-Source: @VC_RUNTIME@; DestDir: {app}\bin; Flags: ignoreversion
-Source: @VCPP_RUNTIME@; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#MSVC_RUNTIME_DIR}\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#MSVC_RUNTIME_DIR}\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#OPENSSL_ROOT_DIR}\ssl\openssl.cnf; DestDir: {app}\bin; Flags: ignoreversion
 
 Source: {#QT_PATH}\bin\icudt@ICU_VERSION_TO_PACKAGE@.dll; DestDir: {app}\bin; Flags: ignoreversion
