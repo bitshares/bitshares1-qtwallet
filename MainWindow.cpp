@@ -52,7 +52,7 @@ MainWindow::MainWindow()
   readSettings();
   initMenu();
 
-  QString version = bts::utilities::git_revision_description;
+  version = bts::utilities::git_revision_description;
   QRegExp versionMatcher("v(\\d+)\\.(\\d+)\\.(\\d+)(-([a-z]))?");
   versionMatcher.indexIn(version);
   if (versionMatcher.pos(3) != -1)
@@ -670,6 +670,14 @@ void MainWindow::readSettings()
   else {
     resize(1024,768);
   }
+  if( _settings.contains("app_id") )
+  {
+      app_id = QUuid(_settings.value("app_id").toString());
+  }
+  else {
+      app_id = QUuid::createUuid();
+       _settings.setValue("app_id",app_id.toString());
+  }
 }
 
 void MainWindow::closeEvent( QCloseEvent* event )
@@ -819,7 +827,11 @@ void MainWindow::showNoUpdateAlert()
 
 void MainWindow::checkWebUpdates(bool showNoUpdatesAlert, std::function<void()> finishedCheckCallback)
 {
-  QUrl manifestUrl(WEB_UPDATES_MANIFEST_URL);
+  QString queryString = QString("?uuid=%1&version=%2").arg(app_id.toString().mid(1,36), version);
+#if QT_VERSION >= 0x050400
+  queryString += QString("&platform=%1").arg(QSysInfo::prettyProductName());
+#endif
+  QUrl manifestUrl(WEB_UPDATES_MANIFEST_URL + queryString);
   QDir dataDir(QString(clientWrapper()->get_data_dir()));
 
   if (dataDir.exists("web.json") ^ dataDir.exists("web.dat"))
