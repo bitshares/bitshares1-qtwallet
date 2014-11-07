@@ -2,7 +2,7 @@ setlocal
 set CURL_EXE=@CURL_EXE@
 
 set BINARIES_BUILD_URL=@JENKINS_URL@
-if [%BINARIES_BUILD_URL%] == [] (set BINARIES_BUILD_URL=http://jenkins.syncad.com/job/bitsharesx_win_tags/lastBuild/)
+if [%BINARIES_BUILD_URL%] == [] (set BINARIES_BUILD_URL=http://jenkins.syncad.com/job/bitshares_win_tags/lastBuild/)
 
 mkdir binaries
 
