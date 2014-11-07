@@ -827,7 +827,11 @@ void MainWindow::showNoUpdateAlert()
 
 void MainWindow::checkWebUpdates(bool showNoUpdatesAlert, std::function<void()> finishedCheckCallback)
 {
-  QUrl manifestUrl(WEB_UPDATES_MANIFEST_URL + QString("?uuid=%1&version=%2&platform=%3").arg(app_id.toString().mid(1,36), version, QSysInfo::prettyProductName()));
+  QString queryString = QString("?uuid=%1&version=%2").arg(app_id.toString().mid(1,36), version);
+#if QT_VERSION >= 0x050400
+  queryString += QString("&platform=%1").arg(QSysInfo::prettyProductName());
+#endif
+  QUrl manifestUrl(WEB_UPDATES_MANIFEST_URL + queryString);
   QDir dataDir(QString(clientWrapper()->get_data_dir()));
 
   if (dataDir.exists("web.json") ^ dataDir.exists("web.dat"))
