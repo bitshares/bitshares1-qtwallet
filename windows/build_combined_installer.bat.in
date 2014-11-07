@@ -1,0 +1,40 @@
+setlocal
+set CURL_EXE="@CURL_EXE@"
+
+set BINARIES_BUILD_URL=@JENKINS_URL@
+if [%BINARIES_BUILD_URL%] == [] (set BINARIES_BUILD_URL=http://jenkins.syncad.com/job/bitsharesx_win_tags/lastBuild/)
+
+mkdir binaries
+
+REM download the 32-bit binaries
+mkdir binaries\x86
+set ARTIFACT_URL_X86=%BINARIES_BUILD_URL%PLATFORM=win32/artifact/
+%CURL_EXE% -o binaries\x86\BitShares.exe "%ARTIFACT_URL_X86%build/programs/qt_wallet/bin/BitSharesX.exe"
+if not errorlevel 0 exit /b %ERRORLEVEL%
+%CURL_EXE% -o binaries\x86\bitshares_client.exe "%ARTIFACT_URL_X86%build/programs/client/RelWithDebInfo/bitshares_client.exe"
+if not errorlevel 0 exit /b %ERRORLEVEL%
+
+REM download the 64-bit binaries
+mkdir binaries\x64
+set ARTIFACT_URL_X64=%BINARIES_BUILD_URL%PLATFORM=win64/artifact/
+%CURL_EXE% -o binaries\x64\BitShares.exe "%ARTIFACT_URL_X64%build/programs/qt_wallet/bin/BitSharesX.exe"
+if not errorlevel 0 exit /b %ERRORLEVEL%
+%CURL_EXE% -o binaries\x64\bitshares_client.exe "%ARTIFACT_URL_X64%build/programs/client/RelWithDebInfo/bitshares_client.exe"
+if not errorlevel 0 exit /b %ERRORLEVEL%
+
+REM download the installer script
+%CURL_EXE% -o setup_combined.iss "%ARTIFACT_URL_X64%/build/programs/qt_wallet/setup_combined.iss"
+if not errorlevel 0 exit /b %ERRORLEVEL%
+
+REM download the splash screen image needed for the installer
+%CURL_EXE% -o inno_setup_img.bmp "%ARTIFACT_URL_X64%/bitshares_toolkit/programs/qt_wallet/images/inno_setup_img.bmp"
+if not errorlevel 0 exit /b %ERRORLEVEL%
+
+REM build the installer
+"@ISCC_EXE@" setup_combined.iss
+if not errorlevel 0 exit /b %ERRORLEVEL%
+
+REM scan for viruses
+"@CLAMSCAN_EXE@" -d "@CLAMSCAN_DB@" BitSharesX-@VERSION_STRING@.exe
+if not errorlevel 0 ( rename BitSharesX-@VERSION_STRING@.exe BitSharesX-@VERSION_STRING@-bad.exe & exit 1 )
+exit /B 0

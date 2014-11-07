@@ -1,0 +1,185 @@
+#define APPNAME "@APP_NAME@"
+#define BITSHARES_ROOT_X86 "binaries\x86"
+#define BITSHARES_ROOT_X64 "binaries\x64"
+
+#define QT_PATH_X86 "@QT_PATH_X86@"
+#define QT_PATH_X64 "@QT_PATH_X64@"
+
+#define OPENSSL_ROOT_DIR_X86 "@OPENSSL_ROOT_DIR_X86@"
+#define OPENSSL_ROOT_DIR_X64 "@OPENSSL_ROOT_DIR_X64@"
+
+#define MSVC_RUNTIME_DIR_X86 "@MSVC_RUNTIME_DIR_X86@"
+#define MSVC_RUNTIME_DIR_X64 "@MSVC_RUNTIME_DIR_X64@"
+
+; Comment following out if you do not want to include crash report dlls
+; INCLUDE_CRASHRPT_DEFINE gets substituted with "define" or "undef"
+#define USE_CRASHRPT
+#define CRASHRPT_BIN_DIR_X86 "@CRASHRPT_BIN_DIR_X86@"
+#define CRASHRPT_BIN_DIR_X64 "@CRASHRPT_BIN_DIR_X64@"
+
+#define CUSTOM_URL_SCHEME "@CUSTOM_URL_SCHEME@"
+
+#define VERSION "@VERSION_STRING@"
+#define NUMERIC_VERSION "@NUMERIC_ONLY_VERSION_STRING@"
+
+[Setup]
+AppPublisher=BitShares
+AppPublisherURL=http://bitshares.org
+AppVersion={#VERSION}
+AppName={#APPNAME}
+AppVerName={#APPNAME} {#VERSION}
+DefaultDirName={pf}\{#APPNAME}
+DefaultGroupName={#APPNAME}
+Compression=lzma/Ultra
+SolidCompression=true
+VersionInfoVersion={#NUMERIC_VERSION}
+VersionInfoCompany=BitShares
+VersionInfoDescription={#APPNAME}
+AppCopyright=(c) 2014 BitShares
+DirExistsWarning=no
+DisableStartupPrompt=true
+WindowVisible=false
+AppSupportURL=http://bitshares.org
+AppUpdatesURL=http://bitshares.org
+;AppReadmeFile={app}\README.TXT
+ShowLanguageDialog=no
+LanguageDetectionMethod=none
+AppID=68ad7005-8eee-49c9-95ce-9eed97e5b347
+RestartIfNeededByRun=false
+DisableFinishedPage=false
+DisableProgramGroupPage=true
+DisableReadyPage=true
+OutputDir=.
+OutputBaseFilename={#APPNAME}-{#VERSION}
+WizardImageFile=inno_setup_img.bmp
+ArchitecturesInstallIn64BitMode=x64
+SignTool=signtool
+
+[Tasks]
+;Name: desktopicon; Description: Create a &desktop icon; GroupDescription: Additional icons:; Flags: checkedonce
+
+[CustomMessages]
+
+
+[_ISTool]
+EnableISX=true
+
+[LangOptions]
+LanguageCodePage=0
+
+[Languages]
+;Name: en; MessagesFile: compiler:Default.isl; LicenseFile: license.rtf
+
+[Files]
+; BitShares binaries
+Source: {#BITSHARES_ROOT_X64}\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#BITSHARES_ROOT_X64}\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+
+Source: {#BITSHARES_ROOT_X86}\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#BITSHARES_ROOT_X86}\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+
+; VC_RUNTIME and VCPP_RUNTIME get substituted with the path to msvcr120.dll and msvcp120.dll
+Source: {#MSVC_RUNTIME_DIR_X64}\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#MSVC_RUNTIME_DIR_X64}\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+
+Source: {#MSVC_RUNTIME_DIR_X86}\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#MSVC_RUNTIME_DIR_X86}\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+
+; OpenSSL -- we link OpenSSL statically, so we don't need DLLs.
+; The openssl.cnf file is the same for both the 32- and 64-bit
+; so we only need one command
+Source: {#OPENSSL_ROOT_DIR_X64}\ssl\openssl.cnf; DestDir: {app}\bin; Flags: ignoreversion
+
+; 64-bit Qt
+Source: {#QT_PATH_X64}\bin\icudt@ICU_VERSION_TO_PACKAGE@.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\icuin@ICU_VERSION_TO_PACKAGE@.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\icuuc@ICU_VERSION_TO_PACKAGE@.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\libEGL.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\libGLESv2.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Core.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Gui.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Multimedia.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5MultimediaWidgets.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Network.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5OpenGL.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Positioning.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5PrintSupport.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Qml.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Quick.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Sensors.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Sql.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5WebKit.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5WebKitWidgets.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\bin\Qt5Widgets.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+
+Source: {#QT_PATH_X64}\plugins\platforms\qwindows.dll; DestDir: {app}\bin\platforms; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\imageformats\qgif.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\imageformats\qico.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\imageformats\qjpeg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\imageformats\qsvg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\imageformats\qsvg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\accessible\qtaccessiblequick.dll; DestDir: {app}\bin\accessible; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\accessible\qtaccessiblewidgets.dll; DestDir: {app}\bin\accessible; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#QT_PATH_X64}\plugins\printsupport\windowsprintersupport.dll; DestDir: {app}\bin\printsupport; Flags: ignoreversion; Check: Is64BitInstallMode
+
+; 32-bit Qt
+Source: {#QT_PATH_X86}\bin\icudt53.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\icuin53.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\icuuc53.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\libEGL.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\libGLESv2.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Core.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Gui.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Multimedia.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5MultimediaWidgets.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Network.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5OpenGL.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Positioning.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5PrintSupport.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Qml.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Quick.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Sensors.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Sql.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5WebKit.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5WebKitWidgets.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\bin\Qt5Widgets.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+
+Source: {#QT_PATH_X86}\plugins\platforms\qwindows.dll; DestDir: {app}\bin\platforms; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\imageformats\qgif.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\imageformats\qico.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\imageformats\qjpeg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\imageformats\qsvg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\imageformats\qsvg.dll; DestDir: {app}\bin\imageformats; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\accessible\qtaccessiblequick.dll; DestDir: {app}\bin\accessible; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\accessible\qtaccessiblewidgets.dll; DestDir: {app}\bin\accessible; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#QT_PATH_X86}\plugins\printsupport\windowsprintersupport.dll; DestDir: {app}\bin\printsupport; Flags: ignoreversion; Check: not Is64BitInstallMode
+
+
+#ifdef USE_CRASHRPT
+Source: {#CRASHRPT_BIN_DIR_X64}\crashrpt_lang.ini; DestDir: {app}\bin; Flags: ignoreversion
+
+Source: {#CRASHRPT_BIN_DIR_X64}\CrashRpt1402.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#CRASHRPT_BIN_DIR_X64}\CrashSender1402.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#CRASHRPT_BIN_DIR_X64}\dbghelp.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+
+Source: {#CRASHRPT_BIN_DIR_X86}\CrashRpt1402.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#CRASHRPT_BIN_DIR_X86}\CrashSender1402.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#CRASHRPT_BIN_DIR_X86}\dbghelp.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+#endif
+
+[Icons]
+Name: {group}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: "{group}\Uninstall {#APPNAME}"; Filename: "{uninstallexe}"
+Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
+
+[Run]
+Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run 
+
+[Registry]
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none; 
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; ValueType: string; ValueName: "URL Protocol"; ValueData: "";
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell"; Flags: uninsdeletekey; ValueType: none
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open"; Flags: uninsdeletekey; ValueType: none
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open\command"; Flags: uninsdeletekey; ValueType: string; ValueName: ""; ValueData: "{app}\bin\{#APPNAME}.exe %1";
+
+[Code]
