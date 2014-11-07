@@ -23,11 +23,11 @@ if not errorlevel 0 exit /b %ERRORLEVEL%
 if not errorlevel 0 exit /b %ERRORLEVEL%
 
 REM download the installer script
-"%CURL_EXE%" -o setup_combined.iss "%ARTIFACT_URL_X64%/build/programs/qt_wallet/setup_combined.iss"
+"%CURL_EXE%" -o setup_combined.iss "%ARTIFACT_URL_X64%build/programs/qt_wallet/setup_combined.iss"
 if not errorlevel 0 exit /b %ERRORLEVEL%
 
 REM download the splash screen image needed for the installer
-"%CURL_EXE%" -o inno_setup_img.bmp "%ARTIFACT_URL_X64%/bitshares_toolkit/programs/qt_wallet/images/inno_setup_img.bmp"
+"%CURL_EXE%" -o inno_setup_img.bmp "%ARTIFACT_URL_X64%bitshares_toolkit/programs/qt_wallet/images/inno_setup_img.bmp"
 if not errorlevel 0 exit /b %ERRORLEVEL%
 
 REM build the installer
