@@ -1,7 +1,7 @@
 setlocal
 set CURL_EXE=@CURL_EXE@
 
-set BINARIES_JOB_URL=@JOB_URL@
+set BINARIES_JOB_URL=@JENKINS_URL@job/@JOB_NAME@/
 set BINARIES_JOB_NUMBER=@BUILD_NUMBER@
 
 mkdir binaries
