@@ -36,11 +36,11 @@
     <file>htdocs/img/signal_3.png</file>
     <file>htdocs/img/signal_4.png</file>
     <file>htdocs/img/user.png</file>
-    <file>htdocs/img/background-dark.jpg</file>
-    <file>htdocs/img/background.jpg</file>
-    <file>htdocs/img/icon.png</file>
-    <file>htdocs/img/logo-head.png</file>
-    <file>htdocs/img/logo-xl-white-shadow.png</file>
+    <file>htdocs/img/xt-background-dark.jpg</file>
+    <file>htdocs/img/xt-background.jpg</file>
+    <file>htdocs/img/xt-icon.png</file>
+    <file>htdocs/img/xts-logo-head.png</file>
+    <file>htdocs/img/xts-logo-xl-white-shadow.png</file>
     <file>htdocs/js/app.js</file>
     <file>htdocs/webfonts/fontawesome-webfont.eot</file>
     <file>htdocs/webfonts/fontawesome-webfont.ttf</file>
