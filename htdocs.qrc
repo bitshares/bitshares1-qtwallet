@@ -12,16 +12,16 @@
     <file>htdocs/img/bitsharesIcon.png</file>
     <file>htdocs/img/bitsharesTransparentLow.png</file>
     <file>htdocs/img/bs-double-trans.png</file>
-    <file>htdocs/img/bts-icon-white-transparent.png</file>
-    <file>htdocs/img/bts-logo-gray.png</file>
-    <file>htdocs/img/bts-logo.svg</file>
-    <file>htdocs/img/bts-background.jpg</file>
-    <file>htdocs/img/bts-background@2x.jpg</file>
-    <file>htdocs/img/bts-ico-blue.svg</file>
-    <file>htdocs/img/bts-ico-w.svg</file>
-    <file>htdocs/img/bts-logo-blue.svg</file>
-    <file>htdocs/img/bts-logo-ico.svg</file>
-    <file>htdocs/img/bts-logo-w.svg</file>
+    <file>htdocs/img/icon-white-transparent.png</file>
+    <file>htdocs/img/logo-gray.png</file>
+    <file>htdocs/img/logo.svg</file>
+    <file>htdocs/img/background.jpg</file>
+    <file>htdocs/img/background@2x.jpg</file>
+    <file>htdocs/img/ico-blue.svg</file>
+    <file>htdocs/img/ico-w.svg</file>
+    <file>htdocs/img/logo-blue.svg</file>
+    <file>htdocs/img/logo-ico.svg</file>
+    <file>htdocs/img/logo-w.svg</file>
     <file>htdocs/img/delegate-background.jpg</file>
     <file>htdocs/img/delegate-background.png</file>
     <file>htdocs/img/delegate-hue.jpg</file>
@@ -36,11 +36,10 @@
     <file>htdocs/img/signal_3.png</file>
     <file>htdocs/img/signal_4.png</file>
     <file>htdocs/img/user.png</file>
-    <file>htdocs/img/xt-background-dark.jpg</file>
-    <file>htdocs/img/xt-background.jpg</file>
-    <file>htdocs/img/xt-icon.png</file>
-    <file>htdocs/img/xts-logo-head.png</file>
-    <file>htdocs/img/xts-logo-xl-white-shadow.png</file>
+    <file>htdocs/img/background-dark.jpg</file>
+    <file>htdocs/img/icon.png</file>
+    <file>htdocs/img/logo-head.png</file>
+    <file>htdocs/img/logo-xl-white-shadow.png</file>
     <file>htdocs/js/app.js</file>
     <file>htdocs/webfonts/fontawesome-webfont.eot</file>
     <file>htdocs/webfonts/fontawesome-webfont.ttf</file>
