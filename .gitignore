@@ -11,7 +11,7 @@ htdocs/
 *.cmake
 *.cbp
 CMakeFiles
-BitSharesXT
+BitShares
 qt_wallet
 *_automoc.cpp
 qrc_*.cpp
