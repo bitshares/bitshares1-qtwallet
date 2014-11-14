@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.0" language="ru_RU">
+<TS version="2.0" language="zh_CN">
 <context>
     <name>BitSharesApp</name>
     <message>
@@ -315,48 +315,48 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="634"/>
         <source>You are about to restore a wallet backup. This will back up and replace your current wallet! Are you sure you wish to continue?</source>
-        <translation>Вы собираетесь восстановить бумажник из резервной копии. Эта резервная копия заменит существующий бумажник! Вы уверены, что хотите продолжить?</translation>
+        <translation>你将要恢复一个钱包备份。这样会备份而且替换你现在的钱包！你确定你想继续吗？</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="635"/>
         <source>Yes, back up and replace my wallet</source>
-        <translation>Да, сделать резервную копию и заменить мой бумажник</translation>
+        <translation>是的，备份而且替换我的钱包</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="645"/>
         <source>Import Wallet Passphrase</source>
-        <translation>Пароль для импорта бумажника</translation>
+        <translation>导入钱包的口令</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="646"/>
         <source>Please enter the passphrase for the wallet you are restoring.</source>
-        <translation>Пожалуйста, введите пароль от бумажника, который Вы хотите восстановить.</translation>
+        <translation>请为你正在恢复的钱包输入口令。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="663"/>
         <source>Wallet Restore Failed</source>
-        <translation>Ошибка восстановления бумажника</translation>
+        <translation>钱包恢复失败</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="664"/>
         <source>Failed to restore wallet backup. Your original wallet has been restored. Error: %1</source>
-        <translation>Не удалось восстановить бумажник из резервной копии. Был восстановлен Ваш оригинальный бумажник. Ошибка: %1</translation>
+        <translation>恢复钱包备份失败。你的原始钱包已经被恢复。错误: %1</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="675"/>
         <source>File</source>
-        <translation>Файл</translation>
+        <translation>文件</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="678"/>
         <location filename="../MainWindow.cpp" line="680"/>
         <source>Export Wallet</source>
-        <translation>Экспортировать бумажник</translation>
+        <translation>导出钱包</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="687"/>
         <source>Export Failed</source>
-        <translation>Ошибка при экспорте</translation>
+        <translation>导出失败</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="688"/>
@@ -372,12 +372,12 @@ Memo: %4</source>
         <location filename="../MainWindow.cpp" line="695"/>
         <location filename="../MainWindow.cpp" line="697"/>
         <source>Open URL</source>
-        <translation>Открыть URL</translation>
+        <translation>打开URL</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="698"/>
         <source>Please enter a URL to open</source>
-        <translation>Пожалуйста, введите URL, который Вы хотите открыть</translation>
+        <translation>请输入一个URL以供打开</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="707"/>
@@ -387,23 +387,23 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="709"/>
         <source>Change Password</source>
-        <translation>Изменение пароля</translation>
+        <translation>修改密码</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="710"/>
         <source>Check for Updates</source>
-        <translation>Проверить наличие обновлений</translation>
+        <translation>检查是否有更新</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="711"/>
         <source>Remove Updates</source>
-        <translation>Удалить обновления</translation>
+        <translation>移除更新</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="328"/>
         <location filename="../MainWindow.cpp" line="712"/>
         <source>Quit</source>
-        <translation>Выход</translation>
+        <translation>退出</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="712"/>
@@ -413,19 +413,19 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="714"/>
         <source>Accounts</source>
-        <translation>Аккаунты</translation>
+        <translation>账户</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="752"/>
         <source>No new updates are available.</source>
-        <translation>Нет новых обновлений.</translation>
+        <translation>暂时没有可用的更新.</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="753"/>
         <location filename="../MainWindow.cpp" line="835"/>
         <location filename="../MainWindow.cpp" line="863"/>
         <source>%1 Update</source>
-        <translation>%1 обновление</translation>
+        <translation>%1 更新</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="827"/>
@@ -435,7 +435,7 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="862"/>
         <source>Are you sure you want to remove all installed updates?</source>
-        <translation>Вы уверены, что хотите удалить все установленные обновления?</translation>
+        <translation>你确定你要移除所有已经安装的更新吗？</translation>
     </message>
 </context>
 <context>
@@ -443,12 +443,12 @@ Memo: %4</source>
     <message>
         <location filename="../BitSharesApp.cpp" line="412"/>
         <source>Loading configuration...</source>
-        <translation>Загрузка конфигурации...</translation>
+        <translation>正在装载配置...</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="435"/>
         <source>Go to My Accounts</source>
-        <translation>Перейти к Мои Аккаунты</translation>
+        <translation>转到我的账户</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="435"/>
@@ -458,7 +458,7 @@ Memo: %4</source>
     <message>
         <location filename="../BitSharesApp.cpp" line="436"/>
         <source>Create Account</source>
-        <translation>Создать аккаунт</translation>
+        <translation>创建账户</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="436"/>
@@ -468,12 +468,12 @@ Memo: %4</source>
     <message>
         <location filename="../BitSharesApp.cpp" line="437"/>
         <source>Import Account</source>
-        <translation>Импортировать аккаунт</translation>
+        <translation>导入账户</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="438"/>
         <source>New Contact</source>
-        <translation>Новый контакт</translation>
+        <translation>新的联系人</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="438"/>
@@ -483,7 +483,7 @@ Memo: %4</source>
     <message>
         <location filename="../BitSharesApp.cpp" line="476"/>
         <source>Critical Error</source>
-        <translation>Критическая ошибка</translation>
+        <translation>严重错误</translation>
     </message>
 </context>
 </TS>
