@@ -257,60 +257,60 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="457"/>
         <source>Login</source>
-        <translation>Вход</translation>
+        <translation>登陆</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="458"/>
         <source>You are about to log in to %1 as %2. Would you like to continue?</source>
-        <translation>Вы собираетесь выполнить вход в %1, как %2. Продолжить?</translation>
+        <translation>你将要以 %2 的角色登陆到 1% ，你想继续吗？</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="481"/>
         <location filename="../MainWindow.cpp" line="636"/>
         <source>Cancel</source>
-        <translation>Отмена</translation>
+        <translation>取消</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="485"/>
         <source>You are logging in to %1. Please select the account to login with:</source>
-        <translation>Выполняется вход в %1. Пожалуйста, выберите аккаунт при помощи которого Вы ходите выполнить вход:</translation>
+        <translation>你正在登陆到 %1 。请选择你想用于登陆的账户：</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="542"/>
         <source>No Accounts Available</source>
-        <translation>Нет доступных аккаунтов</translation>
+        <translation>没有可用的账户</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="542"/>
         <source>Could not find any accounts to log in with. Create an account and try again.</source>
-        <translation>Не удалось найти ни одного аккаунта для входа. Создайте аккаунт и попробуйте еще раз.</translation>
+        <translation>不能找到可以用于登陆的账户。创建一个账户并重试。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="563"/>
         <source>Unable to Login</source>
-        <translation>Невозможно выполнить вход</translation>
+        <translation>不能登陆</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="563"/>
         <source>An error occurred during login: %1</source>
-        <translation>Произошла ошибка при входе: %1</translation>
+        <translation>在登陆的时候出现错误： %1 </translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="623"/>
         <location filename="../MainWindow.cpp" line="677"/>
         <source>Import Wallet</source>
-        <translation>Импортировать бумажник</translation>
+        <translation>导入钱包</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="623"/>
         <location filename="../MainWindow.cpp" line="682"/>
         <source>Wallet Backups (*.json)</source>
-        <translation>Резервная копия бумажника (*.json)</translation>
+        <translation>钱包备份(*.json)</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="633"/>
         <source>Restoring Wallet Backup</source>
-        <translation>Восстановление бумажника из резервной копии</translation>
+        <translation>正在恢复钱包的备份</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="634"/>
@@ -361,7 +361,7 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="688"/>
         <source>Could not export wallet because the selected file already exists and cannot be removed.</source>
-        <translation>Не удалось экспортировать бумажник, потому что выбранный файл уже существует и не может быть удален.</translation>
+        <translation>不能导出钱包，因为选中的文件已经存在而且不能被移除。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="694"/>
@@ -418,7 +418,7 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="752"/>
         <source>No new updates are available.</source>
-        <translation>暂时没有可用的更新.</translation>
+        <translation>暂时没有可用的更新。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="753"/>
@@ -430,7 +430,7 @@ Memo: %4</source>
     <message>
         <location filename="../MainWindow.cpp" line="827"/>
         <source>A patch update to version %2.%3.%4-%5 is available for %1. You will not need to restart %1 to install it. You may install it later by selecting Check for Updates from the File menu. Would you like to install it now?</source>
-        <translation>Для %1 доступно обновление до версии %2.%3.%4-%5. Для установки обновления НЕ потребуется перезапуск %1. Вы можете установить данное обновление позже, выбрав &quot;Проверить наличие обновлений&quot; в меню Файл. Хотите установить его сейчас?</translation>
+        <translation>一个给 %1 的补丁更新包到版本 %2.%3.%4-%5 已经可用。你可以安装它而不需要重新启动 %1 。你可以稍后通过从文件菜单选择检测更新的功能来安装它。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="862"/>
