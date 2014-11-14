@@ -6,12 +6,12 @@
     <message>
         <location filename="../BitSharesApp.cpp" line="325"/>
         <source>Adobe Application Manager Detected</source>
-        <translation>Обнаружен Adobe Application Manager</translation>
+        <translation>检测到Adobe应用管理器</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="326"/>
         <source>Warning: %1 has detected the Adobe Application Manager plug-in is installed on this computer at %2. This plug-in crashes when loaded into %1. Please remove this plug-in and restart %1.</source>
-        <translation>Внимание: %1 обнаружил плагин Adobe Application Manager установленный на этом компьютере в %2. Этот плагин приводит к аварийной остановке при загрузке в %1. Пожалуйста, удалите этот плагин и перезапустите %1.</translation>
+        <translation>警告: %1 已经检测到这台电脑安装了Adobe应用管理器插件在 %2 。这个插件在载入 %1的时候会崩溃。请移除这个插件并重新启动 %1。</translation>
     </message>
     <message>
         <location filename="../BitSharesApp.cpp" line="455"/>
@@ -29,7 +29,7 @@
     <message>
         <location filename="../ClientWrapper.cpp" line="79"/>
         <source>It appears that %1 crashed last time it was running. If this is happening frequently, it could be caused by a corrupted database. Would you like to reset the database (this will take several minutes) or to continue normally? Resetting the database will NOT lose any of your information or funds.</source>
-        <translation>Похоже, что во время последнего запуска %1 произошло аварийное завершение. Если это происходит часто, то это может быть вызвано поврежденной базой данных. Хотите сбросить базу данных (это займет несколько минут) или продолжить в обычном режиме? Сброс базы данных НЕ приведет к потере Вашей информации или средств.</translation>
+        <translation>%1 在上次运行的时候貌似崩溃了。如果这经常发生，可能是由于一个损坏的数据库导致的。你想重设数据库（可能要花几分钟时间）还是继续像平常一样运行？重设数据库不会造成你的信息或者资金损失。</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="85"/>
@@ -79,32 +79,32 @@
     <message>
         <location filename="../ClientWrapper.cpp" line="214"/>
         <source>An error occurred while trying to start. Please try restarting the application.</source>
-        <translation>Произошла ошибка при запуске. Пожалуйста, попробуйте перезагрузить приложение.</translation>
+        <translation>正在启动的时候发生了错误。请试着重启程序。</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="216"/>
         <source>An error occurred while trying to start.</source>
-        <translation>Произошла ошибка при запуске.</translation>
+        <translation>正在启动的时候发生了错误。</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="265"/>
         <source>Set Delegate Approval</source>
-        <translation>Установить одобрение для делегата</translation>
+        <translation>设置受托人认可</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="266"/>
         <source>Would you like to update approval rating of Delegate %1 to %2?</source>
-        <translation>Вы действительно хотите обновить рейтинг одобрения делагата %1 в %2?</translation>
+        <translation>你想更新受托人评分 %1 到 %2？</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="274"/>
         <source>Invalid Account</source>
-        <translation>Недопустимый аккаунт</translation>
+        <translation>无效账户</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="274"/>
         <source>Account %1 is not a delegate, so its approval cannot be set.</source>
-        <translation>Аккаунт %1 не является делегатом, поэтому он не может быть одобрен.</translation>
+        <translation>账户 %1 不是一个受托人，因此它不能设置认可。</translation>
     </message>
 </context>
 <context>
@@ -112,12 +112,12 @@
     <message>
         <location filename="../MainWindow.cpp" line="90"/>
         <source>Closing to Tray</source>
-        <translation>Свернуть программу в панель задач</translation>
+        <translation>关闭窗口并缩小到常驻栏里</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="91"/>
         <source>You have closed the %1 window. %1 will continue running in the system tray. To quit, use the Quit option in the menu.</source>
-        <translation>Вы закрываете окно %1. %1 будет продолжать работать в панели задач. Чтобы выйти из программы, используйте команду Выход из меню.</translation>
+        <translation>你已经关闭了 %1 窗口。 %1 会继续运行在系统的常驻栏。要退出的话，使用菜单里的退出选项。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="93"/>
@@ -128,7 +128,7 @@
     <message>
         <location filename="../MainWindow.cpp" line="94"/>
         <source>Don&apos;t Show Again</source>
-        <translation>Больше не предупреждать</translation>
+        <translation>不要再次显示</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="150"/>
@@ -138,7 +138,7 @@
         <location filename="../MainWindow.cpp" line="522"/>
         <location filename="../MainWindow.cpp" line="532"/>
         <source>Invalid URL</source>
-        <translation>Неправильный URL</translation>
+        <translation>无效的URL</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="150"/>
@@ -148,111 +148,111 @@
         <location filename="../MainWindow.cpp" line="522"/>
         <location filename="../MainWindow.cpp" line="532"/>
         <source>The URL provided is not valid.</source>
-        <translation>Указан некорректный URL.</translation>
+        <translation>提供的URL是无效的。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="172"/>
         <source>Invalid Account</source>
-        <translation>Недопустимый аккаунт</translation>
+        <translation>不正确的账户</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="172"/>
         <source>The requested account does not exist.</source>
-        <translation>Запрашиваемый аккаунт не существует.</translation>
+        <translation>请求访问的账户不存在</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="228"/>
         <source>Invalid Block Number</source>
-        <translation>Недопустимый номер блока</translation>
+        <translation>无效的区块号码</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="228"/>
         <source>The specified block number does not exist.</source>
-        <translation>Указанный номер блока не существует.</translation>
+        <translation>指定的区块号码并不存在。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="327"/>
         <source>Show Window</source>
-        <translation>Показать</translation>
+        <translation>显示窗口</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="338"/>
         <source>You</source>
-        <translation>Вы</translation>
+        <translation>你</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="340"/>
         <source>Someone</source>
-        <translation>Кто-то</translation>
+        <translation>某人</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="348"/>
         <source>%1 sent you %2</source>
-        <translation>%1 отправил Вам %2</translation>
+        <translation>%1 发送了 %2 给你</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="349"/>
         <source>%1 just received %2 from %3!
 
 Memo: %4</source>
-        <translation>%1 только что получил %2 от %3!
+        <translation>%1 刚从 %3 收到了 %2 !
 
-Примечание: %4</translation>
+备注栏: %4</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="353"/>
         <source>Your short order has been filled</source>
-        <translation>Ваш шорт был выполнен</translation>
+        <translation>你的空单已经成交了</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="354"/>
         <source>You just sold %1 from your short order.</source>
-        <translation>Вы только что продали %1 Вашего шорта.</translation>
+        <translation>你刚从你的空单中卖出了 %1 。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="375"/>
         <source>Invalid Block</source>
-        <translation>Неправильный блок</translation>
+        <translation>无效的区块</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="375"/>
         <source>The specified block ID does not exist.</source>
-        <translation>Указанный идентификатор блока не существует.</translation>
+        <translation>指定的区块ID不存在。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="404"/>
         <source>Unlock Wallet</source>
-        <translation>Разблокировать бумажник</translation>
+        <translation>解锁钱包</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="406"/>
         <source>Incorrect password. Please enter your password to continue.</source>
-        <translation>Неверный пароль. Пожалуйста, введите Ваш пароль для продолжения.</translation>
+        <translation>不正确的密码。请输入你的密码以继续。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="407"/>
         <source>Please enter your password to continue.</source>
-        <translation>Пожалуйста, введите Ваш пароль для продолжения.</translation>
+        <translation>请输入你的密码以继续。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="438"/>
         <source>Misconfigured Website</source>
-        <translation>Неправильно настроенный веб сайт</translation>
+        <translation>错误配置的网站</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="439"/>
         <source>The website you are trying to log into is experiencing problems, and cannot accept logins at this time.</source>
-        <translation>У Веб сайта, в который Вы пытаетесь выполнить вход, возникли проблемы, и он не может принять Ваш запрос на вход.</translation>
+        <translation>你正在尝试登陆进去的网站正发生问题，目前不能接受登陆。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="442"/>
         <source>Out of Sync</source>
-        <translation>Не синхронизирован</translation>
+        <translation>还没有同步好</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="443"/>
         <source>Cannot login right now because your computer is out of sync with the %1 network. Please try again later.</source>
-        <translation>Вы не можете выполнить вход прямо сейчас, потому что Ваш компьютер не синхронизирован с сетью %1. Пожалуйста, повторите попытку позже.</translation>
+        <translation>因为你的计算机与 %1 网络没有同步好，所以暂时不能登陆。请迟点再试。</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="457"/>
