@@ -16,7 +16,7 @@
     <message>
         <location filename="../BitSharesApp.cpp" line="455"/>
         <source>Finished connecting. Launching %1</source>
-        <translation>Подключение завершено. Запуск %1</translation>
+        <translation>完成连接。正在装载 %1</translation>
     </message>
 </context>
 <context>
@@ -24,7 +24,7 @@
     <message>
         <location filename="../ClientWrapper.cpp" line="78"/>
         <source>Crash Detected</source>
-        <translation>Обнаружено аварийное завершение</translation>
+        <translation>检测到崩溃发生</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="79"/>
@@ -34,47 +34,47 @@
     <message>
         <location filename="../ClientWrapper.cpp" line="85"/>
         <source>Reset Database</source>
-        <translation>Сбросить базу данных</translation>
+        <translation>重设数据库</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="86"/>
         <source>Continue Normally</source>
-        <translation>Продолжить в обычном режиме</translation>
+        <translation>依然如常启动</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="149"/>
         <source>Starting %1</source>
-        <translation>Запуск %1</translation>
+        <translation>启动中 %1</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="152"/>
         <source>Reindexing database... Approximately %1% complete.</source>
-        <translation>Переиндексация базы данных... Приблизительно выполнено %1%.</translation>
+        <translation>重新进行数据库索引... 大约 %1% 完成。</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="156"/>
         <source>Wallet is disabled in your configuration file. Please enable the wallet and relaunch the application.</source>
-        <translation>Бумажник отключен в конфигурационном файле. Пожалуйста, включите бумажник и перезапустите приложение.</translation>
+        <translation>在你的配置文件里钱包被禁止了。请允许钱包并重新载入程序。</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="159"/>
         <source>Loading...</source>
-        <translation>Загрузка...</translation>
+        <translation>正在载入...</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="174"/>
         <source>Connecting to %1 network</source>
-        <translation>Подключение к сети %1</translation>
+        <translation>正在连接到 %1 网络</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="182"/>
         <source>Unable to start HTTP server...</source>
-        <translation>Невозможно запустить HTTP сервер...</translation>
+        <translation>无法启动HTTP服务器...</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="207"/>
         <source>An instance of %1 is already running! Please close it and try again.</source>
-        <translation>Экземпляр %1 уже запущен! Пожалуйста, закройте его и повторите попытку.</translation>
+        <translation>%1的一个实例已经在运行！请关闭它并重试。</translation>
     </message>
     <message>
         <location filename="../ClientWrapper.cpp" line="214"/>
