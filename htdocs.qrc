@@ -13,21 +13,23 @@
     <file>htdocs/img/bitsharesIcon.png</file>
     <file>htdocs/img/bitsharesTransparentLow.png</file>
     <file>htdocs/img/bs-double-trans.png</file>
-    <file>htdocs/img/bts-icon-white-transparent.png</file>
-    <file>htdocs/img/bts-logo-gray.png</file>
-    <file>htdocs/img/bts-logo.svg</file>
     <file>htdocs/img/bts-background.jpg</file>
     <file>htdocs/img/bts-background@2x.jpg</file>
     <file>htdocs/img/bts-ico-blue.svg</file>
     <file>htdocs/img/bts-ico-w.svg</file>
+    <file>htdocs/img/bts-icon-white-transparent.png</file>
     <file>htdocs/img/bts-logo-blue.svg</file>
+    <file>htdocs/img/bts-logo-gray.png</file>
     <file>htdocs/img/bts-logo-ico.svg</file>
     <file>htdocs/img/bts-logo-w.svg</file>
+    <file>htdocs/img/bts-logo.svg</file>
     <file>htdocs/img/delegate-background.jpg</file>
     <file>htdocs/img/delegate-background.png</file>
     <file>htdocs/img/delegate-hue.jpg</file>
     <file>htdocs/img/delegate-hue@2x.jpg</file>
     <file>htdocs/img/down-triangle.png</file>
+    <file>htdocs/img/flowers-background.jpg</file>
+    <file>htdocs/img/logo-ico-blue.svg</file>
     <file>htdocs/img/logo-ico.svg</file>
     <file>htdocs/img/signal_0 with bars.png</file>
     <file>htdocs/img/signal_0.png</file>
@@ -43,10 +45,10 @@
     <file>htdocs/img/xts-logo-head.png</file>
     <file>htdocs/img/xts-logo-xl-white-shadow.png</file>
     <file>htdocs/js/app.js</file>
+    <file>htdocs/webfonts/FontAwesome.otf</file>
     <file>htdocs/webfonts/fontawesome-webfont.eot</file>
     <file>htdocs/webfonts/fontawesome-webfont.ttf</file>
     <file>htdocs/webfonts/fontawesome-webfont.woff</file>
-    <file>htdocs/webfonts/FontAwesome.otf</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.eot</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.ttf</file>
     <file>htdocs/webfonts/glyphicons-halflings-regular.woff</file>
