@@ -71,7 +71,6 @@ public Q_SLOTS:
     void goToBlock(uint32_t blockNumber);
     void goToBlock(QString blockId);
     void goToTransaction(QString transactionId);
-
     void importWallet();
 
 private Q_SLOTS:
@@ -90,4 +89,5 @@ private:
     void initMenu();
     void showNoUpdateAlert();
     bool verifyUpdateSignature(QByteArray updatePackage);
+    void goToRefCode(QStringList components);
 };
