@@ -242,6 +242,10 @@ void MainWindow::processCustomUrl(QString url)
   {
     goToTransaction(components[1]);
   }
+  else if( components[0] == "RefCode" )
+  {
+    goToRefCode(components);
+  }
 }
 
 ClientWrapper *MainWindow::clientWrapper() const
@@ -446,6 +450,30 @@ void MainWindow::goToTransaction(QString transactionId)
 
   if (error)
     errorDialog.exec();
+}
+
+void MainWindow::goToRefCode(QStringList components)
+{
+    if(!walletIsUnlocked()) return;
+    
+    QString faucet;
+    QString code;
+    QStringList parameters = components.mid(1);
+    
+    while (!parameters.empty()) {
+        QString parameterName = parameters.takeFirst();
+        if (parameterName == "faucet")
+            faucet = parameters.takeFirst();
+        else if (parameterName == "code")
+            code = parameters.takeFirst();
+        else
+            parameters.pop_front();
+    }
+    
+    QString url = QStringLiteral("/referral_code?faucet=%1&code=%2")
+    .arg(faucet)
+    .arg(code);
+    navigateTo(url);
 }
 
 Html5Viewer* MainWindow::getViewer()
