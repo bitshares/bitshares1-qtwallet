@@ -834,7 +834,7 @@ bool MainWindow::verifyUpdateSignature (QByteArray updatePackage)
 
   auto authorized_signers = WEB_UPDATES_SIGNING_KEYS;
   for (auto signature : _webUpdateDescription.signatures)
-    authorized_signers.erase(bts::blockchain::address(fc::ecc::public_key(signature, hash)));
+    authorized_signers.erase(bts::blockchain::address(fc::ecc::public_key(signature, hash, false)));
   if ((WEB_UPDATES_SIGNING_KEYS.size() - authorized_signers.size()) >= WEB_UPDATES_SIGNATURE_REQUIREMENT)
     return true;
   elog("Rejecting update signature: signature requirement failed (got ${match}/${req} matches)", ("match", WEB_UPDATES_SIGNING_KEYS.size() - authorized_signers.size())("req", WEB_UPDATES_SIGNATURE_REQUIREMENT));
