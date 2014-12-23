@@ -1,10 +1,11 @@
 #pragma once
 
-#include <fc/reflect/reflect.hpp>
-#include <fc/io/json.hpp>
-#include <fc/time.hpp>
-
+#include <bts/blockchain/config.hpp>
 #include <bts/blockchain/types.hpp>
+
+#include <fc/io/json.hpp>
+#include <fc/reflect/reflect.hpp>
+#include <fc/time.hpp>
 
 #include <set>
 #include <vector>
@@ -12,10 +13,10 @@
 const static char*                                          WEB_UPDATES_MANIFEST_URL = "http://bitshares.org/manifest.json";
 const static uint8_t                                        WEB_UPDATES_SIGNATURE_REQUIREMENT = 2;
 const static std::unordered_set<bts::blockchain::address>   WEB_UPDATES_SIGNING_KEYS ({
-    bts::blockchain::address( std::string( "BTS29Q5JSk35JXqLhdDeYxjtFNveEuavHacJ" ) ),
-    bts::blockchain::address( std::string( "BTS2xE2fG2uSKRp6TUZJ5rhucLwTKHi3r3oo" ) ),
-    bts::blockchain::address( std::string( "BTSHGPxYjgsDuhtCineuaC4P4r9jZWMBue1W" ) ),
-    bts::blockchain::address( std::string( "BTS62VST9FZZVMtTKurzzfpK9hp9sijQjkT3" ) )
+    bts::blockchain::address( BTS_ADDRESS_PREFIX + std::string( "29Q5JSk35JXqLhdDeYxjtFNveEuavHacJ" ) ),
+    bts::blockchain::address( BTS_ADDRESS_PREFIX + std::string( "2xE2fG2uSKRp6TUZJ5rhucLwTKHi3r3oo" ) ),
+    bts::blockchain::address( BTS_ADDRESS_PREFIX + std::string( "HGPxYjgsDuhtCineuaC4P4r9jZWMBue1W" ) ),
+    bts::blockchain::address( BTS_ADDRESS_PREFIX + std::string( "62VST9FZZVMtTKurzzfpK9hp9sijQjkT3" ) )
 });
 
 struct WebUpdateManifest
