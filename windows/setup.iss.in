@@ -1,6 +1,7 @@
 ; WIN64_DEFINE gets substituted with "define" or "undef"
 #@WIN64_DEFINE@ WIN64
 #define APPNAME "@APP_NAME@"
+#define APP_ID "@INSTALLER_APP_ID@"
 #define GUI_CLIENT_EXECUTABLE_NAME "@GUI_CLIENT_EXECUTABLE_NAME@"
 #define CLI_CLIENT_EXECUTABLE_NAME "@CLI_CLIENT_EXECUTABLE_NAME@"
 #define BITSHARES_ROOT "@BITSHARES_ROOT@"
@@ -52,7 +53,7 @@ AppUpdatesURL=http://bitshares.org
 ;AppReadmeFile={app}\README.TXT
 ShowLanguageDialog=no
 LanguageDetectionMethod=none
-AppID=68ad7005-8eee-49c9-95ce-9eed97e5b348
+AppID={#APP_ID}
 RestartIfNeededByRun=false
 DisableFinishedPage=false
 DisableProgramGroupPage=true
