@@ -635,7 +635,7 @@ void MainWindow::doLogin(QStringList components)
     }
 
     QUrl url("http://" + QStringList(components.mid(2)).join('/'));
-    QUrlQuery query;
+    QUrlQuery query(url.query());
     query.addQueryItem("client_key",  fc::variant(bts::blockchain::public_key_type(myOneTimeKey.get_public_key())).as_string().c_str());
     query.addQueryItem("client_name", loginUser.c_str());
     query.addQueryItem("server_key", fc::variant(serverOneTimeKey).as_string().c_str());
