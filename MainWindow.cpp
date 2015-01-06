@@ -53,7 +53,9 @@ MainWindow::MainWindow()
   initMenu();
 
   version = bts::utilities::git_revision_description;
-  QRegExp versionMatcher("v(\\d+)\\.(\\d+)\\.(\\d+)(-([a-z]))?");
+  // for an official release, git_revision_description is the git tag, which will
+  // look like bts/0.4.28 or dvs/0.4.29
+  QRegExp versionMatcher(".*/(\\d+)\\.(\\d+)\\.(\\d+)(-([a-z]))?");
   versionMatcher.indexIn(version);
   if (versionMatcher.pos(3) != -1)
   {

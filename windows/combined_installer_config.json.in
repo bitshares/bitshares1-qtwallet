@@ -1,0 +1,5 @@
+{
+  "binaries_job_url": "@JENKINS_URL@job/@JOB_NAME_WITHOUT_PARAMETERS@/",
+  "binaries_job_number": @BUILD_NUMBER@,
+  "git_tag": "@BUILD_TAG@"
+}

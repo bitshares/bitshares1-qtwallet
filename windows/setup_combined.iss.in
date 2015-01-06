@@ -1,4 +1,6 @@
 #define APPNAME "@APP_NAME@"
+#define GUI_CLIENT_EXECUTABLE_NAME "@GUI_CLIENT_EXECUTABLE_NAME@"
+#define CLI_CLIENT_EXECUTABLE_NAME "@CLI_CLIENT_EXECUTABLE_NAME@"
 #define BITSHARES_ROOT_X86 "binaries\x86"
 #define BITSHARES_ROOT_X64 "binaries\x64"
 
@@ -35,7 +37,7 @@ SolidCompression=true
 VersionInfoVersion={#NUMERIC_VERSION}
 VersionInfoCompany=BitShares
 VersionInfoDescription={#APPNAME}
-AppCopyright=(c) 2014 BitShares
+AppCopyright=(c) 2015 BitShares
 DirExistsWarning=no
 DisableStartupPrompt=true
 WindowVisible=false
@@ -72,11 +74,11 @@ LanguageCodePage=0
 
 [Files]
 ; BitShares binaries
-Source: {#BITSHARES_ROOT_X64}\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
-Source: {#BITSHARES_ROOT_X64}\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#BITSHARES_ROOT_X64}\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
+Source: {#BITSHARES_ROOT_X64}\{#CLI_CLIENT_EXECUTABLE_NAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
 
-Source: {#BITSHARES_ROOT_X86}\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
-Source: {#BITSHARES_ROOT_X86}\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#BITSHARES_ROOT_X86}\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
+Source: {#BITSHARES_ROOT_X86}\{#CLI_CLIENT_EXECUTABLE_NAME}.exe; DestDir: {app}\bin; Flags: ignoreversion; Check: not Is64BitInstallMode
 
 ; VC_RUNTIME and VCPP_RUNTIME get substituted with the path to msvcr120.dll and msvcp120.dll
 Source: {#MSVC_RUNTIME_DIR_X64}\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion; Check: Is64BitInstallMode
@@ -168,18 +170,18 @@ Source: {#CRASHRPT_BIN_DIR_X86}\dbghelp.dll; DestDir: {app}\bin; Flags: ignoreve
 #endif
 
 [Icons]
-Name: {group}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {group}\{#APPNAME}; Filename: {app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 Name: "{group}\Uninstall {#APPNAME}"; Filename: "{uninstallexe}"
-Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 
 [Run]
-Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run 
+Filename: {app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; Flags: postinstall; Description: Run 
 
 [Registry]
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none; 
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; ValueType: string; ValueName: "URL Protocol"; ValueData: "";
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell"; Flags: uninsdeletekey; ValueType: none
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open"; Flags: uninsdeletekey; ValueType: none
-Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open\command"; Flags: uninsdeletekey; ValueType: string; ValueName: ""; ValueData: "{app}\bin\{#APPNAME}.exe %1";
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open\command"; Flags: uninsdeletekey; ValueType: string; ValueName: ""; ValueData: "{app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe %1";
 
 [Code]

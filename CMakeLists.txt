@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.11)
 find_package(Git QUIET)
 
 project(qt_wallet)
-set( APP_NAME "BitShares" )
+set( APP_NAME "${GUI_CLIENT_EXECUTABLE_NAME}" )
 
 # Tell CMake where to find our custom Info.plist template
 list( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules" )
@@ -170,8 +170,9 @@ IF( WIN32 )
   		              ERROR_QUIET
 		              OUTPUT_STRIP_TRAILING_WHITESPACE)
 	  if(GIT_DESCRIBE_RESULT EQUAL 0)
-		set(VERSION_STRING ${GIT_DESCRIBE_OUTPUT})
 		# patch up the GIT version tag, which seems to be somewhat arbitrary
+		# convert bts/0.4.10-RC1 -> v0.4.10.1
+		string(REGEX REPLACE "^(bts|xts|dvs)\\/v?" "v" VERSION_STRING "${GIT_DESCRIBE_OUTPUT}")
 		# convert 0.4.10-RC1 -> 0.4.10.1
 		string(REGEX REPLACE "-RC([0-9]+)$" ".\\1" VERSION_STRING_WITHOUT_RC "${VERSION_STRING}")
 		# convert 0.4.10-a to 0.4.10
@@ -202,8 +203,10 @@ IF( WIN32 )
 	set (CRASHRPT_BIN_DIR_X86 $ENV{CRASHRPT_BIN_DIR_X86})
 	set (CRASHRPT_BIN_DIR_X64 $ENV{CRASHRPT_BIN_DIR_X64})
 	
-    configure_file( windows/setup.iss.in setup.iss )
-	configure_file( windows/build_combined_installer.bat.in build_combined_installer.bat )
+	string(REGEX REPLACE "^origin/tags/" "" BUILD_TAG $ENV{GIT_BRANCH})
+	
+  configure_file( windows/setup.iss.in setup.iss )
+	configure_file( windows/combined_installer_config.json.in combined_installer_config.json )
 	configure_file( windows/setup_combined.iss.in setup_combined.iss )
 ENDIF( WIN32 )
 

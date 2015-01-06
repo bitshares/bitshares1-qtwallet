@@ -1,6 +1,8 @@
 ; WIN64_DEFINE gets substituted with "define" or "undef"
 #@WIN64_DEFINE@ WIN64
 #define APPNAME "@APP_NAME@"
+#define GUI_CLIENT_EXECUTABLE_NAME "@GUI_CLIENT_EXECUTABLE_NAME@"
+#define CLI_CLIENT_EXECUTABLE_NAME "@CLI_CLIENT_EXECUTABLE_NAME@"
 #define BITSHARES_ROOT "@BITSHARES_ROOT@"
 #define QT_PATH "@QT_PATH@"
 #define OPENSSL_ROOT_DIR "@OPENSSL_ROOT_DIR@"
@@ -41,7 +43,7 @@ SolidCompression=true
 VersionInfoVersion={#NUMERIC_VERSION}
 VersionInfoCompany=BitShares
 VersionInfoDescription={#APPNAME}
-AppCopyright=(c) 2014 BitShares
+AppCopyright=(c) 2015 BitShares
 DirExistsWarning=no
 DisableStartupPrompt=true
 WindowVisible=false
@@ -81,8 +83,8 @@ LanguageCodePage=0
 
 [Files]
 ;Source: README.TXT; DestDir: {app}; Flags: ignoreversion
-Source: {#BITSHARES_ROOT}\bin\{#APPNAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
-Source: ..\client\RelWithDebInfo\bitshares_client.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: {#BITSHARES_ROOT}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
+Source: ..\client\RelWithDebInfo\{#CLI_CLIENT_EXECUTABLE_NAME}.exe; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#MSVC_RUNTIME_DIR}\msvcr120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#MSVC_RUNTIME_DIR}\msvcp120.dll; DestDir: {app}\bin; Flags: ignoreversion
 Source: {#OPENSSL_ROOT_DIR}\ssl\openssl.cnf; DestDir: {app}\bin; Flags: ignoreversion
@@ -128,18 +130,18 @@ Source: {#CRASHRPT_DIR}\bin{#CRASHRPT_PLATFORM_DIR}\dbghelp.dll; DestDir: {app}\
 #endif
 
 [Icons]
-Name: {group}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {group}\{#APPNAME}; Filename: {app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 Name: "{group}\Uninstall {#APPNAME}"; Filename: "{uninstallexe}"
-Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#APPNAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
+Name: {userdesktop}\{#APPNAME}; Filename: {app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; WorkingDir: {app}\bin; IconIndex: 0
 
 [Run]
-Filename: {app}\bin\{#APPNAME}.exe; Flags: postinstall; Description: Run
+Filename: {app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe; Flags: postinstall; Description: Run
 
 [Registry]
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; Flags: uninsdeletekey; ValueType: none;
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}"; ValueType: string; ValueName: "URL Protocol"; ValueData: "";
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell"; Flags: uninsdeletekey; ValueType: none
 Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open"; Flags: uninsdeletekey; ValueType: none
-Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open\command"; Flags: uninsdeletekey; ValueType: string; ValueName: ""; ValueData: "{app}\bin\{#APPNAME}.exe %1";
+Root: HKCR; Subkey: "{#CUSTOM_URL_SCHEME}\shell\open\command"; Flags: uninsdeletekey; ValueType: string; ValueName: ""; ValueData: "{app}\bin\{#GUI_CLIENT_EXECUTABLE_NAME}.exe %1";
 
 [Code]
