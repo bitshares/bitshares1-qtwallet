@@ -170,15 +170,18 @@ IF( WIN32 )
   		              ERROR_QUIET
 		              OUTPUT_STRIP_TRAILING_WHITESPACE)
 	  if(GIT_DESCRIBE_RESULT EQUAL 0)
-		# patch up the GIT version tag, which seems to be somewhat arbitrary
-		# convert bts/0.4.10-RC1 -> v0.4.10.1
-		string(REGEX REPLACE "^(bts|xts|dvs)\\/v?" "v" VERSION_STRING "${GIT_DESCRIBE_OUTPUT}")
-		# convert 0.4.10-RC1 -> 0.4.10.1
-		string(REGEX REPLACE "-RC([0-9]+)$" ".\\1" VERSION_STRING_WITHOUT_RC "${VERSION_STRING}")
-		# convert 0.4.10-a to 0.4.10
-		string(REGEX REPLACE "-.*$" "" VERSION_STRING_WITHOUT_TRAILING_ALPHA "${VERSION_STRING_WITHOUT_RC}")
-		# convert v0.4.10 -> 0.4.10
-		string(REGEX REPLACE "^v" "" NUMERIC_ONLY_VERSION_STRING "${VERSION_STRING_WITHOUT_TRAILING_ALPHA}")
+      # patch up the GIT version tag, which seems to be somewhat arbitrary
+      # convert bts/0.4.10-RC1 -> v0.4.10.1
+      string(REGEX REPLACE "^(bts|xts|dvs)\\/v?" "v" VERSION_STRING "${GIT_DESCRIBE_OUTPUT}")
+      # convert 0.4.10-RC1 -> 0.4.10.1
+      string(REGEX REPLACE "-RC([0-9]+)$" ".\\1" VERSION_STRING_WITHOUT_RC "${VERSION_STRING}")
+      # convert 0.4.10-a to 0.4.10
+      string(REGEX REPLACE "-.*$" "" VERSION_STRING_WITHOUT_TRAILING_ALPHA "${VERSION_STRING_WITHOUT_RC}")
+      # convert v0.4.10 -> 0.4.10
+      string(REGEX REPLACE "^v" "" NUMERIC_ONLY_VERSION_STRING "${VERSION_STRING_WITHOUT_TRAILING_ALPHA}")
+      if( NOT NUMERIC_ONLY_VERSION_STRING MATCHES "^[0-9]\\.[0-9]\\.[0-9](\\.[0-9])$" )
+        set( NUMERIC_ONLY_VERSION_STRING "0.0.0.0" )
+      endif()
  	    message(STATUS "Using GIT_DESCRIPTION => ${GIT_DESCRIBE_OUTPUT}")
 	  endif()
 	endif(GET_VERSION_STRING_FROM_GIT_TAGS)
