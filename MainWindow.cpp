@@ -84,11 +84,13 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
   if ( event->type() == QEvent::FileOpen )
   {
     QFileOpenEvent* urlEvent = static_cast<QFileOpenEvent*>(event);
-    ilog("Got URL to open: ${url}", ("url", urlEvent->file().toStdString()));
+    QString url = urlEvent->file();
+    if( url.isEmpty() ) url = urlEvent->url().toString();
+    ilog("Got URL to open: ${url}", ("url", url.toStdString()));
     if( isVisible() )
-      processCustomUrl(urlEvent->file());
+      processCustomUrl(url);
     else
-      deferCustomUrl(urlEvent->file());
+      deferCustomUrl(url);
     return true;
   }
   else if( object == this && event->type() == QEvent::Close && _trayIcon )
