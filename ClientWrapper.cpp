@@ -197,9 +197,9 @@ void ClientWrapper::initialize(INotifier* notifier)
 
       main_thread->async( [&]{ Q_EMIT initialized(); });
     }
-    catch (const bts::db::db_in_use_exception&)
+    catch (const bts::db::level_map_open_failure& e)
     {
-      main_thread->async( [&]{ Q_EMIT error( tr("An instance of %1 is already running! Please close it and try again.").arg(qApp->applicationName())); });
+      main_thread->async( [&]{ Q_EMIT error( tr("%1").arg(e.to_string().c_str())); });
     }
     catch (...)
     {
