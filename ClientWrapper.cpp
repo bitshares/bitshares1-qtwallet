@@ -143,8 +143,8 @@ void ClientWrapper::initialize(INotifier* notifier)
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>("qt_wallet");
-      _client->open( data_dir.toStdWString(), fc::optional<fc::path>(), [=](float progress) {
-         main_thread->async( [=]{ Q_EMIT status_update(tr("Reindexing database... Approximately %1% complete.").arg(progress, 0, 'f', 0)); } );
+      _client->open( data_dir.toStdWString(), fc::optional<fc::path>(), fc::optional<bool>(), [=](float progress) {
+         main_thread->async( [=]{ Q_EMIT status_update(tr("Replaying blockchain... Approximately %1% complete.").arg(progress, 0, 'f', 0)); } );
       } );
 
       if(!_client->get_wallet()->is_enabled())
