@@ -260,6 +260,13 @@ foreach(static_resource_file ${static_bitshares_resource_files})
   set(PRE_BUILD_STEP_COMMANDS ${PRE_BUILD_STEP_COMMANDS}
       COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/${static_resource_file}" "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}")
+  if( NOT WIN32 )
+    if ( NOT "${CMAKE_CURRENT_BINARY_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}" )
+      # PRE_BUILD step is actually pre-link on unix, and that's too late
+      file( MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}" )
+      file( COPY "${CMAKE_CURRENT_SOURCE_DIR}/${static_resource_file}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}" )
+    endif ()
+  endif (NOT WIN32 )  
 endforeach()
 
 # Also copy the .qrc file over manually whenever cmake is run, otherwise CMake will errror
