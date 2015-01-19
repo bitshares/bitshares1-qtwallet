@@ -143,8 +143,8 @@ void ClientWrapper::initialize(INotifier* notifier)
     {
       main_thread->async( [&]{ Q_EMIT status_update(tr("Starting %1").arg(qApp->applicationName())); });
       _client = std::make_shared<bts::client::client>("qt_wallet");
-      _client->open( data_dir.toStdWString(), fc::optional<fc::path>(), [=](float progress) {
-         main_thread->async( [=]{ Q_EMIT status_update(tr("Reindexing database... Approximately %1% complete.").arg(progress, 0, 'f', 0)); } );
+      _client->open( data_dir.toStdWString(), fc::optional<fc::path>(), fc::optional<bool>(), [=](float progress) {
+         main_thread->async( [=]{ Q_EMIT status_update(tr("Replaying blockchain... Approximately %1% complete.").arg(progress, 0, 'f', 0)); } );
       } );
 
       if(!_client->get_wallet()->is_enabled())
@@ -197,9 +197,9 @@ void ClientWrapper::initialize(INotifier* notifier)
 
       main_thread->async( [&]{ Q_EMIT initialized(); });
     }
-    catch (const bts::db::db_in_use_exception&)
+    catch (const bts::db::level_map_open_failure& e)
     {
-      main_thread->async( [&]{ Q_EMIT error( tr("An instance of %1 is already running! Please close it and try again.").arg(qApp->applicationName())); });
+      main_thread->async( [&]{ Q_EMIT error( tr("%1").arg(e.to_string().c_str())); });
     }
     catch (...)
     {
