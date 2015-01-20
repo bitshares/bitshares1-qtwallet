@@ -393,6 +393,7 @@ int BitSharesApp::run()
    QSplashScreen splash(pixmap);
    splash.showMessage(QApplication::tr("Loading configuration..."),
                       Qt::AlignCenter | Qt::AlignBottom, Qt::white);
+   splash.setEnabled(false);
    splash.show();
 
    prepareStartupSequence(clientWrapper.get(), viewer, &mainWindow, &splash);
