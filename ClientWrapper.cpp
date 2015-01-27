@@ -197,13 +197,9 @@ void ClientWrapper::initialize(INotifier* notifier)
 
       main_thread->async( [&]{ Q_EMIT initialized(); });
     }
-    catch (const bts::db::level_map_open_failure& e)
-    {
-      main_thread->async( [&]{ Q_EMIT error( tr("%1").arg(e.to_string().c_str())); });
-    }
     catch (...)
     {
-      ilog("Failure when attempting to initialize client");
+      elog("Failure when attempting to initialize client; removing chain directory");
       if (fc::exists(fc::path(data_dir.toStdWString()) / "chain")) {
         fc::remove_all(fc::path(data_dir.toStdWString()) / "chain");
         main_thread->async( [&]{ Q_EMIT error( tr("An error occurred while trying to start. Please try restarting the application.")); });
