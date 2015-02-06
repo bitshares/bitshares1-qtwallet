@@ -46,6 +46,7 @@ class MainWindow : public QMainWindow
     void navigateTo(const QString& path);
 
     bool detectCrash();
+    QUuid getAppId() const { return app_id; }
 
 public Q_SLOTS:
     void goToMyAccounts();

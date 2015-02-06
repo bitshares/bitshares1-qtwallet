@@ -338,6 +338,7 @@ int BitSharesApp::run()
    setStyle(new CrashWorkaroundStyle);
 
    MainWindow mainWindow;
+   Utilities::app_id = mainWindow.getAppId();
    bool crashedPreviously = mainWindow.detectCrash();
    installEventFilter(&mainWindow);
 

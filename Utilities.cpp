@@ -7,6 +7,8 @@
 #include <QDesktopServices>
 #include <QFileDialog>
 
+QUuid Utilities::app_id;
+
 void Utilities::copy_to_clipboard(const QString& string)
 {
     qApp->clipboard()->setText(string);
@@ -31,4 +33,9 @@ QString Utilities::prompt_user_to_open_file(const QString& dialogCaption)
 void Utilities::log_message(const QString& message)
 {
     wlog("Message from GUI: ${msg}", ("msg",message.toStdString()));
+}
+
+QString Utilities::get_app_id()
+{
+    return app_id.toString().mid(1,36);
 }
