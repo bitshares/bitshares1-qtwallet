@@ -214,6 +214,10 @@ QUrl ClientWrapper::http_url() const
   QUrl url = QString::fromStdString("http://" + std::string( *_actual_httpd_endpoint ) );
   url.setUserName(_cfg.rpc.rpc_user.c_str() );
   url.setPassword(_cfg.rpc.rpc_password.c_str() );
+  if( _client && _client->wallet_list().size() )
+     url.setFragment("/unlockwallet");
+  else
+     url.setFragment("/createwallet");
   return url;
 }
 
