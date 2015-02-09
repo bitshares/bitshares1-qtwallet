@@ -8,6 +8,7 @@
     <file>htdocs/locale-it.json</file>
     <file>htdocs/locale-ru.json</file>
     <file>htdocs/locale-zh-CN.json</file>
+    <file>htdocs/locale-ko.json</file>
     <file>htdocs/css/app.css</file>
     <file>htdocs/img/bg-head.jpg</file>
     <file>htdocs/img/bitsharesIcon.png</file>
