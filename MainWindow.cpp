@@ -676,6 +676,11 @@ void MainWindow::goToTransfer(QStringList components)
 
   while (!parameters.empty()) {
     QString parameterName = parameters.takeFirst();
+    if( parameters.isEmpty() )
+    {
+       elog("URL is malformed. Ignoring unparseable token ${t}", ("t", parameterName.toStdString()));
+       break;
+    }
     if (parameterName == "amount")
       amount = parameters.takeFirst();
     else if (parameterName == "memo")
@@ -685,7 +690,7 @@ void MainWindow::goToTransfer(QStringList components)
     else if (parameterName == "asset")
       asset = parameters.takeFirst();
     else
-      parameters.pop_front();
+      wlog("Ignoring unknown token in URL: ${t}", ("t", parameterName.toStdString()));
   }
 
   QString url = QStringLiteral("/transfer?from=%1&to=%2&amount=%3&asset=%4&memo=%5")
