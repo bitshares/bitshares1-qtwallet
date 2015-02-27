@@ -6,6 +6,7 @@
 #include <QClipboard>
 #include <QDesktopServices>
 #include <QFileDialog>
+#include <qglobal.h>
 
 QUuid Utilities::app_id;
 
@@ -38,4 +39,19 @@ void Utilities::log_message(const QString& message)
 QString Utilities::get_app_id()
 {
     return app_id.toString().mid(1,36);
+}
+
+QString Utilities::get_os_name()
+{
+  return 
+#ifdef Q_OS_LINUX
+  "linux"
+#elif defined(Q_OS_WIN32)
+  "windows"
+#elif defined(Q_OS_MAC)
+  "mac"
+#else
+  "unknown"
+#endif
+  ;
 }

@@ -17,6 +17,7 @@ public:
     Q_INVOKABLE static QString prompt_user_to_open_file(const QString& dialogCaption);
     Q_INVOKABLE static void log_message(const QString& message);
     Q_INVOKABLE static QString get_app_id();
+    Q_INVOKABLE static QString get_os_name();
 
     static QUuid app_id;
     
