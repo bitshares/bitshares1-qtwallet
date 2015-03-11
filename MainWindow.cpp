@@ -262,7 +262,7 @@ void MainWindow::setClientWrapper(ClientWrapper *clientWrapper)
   _clientWrapper = clientWrapper;
 }
 
-void MainWindow::navigateTo(const QString& path) 
+void MainWindow::navigateTo(const QString& path)
 {
   if( walletIsUnlocked() ) {
     wlog("Loading ${path} in web UI", ("path", path.toStdString()));
@@ -355,7 +355,7 @@ void MainWindow::setupTrayIcon()
     _trayIcon->deleteLater();
     _trayIcon = nullptr;
   });
-  
+
   bts::wallet::wallet_ptr wallet = clientWrapper()->get_client()->get_wallet();
   bts::wallet::wallet_weak_ptr weak_wallet(wallet);
   wallet->wallet_claimed_transaction.connect([weak_wallet, this](const bts::wallet::ledger_entry& entry) {
@@ -367,12 +367,12 @@ void MainWindow::setupTrayIcon()
     QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
     QString sender = tr("Someone");
     QString memo = entry.memo.c_str();
-      
+
     if (entry.to_account)
       receiver = wallet->get_key_label(*entry.to_account).c_str();
     if (entry.from_account)
       sender = wallet->get_key_label(*entry.from_account).c_str();
-      
+
     _trayIcon->showMessage(tr("%1 sent you %2").arg(sender).arg(amount),
                            tr("%1 just received %2 from %3!\n\nMemo: %4").arg(receiver).arg(amount).arg(sender).arg(memo));
   });
@@ -386,7 +386,7 @@ void MainWindow::setupTrayIcon()
   if( mail_client )
   {
       mail_client->new_mail_notifier.connect([=](int newMessages) {
-        if (newMessages <= 0) 
+        if (newMessages <= 0)
           return;
         if (newMessages == 1)
           _trayIcon->showMessage(tr("New Mail"), tr("You just received a new mail message."));
@@ -464,11 +464,11 @@ void MainWindow::goToTransaction(QString transactionId)
 void MainWindow::goToRefCode(QStringList components)
 {
     if(!walletIsUnlocked()) return;
-    
+
     QString faucet;
     QString code;
     QStringList parameters = components.mid(1);
-    
+
     while (!parameters.empty()) {
         QString parameterName = parameters.takeFirst();
         if (parameterName == "faucet")
@@ -478,7 +478,7 @@ void MainWindow::goToRefCode(QStringList components)
         else
             parameters.pop_front();
     }
-    
+
     QString url = QStringLiteral("/referral_code?faucet=%1&code=%2")
     .arg(faucet)
     .arg(code);
@@ -533,7 +533,16 @@ std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
   auto serverAccount = _clientWrapper->get_client()->get_chain()->get_account_record(serverKey);
   if( !serverAccount.valid() )
   {
-    if(_clientWrapper->get_client()->blockchain_is_synced())
+    uint64_t head_block_age( -1 );
+    try
+    {
+        head_block_age = _clientWrapper->get_client()->get_info()[ "blockchain_head_block_age" ].as_uint64();
+    }
+    catch( ... )
+    {
+    }
+
+    if( head_block_age < 1000 )
       QMessageBox::critical(this,
                             tr("Misconfigured Website"),
                             tr("The website you are trying to log into is experiencing problems, and cannot accept logins at this time."));
@@ -550,7 +559,7 @@ std::string MainWindow::getLoginUser(const fc::ecc::public_key& serverKey)
   userSelecterDialog.setWindowModality(Qt::WindowModal);
 
   QStringList accounts;
-  auto wallet_accounts = _clientWrapper->get_client()->wallet_list_my_accounts();
+  auto wallet_accounts = _clientWrapper->get_client()->wallet_list_accounts();
   if( wallet_accounts.size() == 1 )
   {
     QMessageBox loginAuthBox(QMessageBox::Question,

@@ -261,7 +261,7 @@ void ClientWrapper::confirm_and_set_approval(QString delegate_name, bool approve
                               .arg(approve?"Approve":"Disapprove")
                               )
         == QMessageBox::Yes )
-      get_client()->wallet_account_set_approval(delegate_name.toStdString(), approve);
+      get_client()->wallet_approve(delegate_name.toStdString(), approve);
   }
   else
     QMessageBox::warning(nullptr, tr("Invalid Account"), tr("Account %1 is not a delegate, so its approval cannot be set.").arg(delegate_name));
