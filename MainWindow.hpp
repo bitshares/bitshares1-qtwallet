@@ -10,6 +10,8 @@
 #include <QSystemTrayIcon>
 #include <QTimer>
 #include <QUuid>
+#include <QQueue>
+#include <QPair>
 
 class MainWindow : public QMainWindow
 {
@@ -19,6 +21,9 @@ class MainWindow : public QMainWindow
     QMenu* _accountMenu;
     QString _deferredUrl;
     QSystemTrayIcon* _trayIcon;
+    QQueue<QPair<QString,QString>> _messageQueue;
+    QTimer* _messageTimer;
+    int messageSpamCount = 0;
 
     //Temporary storage for a web update description being considered for application.
     //Do not trust this as the in-use web update.
@@ -91,4 +96,5 @@ private:
     void showNoUpdateAlert();
     bool verifyUpdateSignature(QByteArray updatePackage);
     void goToRefCode(QStringList components);
+    void showMessages();
 };

@@ -47,7 +47,8 @@ MainWindow::MainWindow()
   : _settings("BitShares", BTS_BLOCKCHAIN_NAME),
     _trayIcon(nullptr),
     _updateChecker(new QTimer(this)),
-    _clientWrapper(nullptr)
+    _clientWrapper(nullptr),
+    _messageTimer(new QTimer(this))
 {
   readSettings();
   initMenu();
@@ -77,6 +78,9 @@ MainWindow::MainWindow()
     });
   });
   _updateChecker->start();
+  
+  _messageTimer->setSingleShot(true);
+  connect(_messageTimer, &QTimer::timeout, [this] {showMessages();});
 }
 
 bool MainWindow::eventFilter(QObject* object, QEvent* event)
@@ -373,13 +377,17 @@ void MainWindow::setupTrayIcon()
     if (entry.from_account)
       sender = wallet->get_key_label(*entry.from_account).c_str();
 
-    _trayIcon->showMessage(tr("%1 sent you %2").arg(sender).arg(amount),
-                           tr("%1 just received %2 from %3!\n\nMemo: %4").arg(receiver).arg(amount).arg(sender).arg(memo));
+    QPair<QString,QString> message;
+    message = qMakePair(tr("%1 sent you %2").arg(sender).arg(amount), tr("%1 just received %2 from %3!\n\nMemo: %4").arg(receiver).arg(amount).arg(sender).arg(memo));
+    this->_messageQueue.enqueue(message);
+    showMessages();
   });
   wallet->update_margin_position.connect([=](const bts::wallet::ledger_entry& entry) {
       QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
-      _trayIcon->showMessage(tr("Your short order has been filled"),
-                             tr("You just sold %1 from your short order.").arg(amount));
+      QPair<QString,QString> message;
+      message = qMakePair(tr("Your short order has been filled"), tr("You just sold %1 from your short order.").arg(amount));
+      this->_messageQueue.enqueue(message);
+      showMessages();
   });
 
   auto mail_client = clientWrapper()->get_client()->get_mail_client();
@@ -388,10 +396,13 @@ void MainWindow::setupTrayIcon()
       mail_client->new_mail_notifier.connect([=](int newMessages) {
         if (newMessages <= 0)
           return;
+        QPair<QString,QString> message;
         if (newMessages == 1)
-          _trayIcon->showMessage(tr("New Mail"), tr("You just received a new mail message."));
+            message = qMakePair(tr("New Mail"), tr("You just received a new mail message."));
         else
-          _trayIcon->showMessage(tr("New Mail"), tr("You just received %1 new mail messages.").arg(newMessages));
+            message = qMakePair(tr("New Mail"), tr("You just received %1 new mail messages.").arg(newMessages));
+        this->_messageQueue.enqueue(message);
+        showMessages();
       });
   }
 }
@@ -483,6 +494,22 @@ void MainWindow::goToRefCode(QStringList components)
     .arg(faucet)
     .arg(code);
     navigateTo(url);
+}
+
+void MainWindow::showMessages()
+{
+    if (!_messageTimer->isActive() && !this->_messageQueue.isEmpty())
+    {
+        _messageTimer->setInterval(1000);
+
+        QPair<QString,QString> message = this->_messageQueue.dequeue();
+        _trayIcon->showMessage(message.first,message.second);
+        if (++this->messageSpamCount >= 5)
+            this->_messageQueue.clear();
+        _messageTimer->start();
+    }
+    else
+        this->messageSpamCount = 0;
 }
 
 Html5Viewer* MainWindow::getViewer()
