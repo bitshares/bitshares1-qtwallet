@@ -488,7 +488,6 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
       QTimer::singleShot(100, mainWindow, SLOT(show()));
       splash->finish(mainWindow);
       mainWindow->processDeferredUrl();
-      mainWindow->checkWebUpdates(false);
    });
    client->connect(client, &ClientWrapper::error, [=](QString errorString) {
       splash->hide();
