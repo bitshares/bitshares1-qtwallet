@@ -7,7 +7,6 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <QMenu>
-#include <QSystemTrayIcon>
 #include <QTimer>
 #include <QUuid>
 
@@ -18,7 +17,6 @@ class MainWindow : public QMainWindow
     QMenu* _fileMenu;
     QMenu* _accountMenu;
     QString _deferredUrl;
-    QSystemTrayIcon* _trayIcon;
 
     //Temporary storage for a web update description being considered for application.
     //Do not trust this as the in-use web update.
@@ -33,14 +31,14 @@ class MainWindow : public QMainWindow
     QTimer* _updateChecker;
     QUuid app_id;
     QString version;
-    
+
   public:
     MainWindow();
     QMenu* fileMenu() { return _fileMenu; }
     QMenu* accountMenu() { return _accountMenu; }
 
     bool eventFilter(QObject* object, QEvent* event);
-    
+
     ClientWrapper *clientWrapper() const;
     void setClientWrapper(ClientWrapper* clientWrapper);
     void navigateTo(const QString& path);
@@ -60,8 +58,6 @@ public Q_SLOTS:
     //Causes this window to attempt to become the front window on the desktop
     void takeFocus();
     void hideWindow();
-
-    void setupTrayIcon();
 
     ///Used to schedule a custom URL for processing later, once the app has finished starting
     void deferCustomUrl(QString url);

@@ -110,16 +110,6 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../MainWindow.cpp" line="90"/>
-        <source>Closing to Tray</source>
-        <translation>关闭窗口并缩小到常驻栏里</translation>
-    </message>
-    <message>
-        <location filename="../MainWindow.cpp" line="91"/>
-        <source>You have closed the %1 window. %1 will continue running in the system tray. To quit, use the Quit option in the menu.</source>
-        <translation>你已经关闭了 %1 窗口。 %1 会继续运行在系统的常驻栏。要退出的话，使用菜单里的退出选项。</translation>
-    </message>
-    <message>
         <location filename="../MainWindow.cpp" line="93"/>
         <location filename="../MainWindow.cpp" line="479"/>
         <source>OK</source>

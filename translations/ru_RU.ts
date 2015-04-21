@@ -110,16 +110,6 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../MainWindow.cpp" line="90"/>
-        <source>Closing to Tray</source>
-        <translation>Свернуть программу в панель задач</translation>
-    </message>
-    <message>
-        <location filename="../MainWindow.cpp" line="91"/>
-        <source>You have closed the %1 window. %1 will continue running in the system tray. To quit, use the Quit option in the menu.</source>
-        <translation>Вы закрываете окно %1. %1 будет продолжать работать в панели задач. Чтобы выйти из программы, используйте команду Выход из меню.</translation>
-    </message>
-    <message>
         <location filename="../MainWindow.cpp" line="93"/>
         <location filename="../MainWindow.cpp" line="479"/>
         <source>OK</source>

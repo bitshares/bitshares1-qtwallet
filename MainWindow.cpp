@@ -45,7 +45,6 @@
 
 MainWindow::MainWindow()
   : _settings("BitShares", BTS_BLOCKCHAIN_NAME),
-    _trayIcon(nullptr),
     _updateChecker(new QTimer(this)),
     _clientWrapper(nullptr)
 {
@@ -93,36 +92,7 @@ bool MainWindow::eventFilter(QObject* object, QEvent* event)
       deferCustomUrl(url);
     return true;
   }
-  else if( object == this && event->type() == QEvent::Close && _trayIcon )
-  {
-    //If we're using a tray icon, close to tray instead of exiting
-    if (_settings.value("showTrayIconMessage", true).toBool())
-    {
-      int showAgain = QMessageBox::information(this,
-                               tr("Closing to Tray"),
-                               tr("You have closed the %1 window. %1 will continue running in the system tray. To quit, use the Quit option in the menu.")
-                                  .arg(qApp->applicationName()),
-                               tr("OK"),
-                               tr("Don't Show Again"),
-                               QString(), 1);
-      _settings.setValue("showTrayIconMessage", showAgain == 0);
-    }
 
-#ifdef __APPLE__
-    //Workaround: if user clicks quit in dock menu, a non-spontaneous close event shows up. We should quit when this happens.
-    if( !event->spontaneous() )
-      return QMainWindow::eventFilter(object, event);
-
-    ProcessSerialNumber psn = { 0, kCurrentProcess };
-    ShowHideProcess(&psn, false);
-#else
-    setVisible(false);
-#endif
-
-
-    event->ignore();
-    return true;
-  }
   return QMainWindow::eventFilter(object, event);
 }
 
@@ -326,61 +296,6 @@ void MainWindow::hideWindow()
 #else
     setVisible(false);
 #endif
-}
-
-void MainWindow::setupTrayIcon()
-{
-  if( !QSystemTrayIcon::isSystemTrayAvailable() )
-    return;
-
-  _trayIcon = new QSystemTrayIcon;
-  _trayIcon->setIcon(QIcon(":/images/tray_icon.png"));
-  _trayIcon->show();
-
-  connect(_trayIcon, &QSystemTrayIcon::activated, [this](QSystemTrayIcon::ActivationReason reason){
-    if( reason == QSystemTrayIcon::Trigger )
-    {
-#ifndef __APPLE__
-      setVisible(!isVisible());
-#endif
-    }
-  });
-
-  QMenu* trayMenu = new QMenu(this);
-  trayMenu->addAction(tr("Show Window"), this, SLOT(takeFocus()));
-  trayMenu->addAction(tr("Quit"), qApp, SLOT(quit()));
-  _trayIcon->setContextMenu(trayMenu);
-
-  connect(qApp, &QApplication::aboutToQuit, [this]{
-    _trayIcon->deleteLater();
-    _trayIcon = nullptr;
-  });
-
-  bts::wallet::wallet_ptr wallet = clientWrapper()->get_client()->get_wallet();
-  bts::wallet::wallet_weak_ptr weak_wallet(wallet);
-  wallet->wallet_claimed_transaction.connect([weak_wallet, this](const bts::wallet::ledger_entry& entry) {
-    bts::wallet::wallet_ptr wallet(weak_wallet.lock());
-    if (!wallet)
-      return;
-
-    QString receiver = tr("You");
-    QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
-    QString sender = tr("Someone");
-    QString memo = entry.memo.c_str();
-
-    if (entry.to_account)
-      receiver = wallet->get_key_label(*entry.to_account).c_str();
-    if (entry.from_account)
-      sender = wallet->get_key_label(*entry.from_account).c_str();
-
-    _trayIcon->showMessage(tr("%1 sent you %2").arg(sender).arg(amount),
-                           tr("%1 just received %2 from %3!\n\nMemo: %4").arg(receiver).arg(amount).arg(sender).arg(memo));
-  });
-  wallet->update_margin_position.connect([=](const bts::wallet::ledger_entry& entry) {
-      QString amount = clientWrapper()->get_client()->get_chain()->to_pretty_asset(entry.amount).c_str();
-      _trayIcon->showMessage(tr("Your short order has been filled"),
-                             tr("You just sold %1 from your short order.").arg(amount));
-  });
 }
 
 void MainWindow::goToBlock(uint32_t blockNumber)

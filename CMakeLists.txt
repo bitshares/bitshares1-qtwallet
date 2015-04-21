@@ -142,7 +142,7 @@ IF( WIN32 )
 	  # no crashrpt
 	  set(INCLUDE_CRASHRPT_DEFINE undef)
     endif()
-	
+
 	set (MSVC_RUNTIME_DIR_X86 $ENV{MSVC_RUNTIME_DIR_X86})
 	set (MSVC_RUNTIME_DIR_X64 $ENV{MSVC_RUNTIME_DIR_X64})
     if(NOT "${TARGET_ARCHITECTURE}" STREQUAL "" AND
@@ -198,16 +198,16 @@ IF( WIN32 )
 	SET (CMAKE_EXE $ENV{CMAKE_EXE})
 	SET (CURL_EXE $ENV{CURL_EXE})
 	SET (ISCC_EXE $ENV{ISCC_EXE})
-	
+
 	set (QT_PATH_X86 $ENV{QT_PATH_X86})
 	set (QT_PATH_X64 $ENV{QT_PATH_X64})
 	set (OPENSSL_ROOT_DIR_X86 $ENV{OPENSSL_ROOT_DIR_X86})
 	set (OPENSSL_ROOT_DIR_X64 $ENV{OPENSSL_ROOT_DIR_X64})
 	set (CRASHRPT_BIN_DIR_X86 $ENV{CRASHRPT_BIN_DIR_X86})
 	set (CRASHRPT_BIN_DIR_X64 $ENV{CRASHRPT_BIN_DIR_X64})
-	
+
 	string(REGEX REPLACE "^origin/tags/" "" BUILD_TAG "$ENV{GIT_BRANCH}")
-	
+
   configure_file( windows/setup.iss.in setup.iss )
 	configure_file( windows/combined_installer_config.json.in combined_installer_config.json )
 	configure_file( windows/setup_combined.iss.in setup_combined.iss )
@@ -253,8 +253,7 @@ ENDIF()
 # Set up a pre-build step to do this:
 set(static_bitshares_resource_files bitshares.qrc
                                     images/splash_screen.jpg
-                                    images/qtapp.ico
-                                    images/tray_icon.png)
+                                    images/qtapp.ico)
 foreach(static_resource_file ${static_bitshares_resource_files})
   get_filename_component(static_resource_file_path "${static_resource_file}" DIRECTORY)
   set(PRE_BUILD_STEP_COMMANDS ${PRE_BUILD_STEP_COMMANDS}
@@ -266,7 +265,7 @@ foreach(static_resource_file ${static_bitshares_resource_files})
       file( MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}" )
       file( COPY "${CMAKE_CURRENT_SOURCE_DIR}/${static_resource_file}" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${static_resource_file_path}" )
     endif ()
-  endif (NOT WIN32 )  
+  endif (NOT WIN32 )
 endforeach()
 
 # Also copy the .qrc file over manually whenever cmake is run, otherwise CMake will errror
