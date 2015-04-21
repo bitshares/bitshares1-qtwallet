@@ -484,9 +484,8 @@ void BitSharesApp::prepareStartupSequence(ClientWrapper* client, Html5Viewer* vi
 
       ilog("Webview loaded: ${status}", ("status", ok));
       viewer->disconnect(*loadFinishedConnection);
-      //The web GUI takes a moment to settle; let's give it some time.
-      QTimer::singleShot(100, mainWindow, SLOT(show()));
-      splash->finish(mainWindow);
+      splash->close();
+      mainWindow->show();
       mainWindow->processDeferredUrl();
    });
    client->connect(client, &ClientWrapper::error, [=](QString errorString) {
