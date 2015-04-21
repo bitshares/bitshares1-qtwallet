@@ -685,7 +685,7 @@ void MainWindow::importWallet()
         default_wallet_directory.rename(backup_wallet_name, default_wallet_name);
       QMessageBox::critical(this,
                             tr("Wallet Restore Failed"),
-                            tr("Failed to restore wallet backup. Your original wallet has been restored. Error: %1").arg(e.to_string().c_str()));
+                            tr("Failed to restore wallet backup. Your original wallet has been restored. Error: %1If you are sure that your password and backup file are correct, please post a support request here: https://bitsharestalk.org/index.php/board,45.0.html").arg(e.to_string().c_str()));
     }
   } else return;
 
