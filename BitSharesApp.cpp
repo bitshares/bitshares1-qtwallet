@@ -293,7 +293,7 @@ int BitSharesApp::run(int& argc, char** argv)
 
    BitSharesApp app(argc, argv);
    QTranslator bitsharesTranslator;
-   bitsharesTranslator.load(QLocale::system().name(), QStringLiteral(":/"));
+   bitsharesTranslator.load(QLocale::system().name()+".qm");
    app.installTranslator(&bitsharesTranslator);
 
 #ifdef __APPLE__
