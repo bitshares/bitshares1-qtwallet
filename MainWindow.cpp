@@ -712,7 +712,7 @@ void MainWindow::initMenu()
                                      tr("Could not export wallet because the selected file already exists and cannot be removed."));
                 return;
             }
-        _clientWrapper->get_client()->wallet_backup_create(savePath.toStdWString());
+        _clientWrapper->get_client()->wallet_export_keys(savePath.toStdWString());
     }
   });
   _fileMenu->actions().last()->setShortcut(QKeySequence(tr("Ctrl+Shift+X")));
